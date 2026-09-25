@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-tri-01",
+  "title": "Trier : la ferme ou la mer",
+  "skill": "categorization",
+  "objective": "Ranger un animal dans le bon panier : la ferme ou la mer.",
+  "mechanic": "sort",
+  "rounds": 4,
+  "tutorial": true,
+  "params": {
+    "groups": [
+      { "id": "farm", "symbol": "🚜", "objects": ["cow", "pig", "sheep", "chicken", "horse"] },
+      { "id": "sea", "symbol": "🌊", "objects": ["crab", "octopus", "whale", "dolphin", "tropical-fish"] }
+    ]
+  }
+}

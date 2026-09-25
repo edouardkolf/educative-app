@@ -20,7 +20,7 @@ Un niveau = un fichier JSON. Un parcours = l'ordre des niveaux sur la carte de l
 | `title` | Titre lisible par le parent | `"Suite de 2 couleurs"` |
 | `skill` | Compétence cible | `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"` |
 | `objective` | Objectif pédagogique en une phrase | `"Continuer une suite AB…"` |
-| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"` |
+| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"` |
 | `rounds` | Nombre de manches | 4 (avec tutoriel) ou 5+ |
 | `tutorial` | Affiche la main animée (optionnel) | `true` ou absent |
 | `stars` | Seuils d'étoiles (optionnel) | Défaut : 0 raté → 3 ⭐, 1 raté → 2 ⭐ |
@@ -148,6 +148,34 @@ Le choix envoyé au moteur (`onChoose`) est la couleur RÉSULTANTE du mélange, 
 orange, bleu+jaune → vert, rouge+bleu → violet, une même fiole versée deux fois → la même couleur pure. `round.answer`
 est la couleur cible. La vue affiche un objet géant selon la couleur obtenue (🍎 rouge, 🍌 jaune, 🫐 bleu, 🥕 orange,
 🐸 vert, 🍇 violet), même en cas d'erreur (un mélange raté reste une découverte, pas une punition).
+
+### Sort (le trieur magique)
+
+Ranger un objet géant dans le bon panier parmi 2 ou 3 familles, affichées avec un émoji géant (ex. 🚜 la ferme, 🌊 la
+mer, ☁️ le ciel). Glisser-déposer l'objet vers le panier OU taper directement le panier (les deux marchent, c'est la
+seule mécanique qui accepte le glisser-déposer). Exemple complet (extrait de ms-tri-01.json) :
+
+```json
+{
+  "mechanic": "sort",
+  "params": {
+    "groups": [
+      { "id": "farm", "symbol": "🚜", "objects": ["cow", "pig", "sheep", "chicken", "horse"] },
+      { "id": "sea", "symbol": "🌊", "objects": ["crab", "octopus", "whale", "dolphin", "tropical-fish"] }
+    ]
+  }
+}
+```
+
+**Champs** :
+- `groups` : 2 à 3 paniers, **dans l'ordre d'affichage fixe** (mêmes positions à chaque manche du niveau, pour que
+  l'enfant apprenne où est chaque famille) : `id` (repris comme `round.answer`), `symbol` (émoji du panier),
+  `objects` (au moins 2 objets illustrés du catalogue appartenant à cette famille).
+
+Chaque manche tire un groupe puis un objet dans son réservoir (sans répéter un objet tant que le réservoir du groupe
+n'est pas épuisé), en équilibrant les groupes et sans jamais plus de deux manches consécutives sur le même groupe.
+`round.answer` est l'`id` du groupe propriétaire de l'objet. Une dépose ratée fait rebondir l'objet (son doux, jamais
+punitif) ; relâcher l'objet hors de tout panier le fait glisser au centre, sans manche jouée.
 
 ## Valeurs autorisées
 

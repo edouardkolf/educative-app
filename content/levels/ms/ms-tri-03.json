@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-tri-03",
+  "title": "Trier : ferme, mer ou ciel",
+  "skill": "categorization",
+  "objective": "Ranger un animal dans le bon panier parmi trois familles : la ferme, la mer ou le ciel.",
+  "mechanic": "sort",
+  "rounds": 5,
+  "params": {
+    "groups": [
+      { "id": "farm", "symbol": "🚜", "objects": ["cow", "pig", "sheep", "chicken", "horse"] },
+      { "id": "sea", "symbol": "🌊", "objects": ["crab", "octopus", "whale", "dolphin", "tropical-fish"] },
+      { "id": "sky", "symbol": "☁️", "objects": ["bird", "butterfly", "bee", "owl"] }
+    ]
+  }
+}

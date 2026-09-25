@@ -1,0 +1,134 @@
+/* Vue « sort » (le trieur magique) — classes préfixées srt-, aucun texte. */
+
+.srt-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  gap: 16px;
+}
+
+/* ---------- Paniers (haut) : 2 ou 3, grands, bien distincts ---------- */
+
+.srt-baskets {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.srt-basket {
+  width: 108px;
+  height: 108px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius, 20px);
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.srt-basket:active {
+  transform: scale(0.94);
+}
+
+.srt-basket__symbol {
+  font-family: var(--emoji-font);
+  font-size: 64px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ---------- Scène (bas) : l'objet géant à trier ---------- */
+
+.srt-stage {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.srt-object-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.srt-object-wrap--dragging {
+  cursor: grabbing;
+}
+
+.srt-object-wrap--animated {
+  transition: transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.srt-object {
+  font-family: var(--emoji-font);
+  font-size: 88px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.srt-object--success {
+  animation: srt-pop-in 480ms ease forwards;
+}
+
+.srt-object--fail {
+  animation: srt-boing 420ms ease;
+}
+
+@keyframes srt-pop-in {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(0.25);
+    opacity: 0.4;
+  }
+}
+
+@keyframes srt-boing {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(0.85, 1.15) rotate(-8deg);
+  }
+  50% {
+    transform: scale(1.1, 0.9) rotate(8deg);
+  }
+  75% {
+    transform: scale(0.95, 1.05) rotate(-4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .srt-object-wrap--animated {
+    transition: none;
+  }
+  .srt-object--success,
+  .srt-object--fail {
+    animation: none;
+  }
+}

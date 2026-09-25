@@ -1,6 +1,7 @@
-// Mécaniques « compter » et « intrus », dispositions de comptage (dé, éparpillé), trou de suite au
-// milieu, progression sur la carte à 26 niveaux, tableau de bord parent et mise en page des 26
-// niveaux sur deux tailles d'écran (voir docs/ARCHITECTURE.md §3, §5, §7, §9 et docs/PROGRESSION-MS.md).
+// Mécaniques « compter », « intrus » et « sort » (le trieur magique), dispositions de comptage (dé,
+// éparpillé), trou de suite au milieu, progression sur la carte à 29 niveaux, tableau de bord parent
+// et mise en page des 29 niveaux sur deux tailles d'écran (voir docs/ARCHITECTURE.md §3, §5, §7, §9
+// et docs/PROGRESSION-MS.md).
 // Chaque test démarre avec un contexte Playwright neuf, donc un stockage IndexedDB vierge.
 // Aides de navigation copiées de vertical-slice.spec.ts (même convention : non partagées entre fichiers).
 import { readFileSync } from 'node:fs';
@@ -13,7 +14,7 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
-// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 26 niveaux ----------
+// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 29 niveaux ----------
 
 interface TrackJson {
   levels: string[];
@@ -407,7 +408,7 @@ test('ms-suite-07 : trou au milieu d\'une suite AB', async ({ page }) => {
 
 // ==================== 5. Progression sur la carte + tableau de bord (captures pleine page) ====================
 
-test('progression sur la carte à 26 niveaux et tableau de bord parent', async ({ page }) => {
+test('progression sur la carte à 29 niveaux et tableau de bord parent', async ({ page }) => {
   test.slow();
   await onboardWithChild(page, 'Yanis', { sessionMinutes: '', dailyMinutes: '' });
   await chooseProfile(page, 'Yanis');
@@ -435,7 +436,7 @@ test('progression sur la carte à 26 niveaux et tableau de bord parent', async (
   if (!lastLevelId) throw new Error('content/tracks/ms.json : parcours vide.');
 
   // La carte défile dans un conteneur interne (.map-scroll), pas dans le document : on agrandit
-  // temporairement le viewport pour que la capture "pleine page" montre les 26 niveaux sans coupe.
+  // temporairement le viewport pour que la capture "pleine page" montre les 29 niveaux sans coupe.
   await page.setViewportSize({ width: defaultViewport.width, height: 3600 });
   await expect(mapNode(page, lastLevelId)).toBeVisible(); // le dernier niveau de la carte est bien rendu
   await page.screenshot({ path: shot('17-carte-20-niveaux.png'), fullPage: true });
@@ -464,14 +465,14 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   await page.screenshot({ path: shot('16-ecran-de-fin.png') });
 });
 
-// ==================== 7. Mise en page des 26 niveaux (test paramétré, standard + petit téléphone) ====================
+// ==================== 7. Mise en page des 29 niveaux (test paramétré, standard + petit téléphone) ====================
 
-test('mise en page : les 26 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(180_000); // 26 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+test('mise en page : les 29 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
+  test.setTimeout(180_000); // 29 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
-  // aussi valide que de rejouer les 26 niveaux dans l'ordre pour un test purement visuel.
+  // aussi valide que de rejouer les 29 niveaux dans l'ordre pour un test purement visuel.
   await openChildStats(page, 'Zoé');
   for (const levelId of TRACK.levels) {
     await page.getByTestId(`override-${levelId}-unlocked`).click();
@@ -528,4 +529,83 @@ test('ms-couleurs-01 : un mélange faux (pas puni) puis le bon fait avancer la m
 
   await waitForLevelEndButtons(page);
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '2'); // 1 raté au 1er coup
+});
+
+// ==================== 9. Sort : le trieur magique (mauvais panier non grisé, puis glisser-déposer) ====================
+
+test('ms-tri-01 : un mauvais panier (jamais grisé, ni bloqué) puis les bons paniers font avancer la manche', async ({
+  page,
+}) => {
+  test.slow();
+  await onboardWithChild(page, 'Malo', { sessionMinutes: '', dailyMinutes: '' });
+  await unlockLevel(page, 'Malo', 'ms-tri-01');
+  await chooseProfile(page, 'Malo');
+  await openLevelHash(page, 'ms-tri-01');
+
+  // La main du tutoriel doit apparaître avant le tout premier tap, et pointer vers le bon panier.
+  await expect(page.locator('.tutorial-hand')).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('21-tri-paniers.png') });
+
+  const round = currentRound(page);
+  const answer = await round.getAttribute('data-answer');
+  if (!answer) throw new Error('ms-tri-01 : aucune manche affichée.');
+  const basketIds = await page.locator('[data-choice]').evaluateAll((els) => els.map((el) => el.getAttribute('data-choice')));
+  const wrongId = basketIds.find((id): id is string => Boolean(id) && id !== answer);
+  if (!wrongId) throw new Error('ms-tri-01 : aucun panier faux disponible.');
+
+  const indexBefore = await currentRoundIndex(page);
+  const wrongBasket = page.locator(`[data-choice="${wrongId}"]`);
+  await wrongBasket.click();
+  // Jamais punitif (§9, spécifique à sort) : le mauvais panier ne se grise ni ne se désactive, et
+  // reste retapable — contrairement aux autres mécaniques (odd-one-out grise `wrongChoices`).
+  await expect(wrongBasket).toBeEnabled();
+  await page.waitForTimeout(500); // rebond élastique (~420 ms) avant de pouvoir réessayer
+  expect(await currentRoundIndex(page)).toBe(indexBefore); // toujours la même manche
+  await wrongBasket.click(); // le même panier faux, retenté sans être bloqué
+  await expect(wrongBasket).toBeEnabled();
+  await page.waitForTimeout(500);
+  expect(await currentRoundIndex(page)).toBe(indexBefore);
+
+  await answerCorrectly(page); // le bon panier, cette fois : la manche avance
+  await playPerfectly(page, 3); // manches 2 à 4 (ms-tri-01.json : rounds = 4)
+
+  await waitForLevelEndButtons(page);
+  await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '2'); // 1 raté au 1er coup
+});
+
+test('ms-tri-02 : un vrai glisser-déposer (souris) vers le bon panier résout la manche', async ({ page }) => {
+  test.slow();
+  await onboardWithChild(page, 'Iléa', { sessionMinutes: '', dailyMinutes: '' });
+  await unlockLevel(page, 'Iléa', 'ms-tri-02');
+  await chooseProfile(page, 'Iléa');
+  await openLevelHash(page, 'ms-tri-02');
+
+  const round = currentRound(page);
+  const answer = await round.getAttribute('data-answer');
+  if (!answer) throw new Error('ms-tri-02 : aucune manche affichée.');
+  const indexBefore = await currentRoundIndex(page);
+
+  const objectBox = await page.locator('.srt-object-wrap').boundingBox();
+  const basketBox = await page.locator(`[data-choice="${answer}"]`).boundingBox();
+  if (!objectBox || !basketBox) throw new Error('ms-tri-02 : objet ou panier introuvable.');
+
+  const startX = objectBox.x + objectBox.width / 2;
+  const startY = objectBox.y + objectBox.height / 2;
+  const endX = basketBox.x + basketBox.width / 2;
+  const endY = basketBox.y + basketBox.height / 2;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  // Plusieurs étapes intermédiaires : un vrai geste de glissé, pas un simple clic.
+  await page.mouse.move(startX + (endX - startX) / 2, startY + (endY - startY) / 2, { steps: 5 });
+  await page.mouse.move(endX, endY, { steps: 5 });
+  await page.mouse.up();
+
+  await expect
+    .poll(async () => {
+      if (await page.getByTestId('level-end').isVisible()) return 'end';
+      return currentRoundIndex(page);
+    }, { timeout: 5000 })
+    .not.toBe(indexBefore);
 });

@@ -19,7 +19,7 @@
       "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort"], "description": "Mécanique de jeu. Détermine la forme de params." },
     "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
@@ -58,6 +58,10 @@
     {
       "if": { "type": "object", "properties": { "mechanic": { "const": "color-mix" } } },
       "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/colorMixParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "sort" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/sortParams" } } }
     }
   ],
   "definitions": {
@@ -70,7 +74,10 @@
         "dog", "cat", "rabbit", "fish", "bird", "ladybug",
         "car", "bus", "bike", "boat", "train", "tractor",
         "ball", "teddy", "balloon", "kite", "yoyo", "drum",
-        "sunflower", "tulip", "cactus", "tree", "fir", "clover"
+        "sunflower", "tulip", "cactus", "tree", "fir", "clover",
+        "cow", "pig", "sheep", "chicken", "horse",
+        "crab", "octopus", "whale", "dolphin", "tropical-fish",
+        "butterfly", "bee", "owl"
       ]
     },
     "sequenceParams": {
@@ -136,6 +143,35 @@
           "minItems": 1,
           "uniqueItems": true,
           "description": "Couleurs cibles proposées (une couleur primaire cible se réalise en versant deux fois la même fiole)."
+        }
+      }
+    },
+    "sortParams": {
+      "type": "object",
+      "description": "Le trieur magique : ranger un objet dans le bon panier parmi 2 ou 3 familles.",
+      "required": ["groups"],
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "description": "Paniers, dans l'ordre d'affichage fixe (positions stables d'un niveau à l'autre).",
+          "items": {
+            "type": "object",
+            "required": ["id", "symbol", "objects"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "symbol": { "type": "string", "minLength": 1, "description": "Émoji géant affiché sur le panier." },
+              "objects": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/objectId" },
+                "minItems": 2,
+                "uniqueItems": true
+              }
+            }
+          }
         }
       }
     }

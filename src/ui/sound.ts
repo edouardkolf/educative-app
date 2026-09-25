@@ -157,3 +157,29 @@ export function playDrain(): void {
   glide(320, 90, now, 0.35, { type: 'sine', peak: 0.14 });
   glide(220, 70, now + 0.16, 0.3, { type: 'sine', peak: 0.1 });
 }
+
+/** Le trieur magique : petit « ding » magique et aigu quand l'objet tombe dans le bon panier. */
+export function playDing(): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  const now = context.currentTime;
+  tone(1568.0, now, 0.18, { type: 'sine', peak: 0.16, attack: 0.004, release: 0.14 });
+  tone(2093.0, now + 0.05, 0.22, { type: 'sine', peak: 0.12, attack: 0.004, release: 0.18 });
+}
+
+/** Le trieur magique : petit ressort qui « boing », doux et amusant, quand l'objet rebondit au mauvais panier. */
+export function playBoing(): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  glide(220, 440, context.currentTime, 0.18, { type: 'triangle', peak: 0.13 });
+}
+
+/** Écran de fin de niveau : courte fanfare joyeuse pour la pluie d'étoiles. */
+export function playFanfare(): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  const now = context.currentTime;
+  [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) =>
+    tone(freq, now + i * 0.1, 0.22, { type: 'triangle', peak: 0.16, attack: 0.006, release: 0.12 }),
+  );
+}

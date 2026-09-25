@@ -26,7 +26,7 @@ export type ObjectId = string;
 
 // ---------- Niveaux et parcours ----------
 
-export const MECHANICS = ['sequence', 'count', 'odd-one-out', 'color-mix'] as const;
+export const MECHANICS = ['sequence', 'count', 'odd-one-out', 'color-mix', 'sort'] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
 export const SKILLS = ['patterns', 'counting', 'visual-discrimination', 'categorization', 'color-mixing'] as const;
@@ -91,11 +91,26 @@ export interface ColorMixParams {
   targets: Color[];
 }
 
+/** Le trieur magique : ranger un objet dans le bon panier parmi 2 ou 3 familles. */
+export interface SortParams {
+  /**
+   * Les paniers, dans l'ordre d'affichage fixe (position stable niveau après niveau, pour que
+   * l'enfant apprenne où est chaque famille). 2 à 3 groupes, au moins 2 objets chacun.
+   */
+  groups: {
+    id: string;
+    /** Émoji géant affiché sur le panier (ex. "🚜"). */
+    symbol: string;
+    objects: ObjectId[];
+  }[];
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
   'odd-one-out': OddOneOutParams;
   'color-mix': ColorMixParams;
+  sort: SortParams;
 }
 
 interface LevelBase {
