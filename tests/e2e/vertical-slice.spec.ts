@@ -12,6 +12,26 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
+// ---------- Contenu lu dynamiquement (la carte a 20 niveaux, l'ordre des mécaniques peut bouger) ----------
+// On ne code jamais en dur l'identité du 2e niveau de la carte : on la lit dans content/tracks/ms.json,
+// et son nombre de manches dans son fichier de niveau, pour que ce test reste vrai quel que soit l'ordre.
+
+interface TrackJson {
+  levels: string[];
+}
+interface LevelJson {
+  rounds: number;
+}
+
+function readContentJson<T>(relativePath: string): T {
+  return JSON.parse(readFileSync(relativePath, 'utf-8')) as T;
+}
+
+const TRACK = readContentJson<TrackJson>('content/tracks/ms.json');
+const SECOND_LEVEL_ID = TRACK.levels[1];
+if (!SECOND_LEVEL_ID) throw new Error('content/tracks/ms.json : le parcours doit avoir au moins 2 niveaux.');
+const SECOND_LEVEL_ROUNDS = readContentJson<LevelJson>(`content/levels/ms/${SECOND_LEVEL_ID}.json`).rounds;
+
 // ---------- Garde-fou qualité : aucune erreur JS, aucun console.error pendant un test ----------
 
 let jsErrors: string[] = [];
@@ -182,10 +202,10 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   await onboardWithChild(page, 'Lina');
   await chooseProfile(page, 'Lina');
 
-  // ---- Carte : ms-suite-01 courant/débloqué, ms-suite-02 verrouillé ----
+  // ---- Carte : ms-suite-01 courant/débloqué, le 2e niveau (lu depuis content/tracks/ms.json) verrouillé ----
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'unlocked');
   await expect(mapNode(page, 'ms-suite-01')).toHaveClass(/is-current/);
-  await expect(mapNode(page, 'ms-suite-02')).toHaveAttribute('data-status', 'locked');
+  await expect(mapNode(page, SECOND_LEVEL_ID)).toHaveAttribute('data-status', 'locked');
   await page.screenshot({ path: shot('02-carte.png') });
 
   // ---- ms-suite-01 parfait : la main du tutoriel doit apparaître avant le premier tap ----
@@ -206,19 +226,19 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   await page.screenshot({ path: shot('05-fin-niveau.png') });
   await page.getByTestId('to-map').click();
 
-  // ---- Retour carte : ms-suite-01 réussi, ms-suite-02 débloqué ----
+  // ---- Retour carte : ms-suite-01 réussi, le 2e niveau débloqué ----
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'completed');
-  await expect(mapNode(page, 'ms-suite-02')).toHaveAttribute('data-status', 'unlocked');
+  await expect(mapNode(page, SECOND_LEVEL_ID)).toHaveAttribute('data-status', 'unlocked');
 
-  // ---- ms-suite-02 avec une erreur à la 1re manche puis parfait ----
-  await openLevel(page, 'ms-suite-02');
+  // ---- 2e niveau avec une erreur à la 1re manche puis parfait ----
+  await openLevel(page, SECOND_LEVEL_ID);
   {
     const round = currentRound(page);
     const answer = await round.getAttribute('data-answer');
-    if (!answer) throw new Error('ms-suite-02 : aucune manche affichée.');
+    if (!answer) throw new Error(`${SECOND_LEVEL_ID} : aucune manche affichée.`);
     const ids = await round.locator('[data-choice]').evaluateAll((els) => els.map((el) => el.getAttribute('data-choice')));
     const wrongId = ids.find((id): id is string => Boolean(id) && id !== answer);
-    if (!wrongId) throw new Error('ms-suite-02 : aucun choix faux disponible pour ce niveau.');
+    if (!wrongId) throw new Error(`${SECOND_LEVEL_ID} : aucun choix faux disponible pour ce niveau.`);
     const wrongChoice = page.locator(`[data-choice="${wrongId}"]`);
     await wrongChoice.click();
     await expect(wrongChoice).toBeDisabled(); // le choix faux se grise, jamais punitif (§9)
@@ -226,7 +246,7 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
     await page.screenshot({ path: shot('04-erreur.png') });
     await answerCorrectly(page); // puis la bonne réponse
   }
-  await playPerfectly(page, 4); // manches 2 à 5, toutes parfaites
+  await playPerfectly(page, SECOND_LEVEL_ROUNDS - 1); // les manches restantes, toutes parfaites
 
   await waitForLevelEndButtons(page);
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '2'); // 1 manche ratée au 1er coup → 2 étoiles
@@ -267,10 +287,12 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   await expect(statValue(card01, 'Rejeux')).toHaveText('1');
   await expect(statValue(card01, 'Taux de réussite')).toHaveText('100 %');
 
-  const card02 = page.getByTestId('level-stats-ms-suite-02');
+  const card02 = page.getByTestId(`level-stats-${SECOND_LEVEL_ID}`);
   await expect(statValue(card02, 'Essais')).toHaveText('1');
   await expect(statValue(card02, 'Réussites')).toHaveText('1');
-  await expect(statValue(card02, 'Taux de réussite')).toHaveText('80 %'); // 4 manches sur 5 au 1er coup
+  // 1 manche ratée au 1er coup sur le total de manches du niveau (ex. 1 sur 4 → 75 %).
+  const secondLevelFirstTryRate = Math.round(((SECOND_LEVEL_ROUNDS - 1) / SECOND_LEVEL_ROUNDS) * 100);
+  await expect(statValue(card02, 'Taux de réussite')).toHaveText(`${secondLevelFirstTryRate} %`);
 
   await page.screenshot({ path: shot('06-stats.png'), fullPage: true });
 
@@ -286,7 +308,7 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
 
   expect(bundle.format).toBe(EXPORT_FORMAT);
   expect(bundle.profiles).toHaveLength(1);
-  expect(bundle.runs).toHaveLength(3); // ms-suite-01 (réussi) + ms-suite-02 (réussi) + ms-suite-01 (rejeu abandonné)
+  expect(bundle.runs).toHaveLength(3); // ms-suite-01 (réussi) + 2e niveau (réussi) + ms-suite-01 (rejeu abandonné)
   expect(raw).not.toContain('pinHash');
 });
 
