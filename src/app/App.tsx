@@ -1,3 +1,5 @@
+import { AppShell } from './AppShell';
+
 export function App() {
-  return <div>Petits Malins</div>;
+  return <AppShell />;
 }
