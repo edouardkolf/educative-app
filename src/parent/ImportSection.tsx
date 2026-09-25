@@ -1,9 +1,10 @@
 // Import d'une sauvegarde : lecture du fichier, confirmation dans la page (jamais window.confirm),
 // puis remplacement de toutes les données. Le code parent n'est jamais touché (contrat `importAll`).
 import { useRef, useState } from 'preact/hooks';
+import { useProfile } from '../app/context';
 import { importAll } from '../storage';
 import { describeError } from './util';
-import { describeImportCounts, formatImportConfirmation, parseImportFile } from './import';
+import { describeImportCounts, formatImportConfirmation, formatImportSuccess, parseImportFile } from './import';
 
 type ImportState =
   | { kind: 'idle' }
@@ -13,6 +14,7 @@ type ImportState =
   | { kind: 'success'; message: string };
 
 export function ImportSection(props: { onImported: () => void }) {
+  const { setProfile } = useProfile();
   const [state, setState] = useState<ImportState>({ kind: 'idle' });
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,10 +44,9 @@ export function ImportSection(props: { onImported: () => void }) {
     try {
       const result = await importAll(state.data);
       if (result.ok) {
-        setState({
-          kind: 'success',
-          message: `Sauvegarde importée : ${result.profiles} enfant(s), ${result.runs} partie(s).`,
-        });
+        // F2 : un profil resté en mémoire ne doit plus écrire dans les données tout juste importées.
+        setProfile(null);
+        setState({ kind: 'success', message: formatImportSuccess(result) });
         props.onImported();
       } else {
         setState({ kind: 'error', message: result.error });

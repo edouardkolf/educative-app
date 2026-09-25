@@ -95,7 +95,8 @@ export interface AppSettings {
   pinHash: string | null;
   pinSalt: string | null;
   soundOn: boolean;
-  session: SessionState | null;
+  /** Une session par enfant (clé = profileId) : passer par l'autre enfant ne remet pas ce minuteur à zéro. */
+  sessions: Record<string, SessionState>;
   lock: LockState | null;
 }
 
@@ -115,5 +116,5 @@ export interface ExportBundle {
 }
 
 export type ImportResult =
-  | { ok: true; profiles: number; runs: number }
+  | { ok: true; profiles: number; runs: number; skipped: number }
   | { ok: false; error: string };

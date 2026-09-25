@@ -35,6 +35,23 @@ export function shouldResumeSession(session: SessionState | null, profileId: str
 }
 
 /**
+ * Session à utiliser pour `profileId` à l'instant `now` : reprend la session déjà enregistrée pour
+ * CET enfant (docs/ARCHITECTURE.md §8) si l'activité est récente, sinon en ouvre une neuve à 0.
+ * Passer par le profil de la fratrie n'y touche pas : chaque enfant a sa propre entrée dans `sessions`.
+ */
+export function resumeOrCreateSession(
+  sessions: Record<string, SessionState>,
+  profileId: string,
+  now: number,
+): SessionState {
+  const existing = sessions[profileId] ?? null;
+  if (shouldResumeSession(existing, profileId, now)) {
+    return { ...(existing as SessionState), lastActiveAt: now };
+  }
+  return { profileId, startedAt: now, activeSeconds: 0, lastActiveAt: now };
+}
+
+/**
  * Fraction du temps restant le plus contraignant (session ou jour), pour l'indicateur discret de la
  * carte : 0 = épuisé, 1 = plein ; null si le profil n'a aucune limite.
  */

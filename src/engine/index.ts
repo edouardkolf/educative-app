@@ -3,7 +3,7 @@
 
 export * from './types';
 
-export { getTracks, getTrack, getLevel, getNextLevelId } from './content';
+export { getTracks, getTrack, getTrackOrDefault, getLevel, getNextLevelId } from './content';
 export { createRng } from './rng';
 export { countMisses, computeStars } from './scoring';
 export { computeLevelStates, hasCompleted } from './progress';

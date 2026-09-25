@@ -27,3 +27,13 @@ export function formatImportConfirmation(counts: { profiles: number; runs: numbe
   const game = counts.runs === 1 ? 'partie' : 'parties';
   return `Remplacer toutes les données actuelles par cette sauvegarde (${counts.profiles} ${child}, ${counts.runs} ${game}) ?`;
 }
+
+/**
+ * Message après un import réussi (F2) : mentionne les lignes orphelines ignorées (parties/réglages/
+ * temps d'un enfant absent de la sauvegarde) seulement quand `skipped > 0`.
+ */
+export function formatImportSuccess(result: { profiles: number; runs: number; skipped: number }): string {
+  const base = `Sauvegarde importée : ${result.profiles} enfant(s), ${result.runs} partie(s).`;
+  if (result.skipped <= 0) return base;
+  return `${base} ${result.skipped} enregistrement(s) sans enfant correspondant ont été ignorés.`;
+}

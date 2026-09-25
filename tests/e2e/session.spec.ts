@@ -177,6 +177,48 @@ test('minuteur pendant une partie : la manche se termine puis écran de fin, com
   await expect(statValue(card, 'Interruptions')).toHaveText('1');
 });
 
+// ==================== F1. Retour Android après l'écran de fin ne contourne jamais le verrou ====================
+
+test('F1 : le bouton retour Android après l\'écran de fin reste bloqué, aucune nouvelle partie', async ({ page }) => {
+  test.slow();
+  await page.clock.install();
+  await onboardWithChild(page, 'Lina');
+  await chooseProfile(page, 'Lina');
+  await openLevel(page, 'ms-suite-01');
+  await expect(currentRound(page)).toBeVisible();
+
+  // Retour à la carte, puis fin du temps hors partie : l'écran de fin s'affiche directement.
+  await page.getByTestId('quit').click();
+  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
+  await page.clock.runFor('15:05');
+  await expect(page.getByTestId('lock-parent')).toBeVisible();
+
+  // Plusieurs retours Android d'affilée : toujours l'écran de fin, jamais une manche relancée.
+  await page.goBack();
+  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await page.goBack();
+  await expect(page.getByTestId('lock-parent')).toBeVisible();
+
+  // Même après un délai (> 10 min, fenêtre de reprise de session) qui, avant le correctif, aurait
+  // fait repartir une session neuve à 0 et n'aurait plus jamais réappliqué le verrou.
+  await page.clock.runFor('11:00');
+  await page.goBack();
+  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(currentRound(page)).toHaveCount(0);
+
+  await unlockAndTap(page, 'end-session');
+  await expect(profileCard(page, 'Lina')).toBeVisible();
+
+  // Aucune partie sur ms-suite-01 n'a été relancée par les retours Android (seul le quit initial compte).
+  await longPressClock(page, page.getByTestId('parent-access'), 2100);
+  await expect(page.getByText('Code parent', { exact: true })).toBeVisible();
+  await enterPin(page, PARENT_PIN);
+  await page.getByRole('button', { name: 'Statistiques' }).click();
+  const card = page.getByTestId('level-stats-ms-suite-01');
+  await expect(statValue(card, 'Essais')).toHaveText('1');
+  await expect(statValue(card, 'Abandons')).toHaveText('1');
+});
+
 // ==================== 3. Quota quotidien épuisé ====================
 
 test('quota du jour épuisé : le profil apparaît estompé et non sélectionnable ; « Terminer » ramène aux profils', async ({

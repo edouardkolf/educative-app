@@ -38,6 +38,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--emoji-font); /* F14 : émoji couleur, jamais les chiffres (cnt-choice__digit) */
   font-size: 40px;
   line-height: 1;
   transform: translate(-50%, -50%);
@@ -68,6 +69,15 @@
   justify-content: center;
   gap: 16px;
   width: 100%;
+}
+
+/* F13 : 4 propositions → grille 2 × 2 régulière plutôt qu'un flex qui retombait en 3 + 1. */
+.cnt-choices--grid-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  max-width: 280px;
+  margin: 0 auto;
 }
 
 .cnt-choice {

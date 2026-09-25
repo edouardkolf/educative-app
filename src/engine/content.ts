@@ -25,6 +25,15 @@ export function getTrack(trackId: string): Track | undefined {
   return tracksById.get(trackId);
 }
 
+/**
+ * F11 : un parcours inconnu (`profile.trackId` d'une sauvegarde importée dont le contenu a changé)
+ * n'est jamais rejeté à l'import — à l'affichage, on se replie sur le premier parcours disponible
+ * plutôt que de planter ou de montrer un écran vide.
+ */
+export function getTrackOrDefault(trackId: string): Track | undefined {
+  return getTrack(trackId) ?? getTracks()[0];
+}
+
 export function getLevel(levelId: string): Level | undefined {
   return levelsById.get(levelId);
 }

@@ -19,13 +19,19 @@ import {
 
 export async function exportAll(): Promise<ExportBundle> {
   const db = await getDB();
-  const [profiles, runs, overrides, usage, settings] = await Promise.all([
+  const [profiles, allRuns, allOverrides, allUsage, settings] = await Promise.all([
     db.getAll('profiles'),
     db.getAll('runs'),
     db.getAll('overrides'),
     db.getAll('usage'),
     db.get('settings', 'app'),
   ]);
+  // F2 : ne jamais exporter les lignes orphelines (parties/réglages/temps d'un enfant supprimé,
+  // écrites via un profil resté en mémoire) — même si elles traînent encore dans cette base locale.
+  const profileIds = new Set(profiles.map((profile) => profile.id));
+  const runs = allRuns.filter((run) => profileIds.has(run.profileId));
+  const overrides = allOverrides.filter((override) => profileIds.has(override.profileId));
+  const usage = allUsage.filter((day) => profileIds.has(day.profileId));
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
@@ -43,7 +49,6 @@ export async function exportAll(): Promise<ExportBundle> {
 const BAD_FORMAT = "Ce fichier n'est pas une sauvegarde Petits Malins.";
 const BAD_VERSION = "Cette sauvegarde vient d'une autre version de l'application.";
 const BAD_SHAPE = 'Ce fichier de sauvegarde est incomplet ou abîmé.';
-const ORPHAN = "Cette sauvegarde contient des données d'un enfant absent de la sauvegarde.";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -55,6 +60,16 @@ function isFiniteNumber(value: unknown): value is number {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
+}
+
+/** F11 : une limite de temps importée est soit absente (illimité), soit un entier de 1 à 600 minutes. */
+function isLimitMinutes(value: unknown): value is number | null {
+  return value === null || (Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 600);
+}
+
+/** F11 : jour local strictement au format "AAAA-MM-JJ" (voir `dayKey`). */
+function isDayString(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
 function isRoundRecord(value: unknown): value is RoundRecord {
@@ -88,8 +103,8 @@ function isProfile(value: unknown): value is Profile {
   if (!isFiniteNumber(value.createdAt)) return false;
   if (!isPlainObject(value.limits)) return false;
   const { sessionMinutes, dailyMinutes } = value.limits;
-  if (sessionMinutes !== null && !isFiniteNumber(sessionMinutes)) return false;
-  if (dailyMinutes !== null && !isFiniteNumber(dailyMinutes)) return false;
+  if (!isLimitMinutes(sessionMinutes)) return false;
+  if (!isLimitMinutes(dailyMinutes)) return false;
   return true;
 }
 
@@ -119,9 +134,21 @@ function isOverride(value: unknown): value is LevelOverride {
 function isUsageDay(value: unknown): value is UsageDay {
   if (!isPlainObject(value)) return false;
   if (!isNonEmptyString(value.profileId)) return false;
-  if (!isNonEmptyString(value.day)) return false;
+  if (!isDayString(value.day)) return false;
   if (!isFiniteNumber(value.activeSeconds)) return false;
   if (!isFiniteNumber(value.extraMinutes)) return false;
+  return true;
+}
+
+/** F11 : ids uniques au sein d'un même type d'enregistrement (deux profils/parties ne peuvent
+ * partager un id — une collision écraserait silencieusement l'un des deux au `put`). */
+function hasUniqueIds<T>(items: T[], id: (item: T) => string): boolean {
+  const seen = new Set<string>();
+  for (const item of items) {
+    const key = id(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+  }
   return true;
 }
 
@@ -131,6 +158,8 @@ interface ValidatedBundle {
   overrides: LevelOverride[];
   usage: UsageDay[];
   soundOn: boolean;
+  /** F2 : nombre de lignes ignorées parce qu'elles référencent un enfant absent de la sauvegarde. */
+  skipped: number;
 }
 
 function validateImportData(data: unknown): { bundle: ValidatedBundle } | { error: string } {
@@ -145,26 +174,30 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
   if (!Array.isArray(profiles) || !profiles.every(isProfile)) return { error: BAD_SHAPE };
   if (!Array.isArray(runs) || !runs.every(isRun)) return { error: BAD_SHAPE };
   if (!Array.isArray(overrides) || !overrides.every(isOverride)) return { error: BAD_SHAPE };
+  // F11 : ids uniques par type d'enregistrement (jamais entre profils et parties, par exemple).
+  if (!hasUniqueIds(profiles, (p) => p.id)) return { error: BAD_SHAPE };
+  if (!hasUniqueIds(runs, (r) => r.id)) return { error: BAD_SHAPE };
   if (!Array.isArray(usage) || !usage.every(isUsageDay)) return { error: BAD_SHAPE };
   if (!isPlainObject(settings) || typeof settings.soundOn !== 'boolean') return { error: BAD_SHAPE };
   const soundOn = settings.soundOn;
 
+  // F2 : une ligne dont l'enfant est absent de la sauvegarde (parties/réglages/temps écrits via un
+  // profil resté en mémoire après suppression) est ignorée plutôt que de faire échouer tout l'import.
   const profileIds = new Set(profiles.map((profile) => profile.id));
-  const hasOrphan =
-    runs.some((run) => !profileIds.has(run.profileId)) ||
-    overrides.some((override) => !profileIds.has(override.profileId)) ||
-    usage.some((day) => !profileIds.has(day.profileId));
-  if (hasOrphan) {
-    return { error: ORPHAN };
-  }
+  const keptRuns = runs.filter((run) => profileIds.has(run.profileId));
+  const keptOverrides = overrides.filter((override) => profileIds.has(override.profileId));
+  const keptUsage = usage.filter((day) => profileIds.has(day.profileId));
+  const skipped =
+    runs.length - keptRuns.length + (overrides.length - keptOverrides.length) + (usage.length - keptUsage.length);
 
-  return { bundle: { profiles, runs, overrides, usage, soundOn } };
+  return { bundle: { profiles, runs: keptRuns, overrides: keptOverrides, usage: keptUsage, soundOn, skipped } };
 }
 
 /**
  * Valide `data` (format, version, forme des enregistrements) puis REMPLACE toutes les données
- * (profils, parties, réglages de niveaux, temps de jeu) en une seule transaction.
- * Conserve le code parent. En cas d'erreur, rien n'est modifié.
+ * (profils, parties, réglages de niveaux, temps de jeu) en une seule transaction. Les lignes
+ * orphelines sont ignorées (F2), jamais réécrites. Conserve le code parent. En cas d'erreur de
+ * format/version/forme, rien n'est modifié.
  */
 export async function importAll(data: unknown): Promise<ImportResult> {
   const validation = validateImportData(data);
@@ -193,11 +226,12 @@ export async function importAll(data: unknown): Promise<ImportResult> {
   const nextSettings: AppSettings = {
     ...existingSettings,
     soundOn: bundle.soundOn,
-    session: null,
+    // F3 : une session par enfant ; F1 : jamais d'écran de fin hérité d'avant l'import.
+    sessions: {},
     lock: null,
   };
   await settings.put(nextSettings, 'app');
 
   await tx.done;
-  return { ok: true, profiles: bundle.profiles.length, runs: bundle.runs.length };
+  return { ok: true, profiles: bundle.profiles.length, runs: bundle.runs.length, skipped: bundle.skipped };
 }

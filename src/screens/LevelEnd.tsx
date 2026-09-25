@@ -12,11 +12,17 @@ interface LevelEndProps {
   onToMap: () => void;
   /** Appelé une fois (quand l'animation des étoiles se termine) : minuteur, écran de fin différé. */
   onDone?: () => void;
+  /**
+   * F4 : le temps est déjà écoulé pendant cet écran. Suivant/Rejouer démarreraient une nouvelle
+   * partie qui serait comptée en abandon 3 s plus tard (l'écran de fin va s'afficher de lui-même) —
+   * on n'affiche donc plus que les étoiles, aucune action.
+   */
+  timeUp?: boolean;
 }
 
 const STAR_INTERVAL_MS = 600;
 
-export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap, onDone }: LevelEndProps) {
+export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap, onDone, timeUp = false }: LevelEndProps) {
   const [shown, setShown] = useState(0);
 
   useEffect(() => {
@@ -48,7 +54,7 @@ export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap, onDone }: 
       <div class="level-end__stars">
         <StarRow count={shown as 0 | 1 | 2 | 3} size={64} animated />
       </div>
-      {done && (
+      {done && !timeUp && (
         <div class="level-end__actions">
           {hasNext && (
             <IconButton size={80} variant="primary" onClick={onNext} aria-label="Niveau suivant" data-testid="next">

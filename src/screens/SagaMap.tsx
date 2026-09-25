@@ -1,6 +1,6 @@
 // Carte du parcours ("saga") : niveau 1 en bas, chemin en zigzag pointillé vers le haut.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { computeLevelStates, getLevel, getTrack } from '../engine';
+import { computeLevelStates, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelState, MechanicId } from '../engine/types';
 import { listOverrides, listRuns } from '../storage';
 import { navigate } from '../app/routes';
@@ -92,7 +92,7 @@ export function SagaMap() {
     scrolledRef.current = false;
     (async () => {
       try {
-        const track = getTrack(profile.trackId);
+        const track = getTrackOrDefault(profile.trackId); // F11 : parcours inconnu → premier disponible
         if (!track) {
           if (!cancelled) setStates([]);
           return;

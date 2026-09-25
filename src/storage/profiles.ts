@@ -56,8 +56,9 @@ export async function deleteProfile(id: string): Promise<void> {
   if (currentSettings) {
     const next = { ...currentSettings };
     let changed = false;
-    if (next.session?.profileId === id) {
-      next.session = null;
+    if (next.sessions[id]) {
+      const { [id]: _removed, ...rest } = next.sessions;
+      next.sessions = rest;
       changed = true;
     }
     if (next.lock?.profileId === id) {

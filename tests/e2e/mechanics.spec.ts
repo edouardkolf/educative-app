@@ -194,7 +194,12 @@ async function openLevelHash(page: Page, levelId: string): Promise<void> {
   await page.evaluate((id) => {
     window.location.hash = `#/play/${encodeURIComponent(id)}`;
   }, levelId);
+  // En passant d'un niveau à l'autre, l'ancienne manche reste un instant à l'écran : attendre
+  // que l'URL soit prise en compte puis que les choix du nouveau niveau soient rendus.
+  await expect(page).toHaveURL(new RegExp(`#/play/${levelId}$`));
+  await expect(page.locator('.screen--loading')).toHaveCount(0);
   await expect(currentRound(page)).toBeVisible();
+  await expect(page.locator('[data-choice]').first()).toBeVisible();
 }
 
 async function gotoMap(page: Page): Promise<void> {

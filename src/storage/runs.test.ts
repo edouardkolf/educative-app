@@ -9,6 +9,7 @@ import {
   recordRound,
   saveProfile,
   startRun,
+  updateSettings,
 } from './index';
 
 beforeEach(async () => {
@@ -127,6 +128,52 @@ describe('closeStaleRuns', () => {
     expect(await closeStaleRuns()).toBe(0);
     const [stored] = await listRuns(profile.id);
     expect(stored).toEqual(completed);
+  });
+
+  it("F6 : endReason \"time-up\" si une fin douce de CE profil était en cours (lockedAt ≥ startedAt)", async () => {
+    const profile = await makeProfile();
+    const run = await startRun({ profileId: profile.id, levelId: 'ms-suite-01', trackId: 'ms', replay: false });
+    await updateSettings({ lock: { reason: 'session', profileId: profile.id, lockedAt: run.startedAt + 10 } });
+
+    await closeStaleRuns();
+
+    const [stored] = await listRuns(profile.id);
+    expect(stored?.endReason).toBe('time-up');
+  });
+
+  it('F6 : endReason "closed" si le verrou concerne un autre profil ou date d\'avant le début de la partie', async () => {
+    const profile = await makeProfile();
+    const other = await saveProfile({
+      name: 'Mia',
+      avatar: '🐼',
+      trackId: 'ms',
+      limits: { sessionMinutes: null, dailyMinutes: null },
+    });
+    const run = await startRun({ profileId: profile.id, levelId: 'ms-suite-01', trackId: 'ms', replay: false });
+    // Verrou d'un AUTRE profil : ne doit pas influencer cette partie.
+    await updateSettings({ lock: { reason: 'session', profileId: other.id, lockedAt: run.startedAt + 10 } });
+    await closeStaleRuns();
+    expect((await listRuns(profile.id))[0]?.endReason).toBe('closed');
+
+    // Verrou du même profil mais déclenché AVANT le début de cette partie (fin douce déjà terminée).
+    const run2 = await startRun({ profileId: profile.id, levelId: 'ms-suite-02', trackId: 'ms', replay: false });
+    await updateSettings({ lock: { reason: 'session', profileId: profile.id, lockedAt: run2.startedAt - 10 } });
+    await closeStaleRuns();
+    const [, stored2] = await listRuns(profile.id);
+    expect(stored2?.endReason).toBe('closed');
+  });
+});
+
+describe('recordRound (F6)', () => {
+  it("n'ajoute une manche qu'à une partie in_progress", async () => {
+    const profile = await makeProfile();
+    const run = await startRun({ profileId: profile.id, levelId: 'ms-suite-01', trackId: 'ms', replay: false });
+    await completeRun(run.id, 1);
+
+    await recordRound(run.id, { index: 0, taps: 1, firstTry: true, durationMs: 500 });
+
+    const [stored] = await listRuns(profile.id);
+    expect(stored?.rounds).toEqual([]);
   });
 });
 

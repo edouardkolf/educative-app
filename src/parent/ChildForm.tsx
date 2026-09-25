@@ -1,6 +1,7 @@
 // Formulaire enfant : création (limites par défaut) ou modification (limites conservées).
 import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
+import { useProfile } from '../app/context';
 import { getTracks } from '../engine';
 import type { Track } from '../engine';
 import { deleteProfile, getProfile, saveProfile } from '../storage';
@@ -21,6 +22,7 @@ const NAME_MAX_LENGTH = 20;
 export type ChildFormProps = { mode: 'create' } | { mode: 'edit'; profileId: string };
 
 export function ChildForm(props: ChildFormProps) {
+  const { setProfile } = useProfile();
   const isEdit = props.mode === 'edit';
   const profileId = props.mode === 'edit' ? props.profileId : null;
 
@@ -65,7 +67,10 @@ export function ChildForm(props: ChildFormProps) {
         setExisting(profile);
         setName(profile.name);
         setAvatar(profile.avatar);
-        setTrackId(profile.trackId);
+        // F11 : parcours inconnu (contenu changé depuis) → premier parcours disponible, jamais un
+        // formulaire bloqué sur un id qu'aucune option ne représente.
+        const known = getTracks().some((t) => t.id === profile.trackId);
+        setTrackId(known ? profile.trackId : (getTracks()[0]?.id ?? profile.trackId));
         setSessionMinutes(profile.limits.sessionMinutes);
         setDailyMinutes(profile.limits.dailyMinutes);
       })
@@ -130,6 +135,8 @@ export function ChildForm(props: ChildFormProps) {
     setDeleteError(null);
     try {
       await deleteProfile(existing.id);
+      // F2 : un profil actif resté en mémoire ne doit plus jamais écrire d'orphelins après une suppression.
+      setProfile(null);
       navigate({ name: 'parent', path: [] });
     } catch (err) {
       setDeleteError(describeError(err));

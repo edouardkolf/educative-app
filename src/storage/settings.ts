@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   pinHash: null,
   pinSalt: null,
   soundOn: true,
-  session: null,
+  sessions: {},
   lock: null,
 };
 

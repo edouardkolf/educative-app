@@ -8,7 +8,9 @@ export default defineConfig({
   plugins: [
     preact(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // F12 : "prompt" (pas "autoUpdate") — la mise à jour n'est appliquée qu'au moment sûr choisi
+      // par src/main.tsx (montage de l'écran profils), jamais en pleine partie.
+      registerType: 'prompt',
       injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/*.png'],
       manifest: {

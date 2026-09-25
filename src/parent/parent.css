@@ -199,6 +199,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--emoji-font);
   font-size: 30px;
   background: var(--pa-surface);
   border-radius: 50%;
@@ -418,6 +419,7 @@
 
 .pa-avatar-option {
   min-height: 56px;
+  font-family: var(--emoji-font);
   font-size: 28px;
   border-radius: 12px;
   border: 2px solid var(--pa-border);
@@ -464,6 +466,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--emoji-font);
   font-size: 32px;
   background: var(--pa-surface);
   border: 1px solid var(--pa-border);

@@ -13,7 +13,7 @@ describe('réglages', () => {
       pinHash: null,
       pinSalt: null,
       soundOn: true,
-      session: null,
+      sessions: {},
       lock: null,
     });
   });
@@ -21,12 +21,18 @@ describe('réglages', () => {
   it('updateSettings fusionne superficiellement dans les réglages existants', async () => {
     await updateSettings({ pinHash: 'abc', pinSalt: 'salt' });
     const afterPin = await updateSettings({ soundOn: false });
-    expect(afterPin).toEqual({ pinHash: 'abc', pinSalt: 'salt', soundOn: false, session: null, lock: null });
+    expect(afterPin).toEqual({ pinHash: 'abc', pinSalt: 'salt', soundOn: false, sessions: {}, lock: null });
 
     const session = { profileId: 'p1', startedAt: 1, activeSeconds: 0, lastActiveAt: 1 };
-    const afterSession = await updateSettings({ session });
+    const afterSession = await updateSettings({ sessions: { p1: session } });
     // Un patch partiel ne doit pas effacer les autres champs (fusion superficielle, pas de reset).
-    expect(afterSession).toEqual({ pinHash: 'abc', pinSalt: 'salt', soundOn: false, session, lock: null });
+    expect(afterSession).toEqual({
+      pinHash: 'abc',
+      pinSalt: 'salt',
+      soundOn: false,
+      sessions: { p1: session },
+      lock: null,
+    });
   });
 
   it('requestPersistence / isPersisted ne lèvent jamais (false hors navigateur)', async () => {

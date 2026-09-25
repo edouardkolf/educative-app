@@ -15,6 +15,9 @@
   --radius-sm: 12px;
   --shadow: 0 8px 20px rgba(61, 44, 30, 0.16);
   --shadow-sm: 0 3px 8px rgba(61, 44, 30, 0.14);
+  /* F14 : force le glyphe emoji couleur plutôt que le glyphe monochrome de la police système. */
+  --emoji-font:
+    'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji Mozilla', sans-serif;
 }
 
 /* ---------- Reset ---------- */
@@ -206,6 +209,7 @@ svg {
 }
 
 .welcome-illustration {
+  font-family: var(--emoji-font);
   font-size: 88px;
   line-height: 1;
   animation: bounce 2.4s ease-in-out infinite;
@@ -276,6 +280,7 @@ svg {
   position: absolute;
   top: 6px;
   right: 6px;
+  font-family: var(--emoji-font);
   font-size: 20px;
   line-height: 1;
 }
@@ -291,6 +296,7 @@ svg {
   width: 84px;
   height: 84px;
   border-radius: 50%;
+  font-family: var(--emoji-font);
   font-size: 46px;
   box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -338,6 +344,7 @@ svg {
 
 .long-press-button__icon {
   position: relative;
+  font-family: var(--emoji-font);
   font-size: 26px;
   line-height: 1;
 }
@@ -360,6 +367,7 @@ svg {
   border-radius: 50%;
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+  font-family: var(--emoji-font);
   font-size: 30px;
   display: flex;
   align-items: center;
@@ -386,6 +394,7 @@ svg {
 
 .map-decor {
   position: absolute;
+  font-family: var(--emoji-font);
   font-size: 40px;
   opacity: 0.7;
   pointer-events: none;
@@ -424,6 +433,7 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--emoji-font);
   font-size: 22px;
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -459,6 +469,7 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--emoji-font);
   font-size: 20px;
   animation: bounce 1.6s ease-in-out infinite;
 }
@@ -471,6 +482,7 @@ svg {
   display: flex;
   align-items: center;
   gap: 2px;
+  font-family: var(--emoji-font); /* F14 : icône 🔍 de l'intrus ; sans effet sur les formes SVG */
 }
 
 .map-node__icon--dots {
@@ -589,6 +601,7 @@ svg {
   position: absolute;
   left: 0;
   top: 0;
+  font-family: var(--emoji-font);
   font-size: 64px;
   line-height: 1;
   opacity: 0;
@@ -617,6 +630,7 @@ svg {
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
+  font-family: var(--emoji-font);
 }
 
 .icon-button--primary {
@@ -706,6 +720,7 @@ svg {
   position: absolute;
   right: 14%;
   top: 12%;
+  font-family: var(--emoji-font);
   font-size: 88px;
   line-height: 1;
   filter: drop-shadow(0 0 24px rgba(255, 244, 214, 0.45));
@@ -724,6 +739,7 @@ svg {
 }
 
 .lock-screen__avatar-emoji {
+  font-family: var(--emoji-font);
   font-size: 72px;
 }
 
@@ -731,6 +747,7 @@ svg {
   position: absolute;
   top: -6px;
   right: -10px;
+  font-family: var(--emoji-font);
   font-size: 34px;
   animation: bounce 2.4s ease-in-out infinite;
 }
@@ -754,6 +771,7 @@ svg {
 }
 
 .unavailable-picto {
+  font-family: var(--emoji-font);
   font-size: 80px;
   line-height: 1;
 }

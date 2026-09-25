@@ -45,21 +45,39 @@ let dbPromise: Promise<IDBPDatabase<StorageSchema>> | null = null;
 export function getDB(): Promise<IDBPDatabase<StorageSchema>> {
   if (!dbPromise) {
     dbPromise = openDB<StorageSchema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        db.createObjectStore('profiles', { keyPath: 'id' });
+      // F5 : `oldVersion < N` en cascade (jamais `=== N`), pour qu'un téléphone qui saute plusieurs
+      // versions d'un coup rejoue bien toutes les étapes intermédiaires. Prêt pour un futur `if
+      // (oldVersion < 2) { ... }` : les nouveaux stores/index se rajoutent sans toucher au bloc v1.
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          db.createObjectStore('profiles', { keyPath: 'id' });
 
-        const runs = db.createObjectStore('runs', { keyPath: 'id' });
-        runs.createIndex('profileId', 'profileId');
-        runs.createIndex('profileLevel', ['profileId', 'levelId']);
+          const runs = db.createObjectStore('runs', { keyPath: 'id' });
+          runs.createIndex('profileId', 'profileId');
+          runs.createIndex('profileLevel', ['profileId', 'levelId']);
 
-        const overrides = db.createObjectStore('overrides', { keyPath: ['profileId', 'levelId'] });
-        overrides.createIndex('profileId', 'profileId');
+          const overrides = db.createObjectStore('overrides', { keyPath: ['profileId', 'levelId'] });
+          overrides.createIndex('profileId', 'profileId');
 
-        const usage = db.createObjectStore('usage', { keyPath: ['profileId', 'day'] });
-        usage.createIndex('profileId', 'profileId');
+          const usage = db.createObjectStore('usage', { keyPath: ['profileId', 'day'] });
+          usage.createIndex('profileId', 'profileId');
 
-        db.createObjectStore('settings');
+          db.createObjectStore('settings');
+        }
       },
+      // F5 : cette connexion (plus ancienne) bloque la mise à niveau demandée par une autre fenêtre
+      // — on la ferme pour la laisser passer, puis on recharge pour repartir avec le nouveau schéma
+      // plutôt que de continuer à tourner contre une connexion fermée.
+      blocking() {
+        void dbPromise?.then((db) => db.close());
+        dbPromise = null;
+        if (typeof location !== 'undefined') location.reload();
+      },
+    }).catch((err) => {
+      // F5 : ne jamais laisser une promesse rejetée en cache — sinon aucun nouvel essai n'est
+      // jamais possible (tout appel suivant échouerait immédiatement sur la même erreur figée).
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;

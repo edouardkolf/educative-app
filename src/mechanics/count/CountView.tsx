@@ -98,7 +98,8 @@ export function CountView({ round, wrongChoices, solved, onChoose }: MechanicVie
         ))}
       </div>
 
-      <div class="cnt-choices">
+      {/* F13 : grille 2×2 régulière à 4 propositions (au lieu d'un flex qui retombait en 3 + 1). */}
+      <div class={choices.length === 4 ? 'cnt-choices cnt-choices--grid-4' : 'cnt-choices'}>
         {choices.map(({ id, value }) => {
           const isWrong = wrongChoices.has(id);
           const isCorrectAndSolved = solved && id === round.answer;

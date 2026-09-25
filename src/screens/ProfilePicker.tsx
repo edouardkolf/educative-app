@@ -6,6 +6,7 @@ import type { Profile } from '../storage/types';
 import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
 import { computeTime } from '../app/session';
+import { applyPendingUpdateIfAny } from '../app/updates';
 import { LongPressButton } from '../ui/LongPressButton';
 
 const DISC_COLORS = ['#FFB347', '#7FC8A9', '#6EC6FF', '#FF8FA3', '#C9A0FF', '#FFD166'];
@@ -15,6 +16,18 @@ export function ProfilePicker() {
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [exhausted, setExhausted] = useState<Set<string>>(new Set());
   const [shakeId, setShakeId] = useState<string | null>(null);
+
+  // F2 : vide le profil actif dès qu'on revient sur l'écran profils, pour qu'un profil resté en
+  // mémoire (fin de partie, retour Android…) n'écrive plus jamais dans le stockage par erreur.
+  useEffect(() => {
+    setProfile(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // F12 : moment sûr pour appliquer une mise à jour de la PWA en attente (aucune partie en cours).
+  useEffect(() => {
+    applyPendingUpdateIfAny();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

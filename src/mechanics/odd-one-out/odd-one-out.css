@@ -47,6 +47,7 @@
 }
 
 .ooo-emoji {
+  font-family: var(--emoji-font);
   font-size: 60px;
   line-height: 1;
 }

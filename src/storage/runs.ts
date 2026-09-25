@@ -27,12 +27,13 @@ export async function startRun(input: {
   return run;
 }
 
-/** Ajoute le résultat d'une manche à une partie en cours (écrit immédiatement). */
+/** Ajoute le résultat d'une manche à une partie en cours (écrit immédiatement). F6 : n'agit que sur
+ * une partie "in_progress" — jamais sur une partie déjà terminée/abandonnée/interrompue. */
 export async function recordRound(runId: string, round: RoundRecord): Promise<void> {
   const db = await getDB();
   const tx = db.transaction('runs', 'readwrite');
   const run = await tx.store.get(runId);
-  if (run) {
+  if (run && run.status === 'in_progress') {
     await tx.store.put({ ...run, rounds: [...run.rounds, round] });
   }
   await tx.done;
@@ -69,23 +70,29 @@ export async function abandonRun(runId: string, reason: EndReason): Promise<void
 }
 
 /**
- * À appeler au démarrage de l'app : toute partie restée "in_progress" devient
- * "abandoned" avec endReason "closed" (endedAt = startedAt + somme des durées de manches).
- * Renvoie le nombre de parties clôturées.
+ * À appeler au démarrage de l'app : toute partie restée "in_progress" devient "abandoned".
+ * F6 : si une fin douce de CE profil était en cours à ce moment (`settings.lock` avec
+ * `lockedAt ≥ startedAt`), la raison est "time-up" (une interruption, pas un abandon) — l'app a pu
+ * être fermée juste après le verrou, avant que LevelPlayer n'ait fini de naviguer. Sinon "closed".
+ * `endedAt` = startedAt + somme des durées de manches. Renvoie le nombre de parties clôturées.
  */
 export async function closeStaleRuns(): Promise<number> {
   const db = await getDB();
-  const tx = db.transaction('runs', 'readwrite');
+  const tx = db.transaction(['runs', 'settings'], 'readwrite');
+  const runsStore = tx.objectStore('runs');
+  const lock = (await tx.objectStore('settings').get('app'))?.lock ?? null;
   let count = 0;
-  let cursor = await tx.store.openCursor();
+  let cursor = await runsStore.openCursor();
   while (cursor) {
     const run = cursor.value;
     if (run.status === 'in_progress') {
       const durationMs = run.rounds.reduce((sum, round) => sum + round.durationMs, 0);
+      const softEndOfThisProfile =
+        lock !== null && lock.profileId === run.profileId && lock.lockedAt >= run.startedAt;
       await cursor.update({
         ...run,
         status: 'abandoned',
-        endReason: 'closed',
+        endReason: softEndOfThisProfile ? 'time-up' : 'closed',
         endedAt: run.startedAt + durationMs,
       });
       count += 1;

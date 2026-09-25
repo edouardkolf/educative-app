@@ -1,7 +1,7 @@
 // Statistiques d'un enfant : résumé global puis une carte par niveau du parcours (ARCHITECTURE §7).
 import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
-import { computeLevelStates, computeLevelStats, getLevel, getTrack } from '../engine';
+import { computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelStats, LevelStatus, SkillId } from '../engine';
 import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
 import type { LevelOverride, Profile } from '../storage';
@@ -53,7 +53,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
 
   const [runs, overrides] = await Promise.all([listRuns(profileId), listOverrides(profileId)]);
 
-  const track = getTrack(profile.trackId);
+  const track = getTrackOrDefault(profile.trackId); // F11 : parcours inconnu → premier disponible
   const trackTitle = track?.title ?? profile.trackId;
   const levelIds = track?.levels ?? [];
   const states = track ? computeLevelStates(track, runs, overrides) : [];

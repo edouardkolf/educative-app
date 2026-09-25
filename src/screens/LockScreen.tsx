@@ -31,6 +31,16 @@ export function LockScreen() {
   const [panel, setPanel] = useState<Panel>('closed');
   const [busy, setBusy] = useState(false);
 
+  // F1 : vide le profil actif dès le montage. Sans ça, la garde de route (AppShell) continuait
+  // d'exempter la route "play" bien après la fin de la fin douce (elle ne se fiait qu'à « un profil
+  // est en mémoire »), donc un retour Android relançait une partie — et si la dernière activité
+  // datait de plus de 10 min, une session neuve démarrait à 0 sans jamais réappliquer le verrou.
+  // « +X minutes » (`grant`) le remet lui-même via `getProfile` une fois le verrou levé.
+  useEffect(() => {
+    setProfile(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     getSettings()
@@ -63,7 +73,10 @@ export function LockScreen() {
       }
       const day = dayKey();
       const usage = await getUsage(profile.id, day);
-      const currentSession = settings?.session ?? null;
+      // F3 : « +X » agit sur la session de `lock.profileId` précisément (une session par enfant),
+      // jamais sur celle d'un autre enfant qui aurait éventuellement tourné entre-temps.
+      const currentSessions = settings?.sessions ?? {};
+      const currentSession = currentSessions[profile.id] ?? null;
 
       let nextSession: SessionState | null = currentSession;
       if (profile.limits.sessionMinutes !== null && currentSession) {
@@ -77,7 +90,10 @@ export function LockScreen() {
         if (complement > 0) await grantExtraMinutes(profile.id, day, complement);
       }
 
-      await updateSettings({ lock: null, session: nextSession });
+      const nextSessions = { ...currentSessions };
+      if (nextSession) nextSessions[profile.id] = nextSession;
+      else delete nextSessions[profile.id];
+      await updateSettings({ lock: null, sessions: nextSessions });
       const fresh = await getProfile(profile.id);
       if (fresh) setProfile(fresh);
       navigate({ name: 'map' });
@@ -92,7 +108,11 @@ export function LockScreen() {
     if (busy) return;
     setBusy(true);
     try {
-      await updateSettings({ lock: null, session: null });
+      // F3 : ne retire que la session de l'enfant verrouillé, jamais celle de la fratrie.
+      const profileId = settings?.lock?.profileId;
+      const nextSessions = { ...(settings?.sessions ?? {}) };
+      if (profileId) delete nextSessions[profileId];
+      await updateSettings({ lock: null, sessions: nextSessions });
       setProfile(null);
       navigate({ name: 'profiles' });
     } catch (err) {

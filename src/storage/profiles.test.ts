@@ -60,15 +60,20 @@ describe('profils : CRUD', () => {
 
 describe('deleteProfile : suppression en cascade', () => {
   it('supprime le profil, ses parties, ses réglages de niveaux et son temps de jeu ; ' +
-    'remet session/lock à null s\'ils concernaient ce profil ; laisse les autres profils intacts', async () => {
+    'retire son entrée de settings.sessions et remet lock à null s\'il concernait ce profil ; ' +
+    'laisse les autres profils intacts', async () => {
     const profile = await saveProfile(newProfile());
     const other = await saveProfile({ ...newProfile(), name: 'Mia' });
 
     await startRun({ profileId: profile.id, levelId: 'ms-suite-01', trackId: 'ms', replay: false });
     await setOverride(profile.id, 'ms-suite-02', 'unlocked');
     await addActiveSeconds(profile.id, '2026-09-25', 120);
+    const otherSession = { profileId: other.id, startedAt: Date.now(), activeSeconds: 0, lastActiveAt: Date.now() };
     await updateSettings({
-      session: { profileId: profile.id, startedAt: Date.now(), activeSeconds: 0, lastActiveAt: Date.now() },
+      sessions: {
+        [profile.id]: { profileId: profile.id, startedAt: Date.now(), activeSeconds: 0, lastActiveAt: Date.now() },
+        [other.id]: otherSession,
+      },
       lock: { reason: 'session', profileId: profile.id, lockedAt: Date.now() },
     });
 
@@ -82,22 +87,24 @@ describe('deleteProfile : suppression en cascade', () => {
     expect((await getUsage(profile.id, '2026-09-25')).activeSeconds).toBe(0);
 
     const settings = await getSettings();
-    expect(settings.session).toBeNull();
+    expect(settings.sessions[profile.id]).toBeUndefined();
     expect(settings.lock).toBeNull();
+    // La session de l'enfant non supprimé n'est pas touchée (une session par enfant, F3).
+    expect(settings.sessions[other.id]).toEqual(otherSession);
 
     // Le profil non concerné garde ses données.
     expect(await getProfile(other.id)).toEqual(other);
     expect(await listRuns(other.id)).toEqual([otherRun]);
   });
 
-  it('ne remet pas session/lock à null s\'ils concernent un autre profil', async () => {
+  it('ne remet pas lock à null s\'il concerne un autre profil', async () => {
     const profile = await saveProfile(newProfile());
     const other = await saveProfile({ ...newProfile(), name: 'Mia' });
-    const session = { profileId: other.id, startedAt: Date.now(), activeSeconds: 0, lastActiveAt: Date.now() };
-    await updateSettings({ session });
+    const lock = { reason: 'session' as const, profileId: other.id, lockedAt: Date.now() };
+    await updateSettings({ lock });
 
     await deleteProfile(profile.id);
 
-    expect((await getSettings()).session).toEqual(session);
+    expect((await getSettings()).lock).toEqual(lock);
   });
 });

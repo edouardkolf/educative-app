@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeTime, remainingRatio, shouldResumeSession } from './session';
+import { computeTime, remainingRatio, resumeOrCreateSession, shouldResumeSession } from './session';
 import type { Profile, SessionState, UsageDay } from '../storage/types';
 
 function profile(sessionMinutes: number | null, dailyMinutes: number | null): Profile {
@@ -130,5 +130,54 @@ describe('remainingRatio', () => {
 
   it('limite épuisée : 0', () => {
     expect(remainingRatio(profile(15, null), usage(0), session(900))).toBe(0);
+  });
+});
+
+describe('resumeOrCreateSession (F3 : une session par enfant)', () => {
+  it("passer par le profil de la fratrie n'écrase pas la session de l'autre enfant : " +
+    'A joue 14 min, passe par B 1 min, revient sur A → il reste 1 min à A (limite de 15 min)', () => {
+    const t0 = 1_000_000;
+    let sessions: Record<string, SessionState> = {};
+
+    // A joue 14 minutes d'affilée.
+    const sessionA = resumeOrCreateSession(sessions, 'A', t0);
+    const afterA: SessionState = { ...sessionA, activeSeconds: 14 * 60, lastActiveAt: t0 + 14 * 60 * 1000 };
+    sessions = { ...sessions, A: afterA };
+
+    // B joue 1 minute (nouvelle session : rien enregistré pour B jusque-là).
+    const tB = t0 + 14 * 60 * 1000 + 5000;
+    const sessionB = resumeOrCreateSession(sessions, 'B', tB);
+    expect(sessionB).toEqual({ profileId: 'B', startedAt: tB, activeSeconds: 0, lastActiveAt: tB });
+    const afterB: SessionState = { ...sessionB, activeSeconds: 60, lastActiveAt: tB + 60 * 1000 };
+    sessions = { ...sessions, B: afterB };
+
+    // Retour sur A, peu après (bien avant les 10 min de la fenêtre de reprise) : sa session reprend telle quelle.
+    const tBackToA = tB + 60 * 1000 + 2000;
+    const resumedA = resumeOrCreateSession(sessions, 'A', tBackToA);
+    expect(resumedA.activeSeconds).toBe(14 * 60);
+
+    const remaining = computeTime(profile(15, null), usage(0), resumedA).sessionRemainingSec;
+    expect(remaining).toBe(60); // il reste 1 min à A, indépendant de ce que B a joué entre-temps
+  });
+
+  it('aucune session existante pour ce profil : en ouvre une neuve à 0', () => {
+    const now = 500_000;
+    expect(resumeOrCreateSession({}, 'A', now)).toEqual({
+      profileId: 'A',
+      startedAt: now,
+      activeSeconds: 0,
+      lastActiveAt: now,
+    });
+  });
+
+  it('activité trop ancienne (≥ 10 min) : en ouvre une neuve à 0 plutôt que de reprendre', () => {
+    const sessions: Record<string, SessionState> = { A: session(600, 1_000_000) };
+    const now = 1_000_000 + 11 * 60 * 1000;
+    expect(resumeOrCreateSession(sessions, 'A', now)).toEqual({
+      profileId: 'A',
+      startedAt: now,
+      activeSeconds: 0,
+      lastActiveAt: now,
+    });
   });
 });
