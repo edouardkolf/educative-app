@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-03",
+  "title": "Constellations du dé jusqu'à 5",
+  "skill": "counting",
+  "objective": "Reconnaître d'un coup d'œil les constellations du dé de 1 à 5.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 1,
+    "max": 5,
+    "objects": ["ladybug", "cherries", "balloon"],
+    "layout": "dice",
+    "choices": 3,
+    "answers": "digits+dots"
+  }
+}

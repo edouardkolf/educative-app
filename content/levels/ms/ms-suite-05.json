@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-05",
+  "title": "Suite ABB en formes",
+  "skill": "patterns",
+  "objective": "Continuer une suite de type ABB avec des formes (rond, carré, carré…).",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "ABB",
+    "vary": "shape",
+    "colors": ["green", "orange", "purple"],
+    "shapes": ["circle", "square", "triangle", "star"],
+    "length": 7,
+    "blank": "end",
+    "choices": 3
+  }
+}

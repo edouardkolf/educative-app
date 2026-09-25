@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-intrus-04",
+  "title": "Intrus : fruits et animaux",
+  "skill": "categorization",
+  "objective": "Repérer l'objet qui n'est pas de la même famille (fruits / animaux).",
+  "mechanic": "odd-one-out",
+  "rounds": 5,
+  "params": {
+    "items": 4,
+    "differBy": "category",
+    "categories": ["fruit", "animal"],
+    "distract": true
+  }
+}

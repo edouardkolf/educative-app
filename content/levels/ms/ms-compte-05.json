@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-05",
+  "title": "Constellations jusqu'à 6, en chiffres",
+  "skill": "counting",
+  "objective": "Associer une constellation de 3 à 6 à son chiffre.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 3,
+    "max": 6,
+    "objects": ["grapes", "dog", "boat", "drum"],
+    "layout": "dice",
+    "choices": 4,
+    "answers": "digits"
+  }
+}

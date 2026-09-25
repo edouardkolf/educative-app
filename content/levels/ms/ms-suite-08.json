@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-08",
+  "title": "Trou dans une suite de 3 formes",
+  "skill": "patterns",
+  "objective": "Retrouver l'élément manquant au milieu d'une suite ABC de formes.",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "ABC",
+    "vary": "shape",
+    "colors": ["blue", "red", "green", "purple"],
+    "shapes": ["circle", "square", "triangle", "star", "heart"],
+    "length": 8,
+    "blank": "middle",
+    "choices": 4
+  }
+}

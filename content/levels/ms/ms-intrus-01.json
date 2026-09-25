@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-intrus-01",
+  "title": "Intrus : la couleur",
+  "skill": "visual-discrimination",
+  "objective": "Repérer l'élément qui n'a pas la même couleur que les autres.",
+  "mechanic": "odd-one-out",
+  "rounds": 4,
+  "tutorial": true,
+  "params": {
+    "items": 3,
+    "differBy": "color",
+    "colors": ["red", "blue", "yellow", "green"],
+    "shapes": ["circle", "square", "star"],
+    "distract": false
+  }
+}

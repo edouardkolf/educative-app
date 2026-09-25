@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-02",
+  "title": "Compter jusqu'à 4",
+  "skill": "counting",
+  "objective": "Dénombrer une collection alignée de 1 à 4 objets.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 1,
+    "max": 4,
+    "objects": ["fish", "bird", "car", "teddy"],
+    "layout": "line",
+    "choices": 3,
+    "answers": "digits+dots"
+  }
+}

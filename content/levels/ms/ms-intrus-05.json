@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-intrus-05",
+  "title": "Intrus : forme, couleurs mélangées",
+  "skill": "visual-discrimination",
+  "objective": "Repérer la forme différente alors que les couleurs changent.",
+  "mechanic": "odd-one-out",
+  "rounds": 5,
+  "params": {
+    "items": 5,
+    "differBy": "shape",
+    "colors": ["red", "blue", "yellow", "green", "purple"],
+    "shapes": ["circle", "square", "triangle", "star", "heart"],
+    "distract": true
+  }
+}

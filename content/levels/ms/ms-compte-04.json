@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-04",
+  "title": "Compter des objets éparpillés",
+  "skill": "counting",
+  "objective": "Dénombrer 2 à 5 objets éparpillés sans en oublier ni en compter deux fois.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 2,
+    "max": 5,
+    "objects": ["pear", "rabbit", "bus", "kite"],
+    "layout": "scatter",
+    "choices": 4,
+    "answers": "digits+dots"
+  }
+}

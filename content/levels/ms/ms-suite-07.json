@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-07",
+  "title": "Trou dans une suite",
+  "skill": "patterns",
+  "objective": "Retrouver l'élément manquant au milieu d'une suite AB (couleur et forme).",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "AB",
+    "vary": "both",
+    "colors": ["red", "blue", "yellow", "green"],
+    "shapes": ["circle", "square", "triangle", "star"],
+    "length": 7,
+    "blank": "middle",
+    "choices": 3
+  }
+}

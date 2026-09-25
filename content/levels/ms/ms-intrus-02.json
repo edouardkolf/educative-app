@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-intrus-02",
+  "title": "Intrus : la forme",
+  "skill": "visual-discrimination",
+  "objective": "Repérer l'élément qui n'a pas la même forme que les autres.",
+  "mechanic": "odd-one-out",
+  "rounds": 5,
+  "params": {
+    "items": 4,
+    "differBy": "shape",
+    "colors": ["blue", "red", "green"],
+    "shapes": ["circle", "square", "triangle", "star"],
+    "distract": false
+  }
+}

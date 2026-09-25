@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-06",
+  "title": "Compter jusqu'à 6, éparpillés",
+  "skill": "counting",
+  "objective": "Dénombrer 4 à 6 objets éparpillés et reconnaître le chiffre.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 4,
+    "max": 6,
+    "objects": ["banana", "fish", "train", "yoyo"],
+    "layout": "scatter",
+    "choices": 3,
+    "answers": "digits"
+  }
+}

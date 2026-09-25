@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-01",
+  "title": "Compter jusqu'à 3",
+  "skill": "counting",
+  "objective": "Dénombrer une petite collection alignée (1 à 3) et reconnaître le nombre.",
+  "mechanic": "count",
+  "rounds": 4,
+  "tutorial": true,
+  "params": {
+    "min": 1,
+    "max": 3,
+    "objects": ["apple", "strawberry", "ball"],
+    "layout": "line",
+    "choices": 3,
+    "answers": "digits+dots"
+  }
+}
