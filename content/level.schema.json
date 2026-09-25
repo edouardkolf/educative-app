@@ -15,11 +15,11 @@
     },
     "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
     "skill": {
-      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing"],
-      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires."
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder"], "description": "Mécanique de jeu. Détermine la forme de params." },
     "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
@@ -62,12 +62,17 @@
     {
       "if": { "type": "object", "properties": { "mechanic": { "const": "sort" } } },
       "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/sortParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "builder" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/builderParams" } } }
     }
   ],
   "definitions": {
     "color": { "enum": ["red", "blue", "yellow", "green", "purple", "orange"] },
     "shape": { "enum": ["circle", "square", "triangle", "star", "heart", "diamond"] },
     "category": { "enum": ["fruit", "animal", "vehicle", "toy", "plant"] },
+    "figureId": { "enum": ["house", "tree", "boat", "car", "rocket", "fish", "robot", "snowman", "castle"] },
     "objectId": {
       "enum": [
         "apple", "banana", "pear", "strawberry", "cherries", "grapes",
@@ -173,6 +178,21 @@
             }
           }
         }
+      }
+    },
+    "builderParams": {
+      "type": "object",
+      "description": "Le constructeur : rebâtir une figure en plaçant les bonnes pièces sur leurs emplacements.",
+      "required": ["figures", "distractors"],
+      "additionalProperties": false,
+      "properties": {
+        "figures": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/figureId" },
+          "minItems": 1,
+          "description": "Figures à construire (cycle sans répétition tant que le réservoir n'est pas épuisé)."
+        },
+        "distractors": { "type": "integer", "minimum": 0, "maximum": 2, "description": "Pièces en trop, qui ne correspondent à aucun emplacement." }
       }
     }
   }

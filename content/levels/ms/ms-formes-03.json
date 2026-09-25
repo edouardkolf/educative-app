@@ -1,0 +1,14 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-formes-03",
+  "title": "Formes : robot, bonhomme de neige, château",
+  "skill": "shapes",
+  "objective": "Reconstituer une figure plus riche, avec deux pièces en trop qui ne vont nulle part.",
+  "mechanic": "builder",
+  "rounds": 3,
+  "params": {
+    "figures": ["robot", "snowman", "castle"],
+    "distractors": 2
+  },
+  "stars": { "maxMissesFor3": 1, "maxMissesFor2": 3 }
+}

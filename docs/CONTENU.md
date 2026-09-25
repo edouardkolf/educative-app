@@ -18,9 +18,9 @@ Un niveau = un fichier JSON. Un parcours = l'ordre des niveaux sur la carte de l
 | `$schema` | Chemin vers le schéma (à copier tel quel) | `"../../level.schema.json"` |
 | `id` | Identifiant unique (lettres, chiffres, tirets) | `"ms-suite-01"` |
 | `title` | Titre lisible par le parent | `"Suite de 2 couleurs"` |
-| `skill` | Compétence cible | `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"` |
+| `skill` | Compétence cible | `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"`, `"shapes"` |
 | `objective` | Objectif pédagogique en une phrase | `"Continuer une suite AB…"` |
-| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"` |
+| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"`, `"builder"` |
 | `rounds` | Nombre de manches | 4 (avec tutoriel) ou 5+ |
 | `tutorial` | Affiche la main animée (optionnel) | `true` ou absent |
 | `stars` | Seuils d'étoiles (optionnel) | Défaut : 0 raté → 3 ⭐, 1 raté → 2 ⭐ |
@@ -152,8 +152,9 @@ est la couleur cible. La vue affiche un objet géant selon la couleur obtenue (�
 ### Sort (le trieur magique)
 
 Ranger un objet géant dans le bon panier parmi 2 ou 3 familles, affichées avec un émoji géant (ex. 🚜 la ferme, 🌊 la
-mer, ☁️ le ciel). Glisser-déposer l'objet vers le panier OU taper directement le panier (les deux marchent, c'est la
-seule mécanique qui accepte le glisser-déposer). Exemple complet (extrait de ms-tri-01.json) :
+mer, ☁️ le ciel). Glisser-déposer l'objet vers le panier OU taper directement le panier (les deux marchent — `sort`
+et `builder` sont les deux seules mécaniques qui acceptent le glisser-déposer). Exemple complet (extrait de
+ms-tri-01.json) :
 
 ```json
 {
@@ -176,6 +177,38 @@ Chaque manche tire un groupe puis un objet dans son réservoir (sans répéter u
 n'est pas épuisé), en équilibrant les groupes et sans jamais plus de deux manches consécutives sur le même groupe.
 `round.answer` est l'`id` du groupe propriétaire de l'objet. Une dépose ratée fait rebondir l'objet (son doux, jamais
 punitif) ; relâcher l'objet hors de tout panier le fait glisser au centre, sans manche jouée.
+
+### Builder (le constructeur)
+
+Reconstituer une figure (maison, voiture, robot…) en posant chaque pièce (carré, triangle, rectangle, cercle) sur
+l'emplacement qui lui correspond (même forme, même taille), au centre de l'écran, silhouette grise en creux. Les
+pièces à poser sont dans un plateau en bas, mélangées, avec parfois des pièces en trop qui ne vont sur aucun
+emplacement. Glisser-déposer une pièce vers son emplacement OU la sélectionner d'un tap puis taper l'emplacement
+(les deux marchent, comme `sort`). Les figures sont dessinées en dur dans `src/mechanics/builder/figures.ts` (pas de
+rotation : chaque pièce garde toujours son orientation). Exemple complet (extrait de ms-formes-02.json) :
+
+```json
+{
+  "mechanic": "builder",
+  "params": {
+    "figures": ["car", "rocket", "fish"],
+    "distractors": 1
+  }
+}
+```
+
+**Champs** :
+- `figures` : figures à construire (voir `FigureId` dans `src/engine/types.ts` pour la liste : house, tree, boat,
+  car, rocket, fish, robot, snowman, castle), tirées en cycle sans répétition tant que le réservoir n'est pas
+  épuisé.
+- `distractors` : nombre de pièces en trop dans le plateau, qui ne correspondent (forme + taille) à aucun
+  emplacement de la figure (0 à 2).
+
+`round.answer` vaut toujours `"done"` : la manche n'est réussie que lorsque tous les emplacements sont remplis
+correctement. Une pose ratée (pièce déposée sur un emplacement qui ne lui correspond pas) fait rebondir la pièce
+vers le plateau (son doux, jamais punitif, elle reste disponible) et compte comme un raté de la manche. Une figure a
+plusieurs emplacements : une seule pose ratée suffit donc à faire perdre le « premier coup » de toute la manche (à
+prendre en compte dans les seuils d'étoiles, voir docs/PROGRESSION-MS.md).
 
 ## Valeurs autorisées
 

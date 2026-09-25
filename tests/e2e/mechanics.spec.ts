@@ -1,7 +1,7 @@
-// Mécaniques « compter », « intrus » et « sort » (le trieur magique), dispositions de comptage (dé,
-// éparpillé), trou de suite au milieu, progression sur la carte à 29 niveaux, tableau de bord parent
-// et mise en page des 29 niveaux sur deux tailles d'écran (voir docs/ARCHITECTURE.md §3, §5, §7, §9
-// et docs/PROGRESSION-MS.md).
+// Mécaniques « compter », « intrus », « sort » (le trieur magique) et « builder » (le constructeur),
+// dispositions de comptage (dé, éparpillé), trou de suite au milieu, progression sur la carte à 32
+// niveaux, tableau de bord parent et mise en page des 32 niveaux sur deux tailles d'écran (voir
+// docs/ARCHITECTURE.md §3, §5, §7, §9 et docs/PROGRESSION-MS.md).
 // Chaque test démarre avec un contexte Playwright neuf, donc un stockage IndexedDB vierge.
 // Aides de navigation copiées de vertical-slice.spec.ts (même convention : non partagées entre fichiers).
 import { readFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
-// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 29 niveaux ----------
+// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 32 niveaux ----------
 
 interface TrackJson {
   levels: string[];
@@ -144,6 +144,27 @@ async function pourColorMix(page: Page): Promise<void> {
   await page.locator(`[data-choice="${second}"]`).click();
 }
 
+/**
+ * builder (« le constructeur ») n'a pas non plus de choix direct portant `round.answer` (toujours
+ * "done") : chaque emplacement (`.bld-slot-hit`) et chaque pièce (`.bld-piece`) expose sa forme et
+ * sa taille en attributs `data-shape`/`data-w`/`data-h` (invisibles pour l'enfant), pour retrouver
+ * par tap la pièce qui correspond à un emplacement encore libre, jusqu'à ce que la figure soit
+ * complète (voir BuilderView, contrat MechanicDefinition.tutorialTargets).
+ */
+async function solveBuilder(page: Page): Promise<void> {
+  for (let i = 0; i < 6; i += 1) {
+    const openSlot = page.locator('.bld-slot-hit:not([disabled])').first();
+    if ((await openSlot.count()) === 0) break;
+    const shape = await openSlot.getAttribute('data-shape');
+    const w = await openSlot.getAttribute('data-w');
+    const h = await openSlot.getAttribute('data-h');
+    const piece = page.locator(`.bld-piece[data-shape="${shape}"][data-w="${w}"][data-h="${h}"]`).first();
+    await piece.click();
+    await openSlot.click();
+    await page.waitForTimeout(150); // laisse l'emplacement se remplir avant de relire le plateau
+  }
+}
+
 /** Répond juste à la manche affichée et attend la transition (manche suivante ou fin de niveau). */
 async function answerCorrectly(page: Page): Promise<void> {
   const round = currentRound(page);
@@ -151,8 +172,11 @@ async function answerCorrectly(page: Page): Promise<void> {
   if (!answer) throw new Error('Aucune manche affichée (data-answer introuvable).');
   const indexBefore = await currentRoundIndex(page);
   const isColorMix = (await page.locator('.cmx-view').count()) > 0;
+  const isBuilder = (await page.locator('.bld-view').count()) > 0;
   if (isColorMix) {
     await pourColorMix(page);
+  } else if (isBuilder) {
+    await solveBuilder(page);
   } else {
     await page.locator(`[data-choice="${answer}"]`).click();
   }
@@ -162,7 +186,7 @@ async function answerCorrectly(page: Page): Promise<void> {
         if (await page.getByTestId('level-end').isVisible()) return 'end';
         return currentRoundIndex(page);
       },
-      { timeout: isColorMix ? 8000 : 5000 },
+      { timeout: isColorMix || isBuilder ? 8000 : 5000 },
     )
     .not.toBe(indexBefore);
 }
@@ -408,7 +432,7 @@ test('ms-suite-07 : trou au milieu d\'une suite AB', async ({ page }) => {
 
 // ==================== 5. Progression sur la carte + tableau de bord (captures pleine page) ====================
 
-test('progression sur la carte à 29 niveaux et tableau de bord parent', async ({ page }) => {
+test('progression sur la carte à 32 niveaux et tableau de bord parent', async ({ page }) => {
   test.slow();
   await onboardWithChild(page, 'Yanis', { sessionMinutes: '', dailyMinutes: '' });
   await chooseProfile(page, 'Yanis');
@@ -436,7 +460,7 @@ test('progression sur la carte à 29 niveaux et tableau de bord parent', async (
   if (!lastLevelId) throw new Error('content/tracks/ms.json : parcours vide.');
 
   // La carte défile dans un conteneur interne (.map-scroll), pas dans le document : on agrandit
-  // temporairement le viewport pour que la capture "pleine page" montre les 29 niveaux sans coupe.
+  // temporairement le viewport pour que la capture "pleine page" montre les 32 niveaux sans coupe.
   await page.setViewportSize({ width: defaultViewport.width, height: 3600 });
   await expect(mapNode(page, lastLevelId)).toBeVisible(); // le dernier niveau de la carte est bien rendu
   await page.screenshot({ path: shot('17-carte-20-niveaux.png'), fullPage: true });
@@ -465,14 +489,14 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   await page.screenshot({ path: shot('16-ecran-de-fin.png') });
 });
 
-// ==================== 7. Mise en page des 29 niveaux (test paramétré, standard + petit téléphone) ====================
+// ==================== 7. Mise en page des 32 niveaux (test paramétré, standard + petit téléphone) ====================
 
-test('mise en page : les 29 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(180_000); // 29 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+test('mise en page : les 32 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
+  test.setTimeout(180_000); // 32 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
-  // aussi valide que de rejouer les 29 niveaux dans l'ordre pour un test purement visuel.
+  // aussi valide que de rejouer les 32 niveaux dans l'ordre pour un test purement visuel.
   await openChildStats(page, 'Zoé');
   for (const levelId of TRACK.levels) {
     await page.getByTestId(`override-${levelId}-unlocked`).click();
@@ -608,4 +632,101 @@ test('ms-tri-02 : un vrai glisser-déposer (souris) vers le bon panier résout l
       return currentRoundIndex(page);
     }, { timeout: 5000 })
     .not.toBe(indexBefore);
+});
+
+// ==================== 10. Builder : le constructeur (pose fausse au tap, vrai glisser-déposer) ====================
+
+test('ms-formes-01 : une pose fausse au tap (jamais bloquée) puis un vrai glisser-déposer complètent la figure', async ({
+  page,
+}) => {
+  test.slow();
+  await onboardWithChild(page, 'Timéo', { sessionMinutes: '', dailyMinutes: '' });
+  await unlockLevel(page, 'Timéo', 'ms-formes-01');
+  await chooseProfile(page, 'Timéo');
+  await openLevelHash(page, 'ms-formes-01');
+
+  // La main du tutoriel doit apparaître avant le tout premier tap (une pièce, puis son emplacement).
+  await expect(page.locator('.tutorial-hand')).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('22-constructeur-figure.png') });
+
+  const indexBefore = await currentRoundIndex(page);
+
+  // ---------- Une pose fausse (tap) : sélectionne une pièce, tape un emplacement qui ne correspond
+  // pas (forme et/ou taille différentes) — jamais punitif (§9) : ni grisé, ni bloqué, retapable.
+  const pieceHandles = page.locator('.bld-piece');
+  const slotHandles = page.locator('.bld-slot-hit');
+  const pieceCount = await pieceHandles.count();
+  const slotCount = await slotHandles.count();
+
+  let wrongPieceIndex = -1;
+  let wrongSlotIndex = -1;
+  outer: for (let p = 0; p < pieceCount; p += 1) {
+    const pieceShape = await pieceHandles.nth(p).getAttribute('data-shape');
+    const pieceW = await pieceHandles.nth(p).getAttribute('data-w');
+    const pieceH = await pieceHandles.nth(p).getAttribute('data-h');
+    for (let s = 0; s < slotCount; s += 1) {
+      const slotShape = await slotHandles.nth(s).getAttribute('data-shape');
+      const slotW = await slotHandles.nth(s).getAttribute('data-w');
+      const slotH = await slotHandles.nth(s).getAttribute('data-h');
+      if (pieceShape !== slotShape || pieceW !== slotW || pieceH !== slotH) {
+        wrongPieceIndex = p;
+        wrongSlotIndex = s;
+        break outer;
+      }
+    }
+  }
+  if (wrongPieceIndex === -1) throw new Error('ms-formes-01 : aucune paire pièce/emplacement discordante trouvée.');
+
+  const wrongPiece = pieceHandles.nth(wrongPieceIndex);
+  const wrongSlot = slotHandles.nth(wrongSlotIndex);
+  await wrongPiece.click(); // sélectionne la pièce
+  await wrongSlot.click(); // tape un emplacement qui ne lui correspond pas
+  await page.waitForTimeout(500); // rebond élastique (~420 ms) avant de pouvoir réessayer
+  expect(await currentRoundIndex(page)).toBe(indexBefore); // toujours la même manche
+  await expect(wrongPiece).toBeEnabled(); // jamais grisée ni bloquée (§9)
+
+  // ---------- Un vrai glisser-déposer (souris) vers l'emplacement correspondant ----------
+  const dragPiece = pieceHandles.first();
+  const dragPieceId = await dragPiece.getAttribute('data-choice');
+  const dragShape = await dragPiece.getAttribute('data-shape');
+  const dragW = await dragPiece.getAttribute('data-w');
+  const dragH = await dragPiece.getAttribute('data-h');
+  const matchingSlotSelector = `.bld-slot-hit[data-shape="${dragShape}"][data-w="${dragW}"][data-h="${dragH}"]`;
+  const freeMatchingSlot = page.locator(`${matchingSlotSelector}:not([disabled])`);
+
+  const pieceBox = await dragPiece.boundingBox();
+  const slotBox = await freeMatchingSlot.boundingBox();
+  if (!pieceBox || !slotBox) throw new Error('ms-formes-01 : pièce ou emplacement introuvable pour le glissé.');
+
+  const startX = pieceBox.x + pieceBox.width / 2;
+  const startY = pieceBox.y + pieceBox.height / 2;
+  const endX = slotBox.x + slotBox.width / 2;
+  const endY = slotBox.y + slotBox.height / 2;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + (endX - startX) / 2, startY + (endY - startY) / 2, { steps: 5 });
+  await page.mouse.move(endX, endY, { steps: 5 });
+  await page.mouse.up();
+
+  await expect(page.locator(matchingSlotSelector).first()).toBeDisabled(); // l'emplacement est désormais rempli
+  await expect(page.locator(`[data-choice="${dragPieceId}"]`)).toHaveCount(0); // la pièce posée quitte le plateau
+
+  // ---------- Termine la manche (emplacements restants) puis le reste du niveau ----------
+  await solveBuilder(page);
+  await expect
+    .poll(
+      async () => {
+        if (await page.getByTestId('level-end').isVisible()) return 'end';
+        return currentRoundIndex(page);
+      },
+      { timeout: 8000 },
+    )
+    .not.toBe(indexBefore);
+
+  await playPerfectly(page, 2); // manches 2 et 3 (ms-formes-01.json : rounds = 3)
+
+  await waitForLevelEndButtons(page);
+  await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '2'); // 1 raté au 1er coup
 });

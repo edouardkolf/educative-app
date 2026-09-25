@@ -3,5 +3,5 @@
   "id": "ms",
   "title": "Moyenne section",
   "minStarsToUnlockNext": 1,
-  "levels": ["ms-suite-01", "ms-compte-01", "ms-intrus-01", "ms-couleurs-01", "ms-suite-02", "ms-compte-02", "ms-intrus-02", "ms-tri-01", "ms-suite-03", "ms-suite-nature-01", "ms-compte-03", "ms-intrus-03", "ms-couleurs-02", "ms-suite-04", "ms-compte-04", "ms-intrus-04", "ms-tri-02", "ms-suite-05", "ms-suite-nature-02", "ms-compte-05", "ms-intrus-05", "ms-couleurs-03", "ms-suite-06", "ms-suite-nature-03", "ms-compte-06", "ms-intrus-06", "ms-tri-03", "ms-suite-07", "ms-suite-08"]
+  "levels": ["ms-suite-01", "ms-compte-01", "ms-intrus-01", "ms-couleurs-01", "ms-suite-02", "ms-compte-02", "ms-formes-01", "ms-intrus-02", "ms-tri-01", "ms-suite-03", "ms-suite-nature-01", "ms-compte-03", "ms-intrus-03", "ms-couleurs-02", "ms-suite-04", "ms-compte-04", "ms-formes-02", "ms-intrus-04", "ms-tri-02", "ms-suite-05", "ms-suite-nature-02", "ms-compte-05", "ms-intrus-05", "ms-couleurs-03", "ms-suite-06", "ms-suite-nature-03", "ms-compte-06", "ms-formes-03", "ms-intrus-06", "ms-tri-03", "ms-suite-07", "ms-suite-08"]
 }

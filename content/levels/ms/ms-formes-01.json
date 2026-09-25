@@ -1,0 +1,14 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-formes-01",
+  "title": "Formes : la maison, le sapin, le bateau",
+  "skill": "shapes",
+  "objective": "Reconstituer une figure en posant chaque pièce (carré, triangle, rectangle…) sur son emplacement.",
+  "mechanic": "builder",
+  "rounds": 3,
+  "tutorial": true,
+  "params": {
+    "figures": ["house", "tree", "boat"],
+    "distractors": 0
+  }
+}

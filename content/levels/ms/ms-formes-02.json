@@ -1,0 +1,14 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-formes-02",
+  "title": "Formes : voiture, fusée, poisson",
+  "skill": "shapes",
+  "objective": "Reconstituer une figure avec plus de pièces, dont une pièce en trop qui ne va nulle part.",
+  "mechanic": "builder",
+  "rounds": 3,
+  "params": {
+    "figures": ["car", "rocket", "fish"],
+    "distractors": 1
+  },
+  "stars": { "maxMissesFor3": 1, "maxMissesFor2": 3 }
+}

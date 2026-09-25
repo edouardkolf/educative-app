@@ -125,8 +125,10 @@ Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persis
 
 - Aucun texte nécessaire dans les écrans enfant : pictos, couleurs, animations. Les textes de l'espace parent sont en français.
 - Cibles tactiles : ≥ 72 px pour les choix de jeu, ≥ 56 px pour la navigation. Tap uniquement, pas de glisser-déposer
-  — exception : `sort` (le trieur magique) accepte le glisser-déposer **et** le tap (taper le panier équivaut à y
-  déposer l'objet), pour rester jouable même sans geste de glissé maîtrisé.
+  — exceptions : `sort` (le trieur magique) et `builder` (le constructeur) acceptent le glisser-déposer **et** le tap
+  (sélectionner puis taper la cible équivaut à y déposer l'objet/la pièce), pour rester jouables même sans geste de
+  glissé maîtrisé. Dans `builder`, un emplacement peut être visuellement plus petit que 72 px (la silhouette doit
+  rester fidèle à la figure) : sa zone tapable est alors agrandie en creux, en restant centrée sur lui.
 - Erreur jamais punitive : son doux, léger tremblement, le choix se grise, on réessaie. Aucune vie, aucun compte à rebours visible, aucune récompense aléatoire.
 - Sons obligatoires : réussite, erreur douce, étoile gagnée.
 - Éléments interactifs qui attirent l'œil : la case à compléter pulse, les choix sont grands et contrastés.

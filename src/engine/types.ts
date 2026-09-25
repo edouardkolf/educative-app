@@ -26,10 +26,17 @@ export type ObjectId = string;
 
 // ---------- Niveaux et parcours ----------
 
-export const MECHANICS = ['sequence', 'count', 'odd-one-out', 'color-mix', 'sort'] as const;
+export const MECHANICS = ['sequence', 'count', 'odd-one-out', 'color-mix', 'sort', 'builder'] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
-export const SKILLS = ['patterns', 'counting', 'visual-discrimination', 'categorization', 'color-mixing'] as const;
+export const SKILLS = [
+  'patterns',
+  'counting',
+  'visual-discrimination',
+  'categorization',
+  'color-mixing',
+  'shapes',
+] as const;
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
 
@@ -105,12 +112,25 @@ export interface SortParams {
   }[];
 }
 
+/** Identifiant d'une figure du « constructeur », dessinée en dur dans src/mechanics/builder/figures.ts. */
+export const FIGURE_IDS = ['house', 'tree', 'boat', 'car', 'rocket', 'fish', 'robot', 'snowman', 'castle'] as const;
+export type FigureId = (typeof FIGURE_IDS)[number];
+
+/** Le constructeur : rebâtir une figure en plaçant les bonnes pièces (formes/tailles) sur leurs emplacements. */
+export interface BuilderParams {
+  /** Figures à construire (cycle sans répétition tant que le réservoir n'est pas épuisé). */
+  figures: FigureId[];
+  /** Pièces en trop dans le plateau, qui ne correspondent à aucun emplacement (0 à 2). */
+  distractors: number;
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
   'odd-one-out': OddOneOutParams;
   'color-mix': ColorMixParams;
   sort: SortParams;
+  builder: BuilderParams;
 }
 
 interface LevelBase {

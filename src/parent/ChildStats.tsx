@@ -24,6 +24,7 @@ const SKILL_LABELS: Record<SkillId, string> = {
   'visual-discrimination': 'Repérer une différence',
   categorization: 'Catégoriser',
   'color-mixing': 'Couleurs',
+  shapes: 'Formes',
 };
 
 const STATUS_LABELS: Record<LevelStatus, string> = {
