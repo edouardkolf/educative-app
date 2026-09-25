@@ -1,0 +1,202 @@
+/* Vue « compter des objets » — classes préfixées cnt-, aucun texte. */
+
+.cnt-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  gap: clamp(20px, 5vh, 48px);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.cnt-frame {
+  position: relative;
+  width: min(84vw, 320px);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: var(--radius, 20px);
+  box-shadow: var(--shadow, 0 8px 20px rgba(61, 44, 30, 0.16));
+}
+
+/* "dice" : les objets sont posés sur une grande face de dé arrondie. */
+.cnt-frame--dice {
+  border-radius: 32px;
+  background: linear-gradient(180deg, #ffffff, #fff7e8);
+}
+
+.cnt-object {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  transition:
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.cnt-object:disabled {
+  cursor: default;
+}
+
+/* Aide au comptage : correspondance terme à terme, aucun effet sur le score. */
+.cnt-object--marked {
+  background: rgba(255, 179, 71, 0.28);
+  box-shadow: 0 0 0 6px rgba(255, 179, 71, 0.4);
+  animation: cnt-mark-bounce 360ms ease;
+}
+
+.cnt-object--pop {
+  animation: cnt-object-pop 420ms ease-out;
+}
+
+.cnt-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.cnt-choice {
+  width: 96px;
+  height: 96px;
+  min-width: 88px;
+  min-height: 88px;
+  padding: 0;
+  border-radius: var(--radius, 20px);
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.cnt-choice:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.cnt-choice:disabled {
+  cursor: default;
+}
+
+.cnt-choice--wrong {
+  opacity: 0.35;
+}
+
+.cnt-choice--shake {
+  animation: cnt-shake 320ms ease;
+}
+
+.cnt-choice--bounce {
+  animation: cnt-bounce 500ms ease;
+}
+
+.cnt-choice__digit {
+  font-size: 52px;
+  font-weight: 800;
+  color: var(--ink, #3d2c1e);
+  line-height: 1;
+}
+
+.cnt-choice__digit--small {
+  font-size: 28px;
+}
+
+.cnt-choice__dots {
+  position: relative;
+}
+
+.cnt-choice__dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--ink, #3d2c1e);
+  transform: translate(-50%, -50%);
+}
+
+@keyframes cnt-mark-bounce {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(1.28);
+  }
+}
+
+@keyframes cnt-object-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cnt-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes cnt-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.18);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+  80% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cnt-object--marked,
+  .cnt-object--pop,
+  .cnt-choice--shake,
+  .cnt-choice--bounce {
+    animation: none;
+  }
+}
