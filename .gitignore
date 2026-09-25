@@ -8,3 +8,4 @@ playwright-report
 .claude/settings.local.json
 dist-e2e-*
 test-results-*
+.claude/worktrees/
