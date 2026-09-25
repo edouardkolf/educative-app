@@ -3,9 +3,16 @@ import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
 import { getTracks } from '../engine';
 import type { Track } from '../engine';
-import { getProfile, saveProfile } from '../storage';
+import { deleteProfile, getProfile, saveProfile } from '../storage';
 import type { AvatarId, Profile, ProfileLimits } from '../storage';
 import { AVATARS } from '../ui/avatars';
+import {
+  DAILY_MINUTES_OPTIONS,
+  SESSION_MINUTES_OPTIONS,
+  limitOptionLabel,
+  minutesToSelectValue,
+  selectValueToMinutes,
+} from './limits';
 import { describeError } from './util';
 
 const DEFAULT_LIMITS: ProfileLimits = { sessionMinutes: 15, dailyMinutes: 30 };
@@ -26,8 +33,14 @@ export function ChildForm(props: ChildFormProps) {
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState<AvatarId>(AVATARS[0]);
   const [trackId, setTrackId] = useState('');
+  const [sessionMinutes, setSessionMinutes] = useState<number | null>(DEFAULT_LIMITS.sessionMinutes);
+  const [dailyMinutes, setDailyMinutes] = useState<number | null>(DEFAULT_LIMITS.dailyMinutes);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const [deleteConfirming, setDeleteConfirming] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -53,6 +66,8 @@ export function ChildForm(props: ChildFormProps) {
         setName(profile.name);
         setAvatar(profile.avatar);
         setTrackId(profile.trackId);
+        setSessionMinutes(profile.limits.sessionMinutes);
+        setDailyMinutes(profile.limits.dailyMinutes);
       })
       .catch((err) => {
         if (!cancelled) setLoadError(describeError(err));
@@ -83,6 +98,7 @@ export function ChildForm(props: ChildFormProps) {
 
     setFormError(null);
     setSaving(true);
+    const limits: ProfileLimits = { sessionMinutes, dailyMinutes };
     try {
       if (isEdit) {
         if (!existing) {
@@ -95,16 +111,29 @@ export function ChildForm(props: ChildFormProps) {
           name: trimmed,
           avatar,
           trackId,
-          limits: existing.limits,
+          limits,
         });
       } else {
-        await saveProfile({ name: trimmed, avatar, trackId, limits: DEFAULT_LIMITS });
+        await saveProfile({ name: trimmed, avatar, trackId, limits });
       }
       navigate({ name: 'parent', path: [] });
     } catch (err) {
       setFormError(describeError(err));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteConfirmed() {
+    if (!existing) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      await deleteProfile(existing.id);
+      navigate({ name: 'parent', path: [] });
+    } catch (err) {
+      setDeleteError(describeError(err));
+      setDeleteBusy(false);
     }
   }
 
@@ -192,6 +221,41 @@ export function ChildForm(props: ChildFormProps) {
           )}
         </fieldset>
 
+        <label className="pa-field">
+          <span className="pa-field__label">Durée d'une session</span>
+          <select
+            className="pa-input"
+            name="sessionMinutes"
+            value={minutesToSelectValue(sessionMinutes)}
+            onChange={(ev) => setSessionMinutes(selectValueToMinutes((ev.target as HTMLSelectElement).value))}
+          >
+            {SESSION_MINUTES_OPTIONS.map((m) => (
+              <option key={m ?? 'none'} value={minutesToSelectValue(m)}>
+                {limitOptionLabel(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="pa-field">
+          <span className="pa-field__label">Temps de jeu par jour</span>
+          <select
+            className="pa-input"
+            name="dailyMinutes"
+            value={minutesToSelectValue(dailyMinutes)}
+            onChange={(ev) => setDailyMinutes(selectValueToMinutes((ev.target as HTMLSelectElement).value))}
+          >
+            {DAILY_MINUTES_OPTIONS.map((m) => (
+              <option key={m ?? 'none'} value={minutesToSelectValue(m)}>
+                {limitOptionLabel(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="pa-muted">
+          À la fin, un écran de nuit s'affiche. Votre code permet d'accorder quelques minutes de plus.
+        </p>
+
         {formError && (
           <p className="pa-error" role="alert">
             {formError}
@@ -211,6 +275,49 @@ export function ChildForm(props: ChildFormProps) {
           </button>
         </div>
       </form>
+
+      {isEdit && existing && (
+        <section className="pa-danger-zone">
+          {!deleteConfirming ? (
+            <button
+              type="button"
+              className="pa-button pa-button--danger"
+              data-testid="delete-child"
+              onClick={() => setDeleteConfirming(true)}
+            >
+              Supprimer cet enfant
+            </button>
+          ) : (
+            <div className="pa-danger-zone__confirm">
+              <p>Supprimer définitivement {existing.name} et toutes ses statistiques ?</p>
+              {deleteError && (
+                <p className="pa-error" role="alert">
+                  {deleteError}
+                </p>
+              )}
+              <div className="pa-form__actions">
+                <button
+                  type="button"
+                  className="pa-button pa-button--danger"
+                  data-testid="delete-child-confirm"
+                  disabled={deleteBusy}
+                  onClick={handleDeleteConfirmed}
+                >
+                  {deleteBusy ? 'Suppression…' : 'Supprimer'}
+                </button>
+                <button
+                  type="button"
+                  className="pa-button pa-button--ghost"
+                  disabled={deleteBusy}
+                  onClick={() => setDeleteConfirming(false)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

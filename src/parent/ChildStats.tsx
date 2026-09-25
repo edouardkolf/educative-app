@@ -3,12 +3,20 @@ import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
 import { computeLevelStates, computeLevelStats, getLevel, getTrack } from '../engine';
 import type { LevelStats, LevelStatus, SkillId } from '../engine';
-import { getProfile, listOverrides, listRuns } from '../storage';
-import type { Profile } from '../storage';
+import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
+import type { LevelOverride, Profile } from '../storage';
 import { formatDateTime, formatDuration, formatPercentage } from './format';
 import { summarizeRuns } from './stats';
 import type { RunsSummary } from './stats';
 import { describeError } from './util';
+
+type OverrideState = LevelOverride['state'] | null;
+
+const OVERRIDE_LABELS: Record<'auto' | LevelOverride['state'], string> = {
+  auto: 'Auto',
+  unlocked: 'Débloqué',
+  locked: 'Verrouillé',
+};
 
 const SKILL_LABELS: Record<SkillId, string> = {
   patterns: 'Suites et rythmes',
@@ -29,6 +37,7 @@ interface LevelRow {
   skill: SkillId | null;
   status: LevelStatus;
   stats: LevelStats;
+  override: OverrideState;
 }
 
 interface StatsData {
@@ -48,6 +57,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
   const trackTitle = track?.title ?? profile.trackId;
   const levelIds = track?.levels ?? [];
   const states = track ? computeLevelStates(track, runs, overrides) : [];
+  const overrideByLevel = new Map(overrides.map((o) => [o.levelId, o.state]));
 
   const levels: LevelRow[] = levelIds.map((levelId) => {
     const level = getLevel(levelId);
@@ -58,6 +68,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
       skill: level?.skill ?? null,
       status,
       stats: computeLevelStats(levelId, runs),
+      override: overrideByLevel.get(levelId) ?? null,
     };
   });
 
@@ -67,6 +78,8 @@ async function loadStats(profileId: string): Promise<StatsData> {
 export function ChildStats(props: { profileId: string }) {
   const [data, setData] = useState<StatsData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [overridePending, setOverridePending] = useState<string | null>(null);
+  const [overrideError, setOverrideError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +96,20 @@ export function ChildStats(props: { profileId: string }) {
       cancelled = true;
     };
   }, [props.profileId]);
+
+  async function handleOverrideChange(levelId: string, state: OverrideState) {
+    setOverridePending(levelId);
+    setOverrideError(null);
+    try {
+      await setOverride(props.profileId, levelId, state);
+      const result = await loadStats(props.profileId);
+      setData(result);
+    } catch (err) {
+      setOverrideError(describeError(err));
+    } finally {
+      setOverridePending(null);
+    }
+  }
 
   if (error) {
     return (
@@ -132,6 +159,11 @@ export function ChildStats(props: { profileId: string }) {
 
       <section className="pa-section">
         <h2 className="pa-section__title">Niveaux</h2>
+        {overrideError && (
+          <p className="pa-error" role="alert">
+            {overrideError}
+          </p>
+        )}
         <div className="pa-level-list">
           {levels.map((level) => (
             <article key={level.levelId} className="pa-level-card" data-testid={`level-stats-${level.levelId}`}>
@@ -179,6 +211,27 @@ export function ChildStats(props: { profileId: string }) {
                   <dd>{formatDateTime(level.stats.lastPlayedAt)}</dd>
                 </div>
               </dl>
+
+              <p className="pa-field__label">Déblocage</p>
+              <div className="pa-segmented" role="group" aria-label={`Déblocage de ${level.title}`}>
+                {(['auto', 'unlocked', 'locked'] as const).map((choice) => {
+                  const state: OverrideState = choice === 'auto' ? null : choice;
+                  return (
+                    <button
+                      key={choice}
+                      type="button"
+                      className="pa-segmented__option"
+                      data-testid={`override-${level.levelId}-${choice}`}
+                      aria-pressed={level.override === state}
+                      disabled={overridePending === level.levelId}
+                      onClick={() => handleOverrideChange(level.levelId, state)}
+                    >
+                      {OVERRIDE_LABELS[choice]}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="pa-muted">« Auto » suit la règle des étoiles.</p>
             </article>
           ))}
         </div>

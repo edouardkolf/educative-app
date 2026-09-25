@@ -131,6 +131,12 @@
   color: var(--pa-muted);
 }
 
+.pa-button--danger {
+  background: var(--pa-danger);
+  border-color: var(--pa-danger);
+  color: #fff;
+}
+
 .pa-button:disabled {
   opacity: 0.55;
   cursor: default;
@@ -223,6 +229,26 @@
   width: auto;
   flex: 1;
   padding: 10px 8px;
+}
+
+.pa-child-card__grant {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pa-child-card__usage {
+  color: var(--pa-muted);
+  font-weight: 600;
+}
+
+.pa-child-card__grant .pa-button {
+  width: auto;
+  flex: none;
+  padding: 10px 14px;
 }
 
 /* ---------- Code parent (PinGate) ---------- */
@@ -575,4 +601,117 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ---------- Déblocage manuel (contrôle segmenté sur une carte de niveau) ---------- */
+
+.pa-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.pa-segmented__option {
+  min-height: 48px;
+  padding: 8px 6px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: 10px;
+  border: 2px solid var(--pa-border);
+  background: var(--pa-surface);
+  color: var(--pa-text);
+  cursor: pointer;
+}
+
+.pa-segmented__option[aria-pressed='true'] {
+  border-color: var(--pa-focus);
+  background: color-mix(in srgb, var(--pa-focus) 16%, var(--pa-surface));
+}
+
+.pa-segmented__option:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- Zone danger (suppression d'un enfant) ---------- */
+
+.pa-danger-zone {
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--pa-border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pa-danger-zone__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--pa-danger-bg);
+  border: 1px solid var(--pa-danger);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* ---------- Réglages (son, code parent, stockage) ---------- */
+
+.pa-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pa-toggle {
+  min-height: 48px;
+  min-width: 108px;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 999px;
+  border: 2px solid var(--pa-border);
+  background: var(--pa-surface);
+  color: var(--pa-muted);
+  cursor: pointer;
+}
+
+.pa-toggle[aria-pressed='true'] {
+  border-color: var(--pa-primary);
+  background: var(--pa-primary);
+  color: var(--pa-primary-text);
+}
+
+.pa-pin-change {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--pa-bg);
+  border: 1px solid var(--pa-border);
+  border-radius: var(--pa-radius);
+  text-align: center;
+}
+
+/* ---------- Import d'une sauvegarde ---------- */
+
+.pa-import {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pa-import-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--pa-bg);
+  border: 1px solid var(--pa-border);
+  border-radius: 12px;
+  padding: 14px;
 }

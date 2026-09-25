@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, formatDuration, formatPercentage } from './format';
+import { formatDailyUsage, formatDateTime, formatDuration, formatPercentage } from './format';
 
 describe('formatPercentage', () => {
   it('arrondit un taux en pourcentage', () => {
@@ -35,5 +35,23 @@ describe('formatDateTime', () => {
 
   it('affiche un tiret quand la partie n\'a jamais été jouée', () => {
     expect(formatDateTime(null)).toBe('—');
+  });
+});
+
+describe('formatDailyUsage', () => {
+  it('affiche les minutes jouées sur la limite du jour', () => {
+    expect(formatDailyUsage(12 * 60, 30, 0)).toBe("Aujourd'hui : 12 min sur 30");
+  });
+
+  it('ajoute les minutes bonus au total affiché', () => {
+    expect(formatDailyUsage(12 * 60, 30, 15)).toBe("Aujourd'hui : 12 min sur 45");
+  });
+
+  it('arrondit les secondes à la minute inférieure', () => {
+    expect(formatDailyUsage(119, 30, 0)).toBe("Aujourd'hui : 1 min sur 30");
+  });
+
+  it('affiche « sans limite » quand la limite quotidienne est nulle', () => {
+    expect(formatDailyUsage(600, null, 0)).toBe("Aujourd'hui : 10 min (sans limite)");
   });
 });

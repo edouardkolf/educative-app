@@ -1,12 +1,17 @@
-// Tableau de bord : liste des enfants, ajout, export, état du stockage, retour au jeu.
-import { useEffect, useState } from 'preact/hooks';
+// Tableau de bord : liste des enfants (temps du jour, +15 min), export/import, réglages, retour au jeu.
+import { useCallback, useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
 import { getTrack } from '../engine';
-import { isPersisted, listProfiles } from '../storage';
-import type { Profile } from '../storage';
+import { dayKey, getUsage, grantExtraMinutes, listProfiles } from '../storage';
+import type { Profile, UsageDay } from '../storage';
 import { exportProgress } from './export';
 import type { ExportOutcome } from './export';
+import { formatDailyUsage } from './format';
+import { ImportSection } from './ImportSection';
+import { ParentSettings } from './Settings';
 import { describeError } from './util';
+
+const GRANT_MINUTES = 15;
 
 function trackTitle(trackId: string): string {
   try {
@@ -32,30 +37,39 @@ function outcomeMessage(outcome: ExportOutcome): { text: string; ok: boolean } {
 export function Dashboard() {
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [persisted, setPersisted] = useState<boolean | null>(null);
+  const [usageByProfile, setUsageByProfile] = useState<Record<string, UsageDay>>({});
+  const [grantingId, setGrantingId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    listProfiles()
-      .then((list) => {
-        if (!cancelled) setProfiles(list);
-      })
-      .catch((err) => {
-        if (!cancelled) setLoadError(describeError(err));
-      });
-    isPersisted()
-      .then((value) => {
-        if (!cancelled) setPersisted(value);
-      })
-      .catch(() => {
-        if (!cancelled) setPersisted(null);
-      });
-    return () => {
-      cancelled = true;
-    };
+  const loadProfiles = useCallback(async () => {
+    try {
+      const list = await listProfiles();
+      const today = dayKey();
+      const entries = await Promise.all(list.map(async (p) => [p.id, await getUsage(p.id, today)] as const));
+      setProfiles(list);
+      setUsageByProfile(Object.fromEntries(entries));
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(describeError(err));
+    }
   }, []);
+
+  useEffect(() => {
+    void loadProfiles();
+  }, [loadProfiles]);
+
+  async function handleGrant(profileId: string) {
+    setGrantingId(profileId);
+    try {
+      const updated = await grantExtraMinutes(profileId, dayKey(), GRANT_MINUTES);
+      setUsageByProfile((prev) => ({ ...prev, [profileId]: updated }));
+    } catch (err) {
+      setLoadError(describeError(err));
+    } finally {
+      setGrantingId(null);
+    }
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -82,33 +96,52 @@ export function Dashboard() {
 
         {profiles && profiles.length > 0 && (
           <ul className="pa-child-list">
-            {profiles.map((profile) => (
-              <li key={profile.id} className="pa-child-card">
-                <span className="pa-child-card__avatar" aria-hidden="true">
-                  {profile.avatar}
-                </span>
-                <div className="pa-child-card__info">
-                  <p className="pa-child-card__name">{profile.name}</p>
-                  <p className="pa-child-card__track">{trackTitle(profile.trackId)}</p>
-                </div>
-                <div className="pa-child-card__actions">
-                  <button
-                    type="button"
-                    className="pa-button pa-button--secondary"
-                    onClick={() => navigate({ name: 'parent', path: ['child', profile.id] })}
-                  >
-                    Statistiques
-                  </button>
-                  <button
-                    type="button"
-                    className="pa-button pa-button--secondary"
-                    onClick={() => navigate({ name: 'parent', path: ['child', profile.id, 'edit'] })}
-                  >
-                    Modifier
-                  </button>
-                </div>
-              </li>
-            ))}
+            {profiles.map((profile) => {
+              const usage = usageByProfile[profile.id];
+              return (
+                <li key={profile.id} className="pa-child-card">
+                  <span className="pa-child-card__avatar" aria-hidden="true">
+                    {profile.avatar}
+                  </span>
+                  <div className="pa-child-card__info">
+                    <p className="pa-child-card__name">{profile.name}</p>
+                    <p className="pa-child-card__track">{trackTitle(profile.trackId)}</p>
+                  </div>
+                  <div className="pa-child-card__actions">
+                    <button
+                      type="button"
+                      className="pa-button pa-button--secondary"
+                      onClick={() => navigate({ name: 'parent', path: ['child', profile.id] })}
+                    >
+                      Statistiques
+                    </button>
+                    <button
+                      type="button"
+                      className="pa-button pa-button--secondary"
+                      onClick={() => navigate({ name: 'parent', path: ['child', profile.id, 'edit'] })}
+                    >
+                      Modifier
+                    </button>
+                  </div>
+                  {usage && (
+                    <div className="pa-child-card__grant">
+                      <span className="pa-child-card__usage">
+                        {formatDailyUsage(usage.activeSeconds, profile.limits.dailyMinutes, usage.extraMinutes)}
+                      </span>
+                      <button
+                        type="button"
+                        className="pa-button pa-button--secondary"
+                        data-testid={`grant-today-${profile.id}`}
+                        disabled={grantingId === profile.id}
+                        onClick={() => handleGrant(profile.id)}
+                      >
+                        {grantingId === profile.id ? 'Ajout…' : `+${GRANT_MINUTES} min aujourd'hui`}
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
 
@@ -124,13 +157,6 @@ export function Dashboard() {
 
       <section className="pa-section">
         <h2 className="pa-section__title">Données</h2>
-        <p className={persisted ? 'pa-success' : 'pa-muted'}>
-          {persisted === null
-            ? 'Vérification du stockage…'
-            : persisted
-              ? 'Stockage protégé ✓'
-              : "Stockage non protégé : installez l'app sur l'écran d'accueil pour éviter toute perte."}
-        </p>
         <button
           type="button"
           className="pa-button pa-button--secondary"
@@ -145,7 +171,11 @@ export function Dashboard() {
             {exportMessage.text}
           </p>
         )}
+
+        <ImportSection onImported={() => void loadProfiles()} />
       </section>
+
+      <ParentSettings />
 
       <button
         type="button"

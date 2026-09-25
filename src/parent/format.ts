@@ -23,3 +23,13 @@ export function formatDateTime(ms: number | null): string {
   const timePart = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   return `${datePart} ${timePart}`;
 }
+
+/**
+ * Résumé du temps de jeu du jour pour le tableau de bord (ex. « Aujourd'hui : 12 min sur 30 »).
+ * Le total affiché inclut les minutes bonus accordées par le parent ; « sans limite » si `dailyMinutesLimit` est null.
+ */
+export function formatDailyUsage(activeSeconds: number, dailyMinutesLimit: number | null, extraMinutes: number): string {
+  const used = Math.floor(activeSeconds / 60);
+  if (dailyMinutesLimit === null) return `Aujourd'hui : ${used} min (sans limite)`;
+  return `Aujourd'hui : ${used} min sur ${dailyMinutesLimit + extraMinutes}`;
+}
