@@ -1,0 +1,123 @@
+/* Vue « trouver l'intrus » — classes préfixées ooo-, aucun texte. */
+
+.ooo-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.ooo-grid {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.ooo-grid--cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 280px;
+}
+
+.ooo-grid--cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.ooo-choice {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 96px;
+  min-height: 96px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius, 20px);
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ooo-emoji {
+  font-size: 60px;
+  line-height: 1;
+}
+
+.ooo-choice:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.ooo-choice:disabled {
+  cursor: default;
+}
+
+.ooo-choice--wrong {
+  opacity: 0.35;
+}
+
+.ooo-choice--shake {
+  animation: ooo-shake 320ms ease;
+}
+
+.ooo-choice--dim {
+  opacity: 0.55;
+}
+
+.ooo-choice--solved {
+  position: relative;
+  z-index: 1;
+  transform: scale(1.16);
+  animation: ooo-bounce 550ms ease;
+  box-shadow:
+    0 0 0 6px rgba(255, 195, 0, 0.55),
+    0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes ooo-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes ooo-bounce {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.32);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ooo-choice--shake,
+  .ooo-choice--solved {
+    animation: none;
+  }
+}
