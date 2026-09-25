@@ -4,7 +4,7 @@ import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
 import { getTracks } from '../engine';
 import type { Track } from '../engine';
-import { deleteProfile, getProfile, saveProfile } from '../storage';
+import { deleteProfile, getProfile, getSettings, saveProfile } from '../storage';
 import type { AvatarId, Profile, ProfileLimits } from '../storage';
 import { AVATARS } from '../ui/avatars';
 import {
@@ -14,6 +14,8 @@ import {
   minutesToSelectValue,
   selectValueToMinutes,
 } from './limits';
+import { NumericKeypad } from './NumericKeypad';
+import { verifyPin } from './pin';
 import { describeError } from './util';
 
 const DEFAULT_LIMITS: ProfileLimits = { sessionMinutes: 15, dailyMinutes: 30 };
@@ -43,6 +45,8 @@ export function ChildForm(props: ChildFormProps) {
   const [deleteConfirming, setDeleteConfirming] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Suppression irréversible : le code parent est redemandé, même espace parent déjà déverrouillé.
+  const [deletePin, setDeletePin] = useState('');
 
   useEffect(() => {
     try {
@@ -129,19 +133,38 @@ export function ChildForm(props: ChildFormProps) {
     }
   }
 
-  async function handleDeleteConfirmed() {
-    if (!existing) return;
-    setDeleteBusy(true);
+  async function handleDeletePinDigit(digit: string) {
+    if (!existing || deleteBusy) return;
+    const next = (deletePin + digit).slice(0, 4);
+    setDeletePin(next);
     setDeleteError(null);
+    if (next.length < 4) return;
+    setDeleteBusy(true);
     try {
+      const settings = await getSettings();
+      const ok =
+        settings.pinHash && settings.pinSalt ? await verifyPin(next, settings.pinSalt, settings.pinHash) : false;
+      if (!ok) {
+        setDeleteError('Code incorrect.');
+        setDeletePin('');
+        setDeleteBusy(false);
+        return;
+      }
       await deleteProfile(existing.id);
       // F2 : un profil actif resté en mémoire ne doit plus jamais écrire d'orphelins après une suppression.
       setProfile(null);
       navigate({ name: 'parent', path: [] });
     } catch (err) {
       setDeleteError(describeError(err));
+      setDeletePin('');
       setDeleteBusy(false);
     }
+  }
+
+  function cancelDelete() {
+    setDeleteConfirming(false);
+    setDeletePin('');
+    setDeleteError(null);
   }
 
   if (isEdit && loading) {
@@ -302,22 +325,28 @@ export function ChildForm(props: ChildFormProps) {
                   {deleteError}
                 </p>
               )}
+              <p className="pa-muted">Tape ton code parent pour confirmer.</p>
+              <div
+                className="pa-pin-dots"
+                role="status"
+                aria-label={`${deletePin.length} chiffre${deletePin.length > 1 ? 's' : ''} sur 4 saisis`}
+                data-testid="delete-child-pin"
+              >
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className={`pa-pin-dot${i < deletePin.length ? ' pa-pin-dot--filled' : ''}`}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
+              <NumericKeypad
+                onDigit={handleDeletePinDigit}
+                onDelete={() => setDeletePin((p) => p.slice(0, -1))}
+                disabled={deleteBusy}
+              />
               <div className="pa-form__actions">
-                <button
-                  type="button"
-                  className="pa-button pa-button--danger"
-                  data-testid="delete-child-confirm"
-                  disabled={deleteBusy}
-                  onClick={handleDeleteConfirmed}
-                >
-                  {deleteBusy ? 'Suppression…' : 'Supprimer'}
-                </button>
-                <button
-                  type="button"
-                  className="pa-button pa-button--ghost"
-                  disabled={deleteBusy}
-                  onClick={() => setDeleteConfirming(false)}
-                >
+                <button type="button" className="pa-button pa-button--ghost" disabled={deleteBusy} onClick={cancelDelete}>
                   Annuler
                 </button>
               </div>

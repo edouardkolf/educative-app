@@ -8,6 +8,7 @@ import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
 import { Shape } from '../ui/Shape';
 import { StarRow } from '../ui/StarRow';
+import { LongPressButton } from '../ui/LongPressButton';
 
 const NODE_SIZE = 80;
 const SPACING = 168;
@@ -127,6 +128,11 @@ export function SagaMap() {
     navigate({ name: 'profiles' });
   };
 
+  // Raccourci parent : même geste que sur l'écran des profils (appui long de 2 s, jamais un tap bref).
+  // Le profil actif n'est pas vidé ici (la garde de route renverrait aussitôt vers les profils) :
+  // l'espace parent ramène toujours aux profils, qui le re-sélectionnent.
+  const openParent = () => navigate({ name: 'parent', path: [] });
+
   const tapLocked = (levelId: string) => {
     setShakeId(levelId);
     window.setTimeout(() => setShakeId((cur) => (cur === levelId ? null : cur)), 400);
@@ -150,6 +156,16 @@ export function SagaMap() {
       <button type="button" class="map-back-avatar" onClick={backToProfiles} aria-label="Retour aux profils">
         {profile.avatar}
       </button>
+      <LongPressButton
+        class="lock-button"
+        durationMs={2000}
+        size={56}
+        onLongPress={openParent}
+        aria-label="Espace parent"
+        data-testid="parent-access"
+      >
+        🔒
+      </LongPressButton>
       {remainingRatio !== null && <TimeRing ratio={remainingRatio} />}
       <div class="map-scroll">
         <div class="map-track" style={{ height }}>

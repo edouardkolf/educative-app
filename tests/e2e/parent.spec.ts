@@ -317,8 +317,31 @@ test('la suppression d’un enfant le retire du tableau de bord', async ({ page 
 
   await page.getByTestId('delete-child').click();
   await expect(page.getByText('Supprimer définitivement Timéo et toutes ses statistiques ?')).toBeVisible();
-  await page.getByTestId('delete-child-confirm').click();
 
+  // Mauvais code : rien n'est supprimé, on reste sur la confirmation.
+  await enterPin(page, '9999');
+  await expect(page.locator('.pa-danger-zone .pa-error')).toHaveText('Code incorrect.');
+  await expect(page.getByRole('heading', { name: 'Modifier Timéo' })).toBeVisible();
+
+  // Bon code : suppression effective.
+  await enterPin(page, PARENT_PIN);
   await expect(page.getByRole('heading', { name: 'Espace parent' })).toBeVisible();
   await expect(page.getByText("Aucun enfant pour l'instant.")).toBeVisible();
+});
+
+// ==================== 7. Raccourci parent depuis la carte ====================
+
+test('le cadenas de la carte ouvre l’espace parent (appui long + code)', async ({ page }) => {
+  await createParentCode(page);
+  await addChild(page, 'Lina');
+  await page.getByTestId('back-to-game').click();
+  await chooseProfile(page, 'Lina');
+  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
+
+  // Un tap bref ne fait rien.
+  await page.getByTestId('parent-access').click();
+  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
+
+  await openParentDashboard(page);
+  await expect(page.getByText('Lina')).toBeVisible();
 });
