@@ -1,0 +1,179 @@
+/* Vue « compléter une suite » — classes préfixées seq-, aucun texte. */
+
+.seq-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  gap: clamp(24px, 6vh, 56px);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.seq-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--seq-strip-bg, #fff7e8);
+  border-radius: var(--radius, 20px);
+  padding: 14px 18px;
+  box-sizing: border-box;
+}
+
+.seq-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.seq-cell {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 56px;
+  max-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 14px);
+  background: #ffffff;
+}
+
+.seq-cell--blank {
+  background: transparent;
+  border: 3px dashed var(--color-primary, #ffb347);
+  animation: seq-pulse 1.6s ease-in-out infinite;
+}
+
+.seq-cell--pop {
+  animation: seq-pop 420ms ease-out;
+  border-style: solid;
+}
+
+.seq-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.seq-choice {
+  width: 96px;
+  height: 96px;
+  min-width: 88px;
+  min-height: 88px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius, 20px);
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.seq-choice:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.seq-choice:disabled {
+  cursor: default;
+}
+
+.seq-choice--wrong {
+  opacity: 0.35;
+}
+
+.seq-choice--shake {
+  animation: seq-shake 320ms ease;
+}
+
+.seq-choice--bounce {
+  animation: seq-bounce 500ms ease;
+}
+
+@keyframes seq-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes seq-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes seq-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes seq-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.18);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+  80% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seq-cell--blank,
+  .seq-cell--pop,
+  .seq-choice--shake,
+  .seq-choice--bounce {
+    animation: none;
+  }
+}
