@@ -18,9 +18,9 @@ Un niveau = un fichier JSON. Un parcours = l'ordre des niveaux sur la carte de l
 | `$schema` | Chemin vers le schéma (à copier tel quel) | `"../../level.schema.json"` |
 | `id` | Identifiant unique (lettres, chiffres, tirets) | `"ms-suite-01"` |
 | `title` | Titre lisible par le parent | `"Suite de 2 couleurs"` |
-| `skill` | Compétence cible | `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"` |
+| `skill` | Compétence cible | `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"` |
 | `objective` | Objectif pédagogique en une phrase | `"Continuer une suite AB…"` |
-| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"` |
+| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"` |
 | `rounds` | Nombre de manches | 4 (avec tutoriel) ou 5+ |
 | `tutorial` | Affiche la main animée (optionnel) | `true` ou absent |
 | `stars` | Seuils d'étoiles (optionnel) | Défaut : 0 raté → 3 ⭐, 1 raté → 2 ⭐ |
@@ -106,6 +106,30 @@ Repérer l'élément qui ne correspond pas. Exemple (extrait de ms-intrus-01.jso
 - `shapes` : Formes possibles (optionnel si `differBy` = `"category"`)
 - `categories` : Catégories possibles (optionnel si `differBy` ≠ `"category"`)
 - `distract` : `true` → ajoute une difficulté (éléments varient sur une autre dimension)
+
+### Color-mix (le laboratoire des couleurs)
+
+Verser deux fioles primaires (rouge, jaune, bleu) dans le chaudron pour obtenir la couleur cible affichée en haut de
+l'écran. Une couleur cible primaire (rouge/jaune/bleu) s'obtient en versant deux fois la même fiole. Exemple
+complet (extrait de ms-couleurs-01.json) :
+
+```json
+{
+  "mechanic": "color-mix",
+  "params": {
+    "targets": ["orange", "green", "purple"]
+  }
+}
+```
+
+**Champs** :
+- `targets` : couleurs cibles proposées (au moins 1), tirées au hasard manche après manche, jamais deux fois de
+  suite quand le réservoir le permet, et toutes couvertes dès que `rounds` ≥ `targets.length`.
+
+Le choix envoyé au moteur (`onChoose`) est la couleur RÉSULTANTE du mélange, pas la fiole tapée : rouge+jaune →
+orange, bleu+jaune → vert, rouge+bleu → violet, une même fiole versée deux fois → la même couleur pure. `round.answer`
+est la couleur cible. La vue affiche un objet géant selon la couleur obtenue (🍎 rouge, 🍌 jaune, 🫐 bleu, 🥕 orange,
+🐸 vert, 🍇 violet), même en cas d'erreur (un mélange raté reste une découverte, pas une punition).
 
 ## Valeurs autorisées
 

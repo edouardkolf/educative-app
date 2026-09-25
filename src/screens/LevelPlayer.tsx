@@ -302,7 +302,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       recordsRef.current = [...recordsRef.current, record];
       const runId = runIdRef.current;
       if (runId) recordRound(runId, record).catch((err) => console.error('recordRound failed', err));
-      window.setTimeout(advance, 900);
+      const mechanicForDelay = level ? getMechanic(level.mechanic) : undefined;
+      window.setTimeout(advance, mechanicForDelay?.solvedDelayMs ?? 900);
     } else {
       firstTryRef.current = false;
       playError();
@@ -364,6 +365,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   const mechanic = getMechanic(level.mechanic);
   if (!mechanic) return null;
   const showTutorial = Boolean(level.tutorial) && roundIndex === 0 && !hasTapped;
+  const tutorialTargets = mechanic.tutorialTargets?.(round) ?? [round.answer];
 
   return (
     <div class="screen screen--play">
@@ -383,7 +385,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       <div class="play-round" data-answer={round.answer}>
         <mechanic.View round={round} wrongChoices={wrongChoices} solved={solved} onChoose={onChoose} key={roundIndex} />
       </div>
-      {showTutorial && <TutorialHand answer={round.answer} />}
+      {showTutorial && <TutorialHand targets={tutorialTargets} />}
     </div>
   );
 }

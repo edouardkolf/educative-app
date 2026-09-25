@@ -23,6 +23,7 @@ const SKILL_LABELS: Record<SkillId, string> = {
   counting: 'Dénombrement',
   'visual-discrimination': 'Repérer une différence',
   categorization: 'Catégoriser',
+  'color-mixing': 'Couleurs',
 };
 
 const STATUS_LABELS: Record<LevelStatus, string> = {

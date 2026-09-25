@@ -1,0 +1,228 @@
+/* Vue « color-mix » (laboratoire des couleurs) — classes préfixées cmx-, aucun texte. */
+
+.cmx-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+
+/* ---------- Zone cible (haut) : la question, puis l'objet révélé ---------- */
+
+.cmx-target {
+  flex: 0 0 auto;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cmx-target__splash {
+  width: 76px;
+  height: 76px;
+  border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.cmx-target__splash--pulse {
+  animation: cmx-pulse 1.6s ease-in-out infinite;
+}
+
+.cmx-target__object {
+  font-family: var(--emoji-font);
+  font-size: 72px;
+  line-height: 1;
+}
+
+.cmx-target__object--pop {
+  animation: cmx-pop 550ms ease;
+}
+
+/* ---------- Laboratoire (bas) : fioles + chaudron ---------- */
+
+.cmx-lab {
+  flex: 1;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cmx-flasks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cmx-flask {
+  width: 88px;
+  height: 88px;
+  padding: 10px;
+  border: none;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.cmx-flask__glass {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px 12px 28px 28px;
+}
+
+.cmx-flask:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.cmx-flask--poured {
+  opacity: 0.4;
+}
+
+.cmx-flask:disabled {
+  cursor: default;
+}
+
+.cmx-cauldron {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 16px 16px 50% 50% / 16px 16px 70% 70%;
+  background: rgba(255, 255, 255, 0.35);
+  border: 6px solid rgba(120, 120, 140, 0.45);
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.cmx-cauldron__rim {
+  position: absolute;
+  top: 0;
+  left: -6px;
+  right: -6px;
+  height: 10px;
+  border-radius: 8px;
+  background: rgba(120, 120, 140, 0.5);
+}
+
+.cmx-cauldron__liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0%;
+  transition: height 380ms ease;
+}
+
+.cmx-cauldron__liquid--draining {
+  transition: height 700ms ease-in;
+}
+
+.cmx-bubbles {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding-bottom: 8px;
+  font-family: var(--emoji-font);
+  font-size: 22px;
+  pointer-events: none;
+}
+
+.cmx-bubbles span {
+  animation: cmx-bubble-rise 1s ease-in infinite;
+}
+
+.cmx-bubbles span:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.cmx-bubbles span:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.cmx-drop {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 18px;
+  height: 24px;
+  border-radius: 50% 50% 50% 0;
+  transform: translateX(-50%) rotate(45deg);
+  animation: cmx-drop-fall 480ms ease-in forwards;
+  z-index: 2;
+}
+
+@keyframes cmx-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes cmx-pop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes cmx-bubble-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-90px);
+    opacity: 0;
+  }
+}
+
+@keyframes cmx-drop-fall {
+  0% {
+    top: -10px;
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 60%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cmx-target__splash--pulse,
+  .cmx-target__object--pop,
+  .cmx-bubbles span,
+  .cmx-drop {
+    animation: none;
+  }
+}

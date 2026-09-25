@@ -1,0 +1,12 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-couleurs-02",
+  "title": "Couleurs : les mélanges",
+  "skill": "color-mixing",
+  "objective": "S'entraîner à retrouver quelles couleurs mélanger pour obtenir l'orange, le vert ou le violet.",
+  "mechanic": "color-mix",
+  "rounds": 5,
+  "params": {
+    "targets": ["orange", "green", "purple"]
+  }
+}

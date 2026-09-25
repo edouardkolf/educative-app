@@ -1,0 +1,12 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-couleurs-03",
+  "title": "Couleurs : mélanges et couleurs pures",
+  "skill": "color-mixing",
+  "objective": "Retrouver aussi bien une couleur mélangée qu'une couleur pure obtenue en versant deux fois la même fiole.",
+  "mechanic": "color-mix",
+  "rounds": 5,
+  "params": {
+    "targets": ["orange", "green", "purple", "red", "yellow", "blue"]
+  }
+}

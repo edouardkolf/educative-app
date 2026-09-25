@@ -1,5 +1,5 @@
 // Mécaniques « compter » et « intrus », dispositions de comptage (dé, éparpillé), trou de suite au
-// milieu, progression sur la carte à 20 niveaux, tableau de bord parent et mise en page des 20
+// milieu, progression sur la carte à 23 niveaux, tableau de bord parent et mise en page des 23
 // niveaux sur deux tailles d'écran (voir docs/ARCHITECTURE.md §3, §5, §7, §9 et docs/PROGRESSION-MS.md).
 // Chaque test démarre avec un contexte Playwright neuf, donc un stockage IndexedDB vierge.
 // Aides de navigation copiées de vertical-slice.spec.ts (même convention : non partagées entre fichiers).
@@ -13,7 +13,7 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
-// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 20 niveaux ----------
+// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 23 niveaux ----------
 
 interface TrackJson {
   levels: string[];
@@ -129,20 +129,39 @@ async function currentRoundIndex(page: Page): Promise<number | null> {
   return index === -1 ? null : index;
 }
 
+/**
+ * color-mix (« le laboratoire des couleurs ») n'a pas de choix direct portant l'id de la réponse :
+ * `data-choice` désigne une fiole (red/yellow/blue), la réponse est la couleur RÉSULTANTE du mélange
+ * (voir ColorMixView, contrat MechanicDefinition.solvedDelayMs). La recette (deux fioles à verser) est
+ * exposée en attribut `data-mix-recipe` sur `.cmx-view`, invisible pour l'enfant.
+ */
+async function pourColorMix(page: Page): Promise<void> {
+  const recipe = await page.locator('.cmx-view').getAttribute('data-mix-recipe');
+  if (!recipe) throw new Error('color-mix : data-mix-recipe introuvable.');
+  const [first, second] = recipe.split(',');
+  await page.locator(`[data-choice="${first}"]`).click();
+  await page.locator(`[data-choice="${second}"]`).click();
+}
+
 /** Répond juste à la manche affichée et attend la transition (manche suivante ou fin de niveau). */
 async function answerCorrectly(page: Page): Promise<void> {
   const round = currentRound(page);
   const answer = await round.getAttribute('data-answer');
   if (!answer) throw new Error('Aucune manche affichée (data-answer introuvable).');
   const indexBefore = await currentRoundIndex(page);
-  await page.locator(`[data-choice="${answer}"]`).click();
+  const isColorMix = (await page.locator('.cmx-view').count()) > 0;
+  if (isColorMix) {
+    await pourColorMix(page);
+  } else {
+    await page.locator(`[data-choice="${answer}"]`).click();
+  }
   await expect
     .poll(
       async () => {
         if (await page.getByTestId('level-end').isVisible()) return 'end';
         return currentRoundIndex(page);
       },
-      { timeout: 5000 },
+      { timeout: isColorMix ? 8000 : 5000 },
     )
     .not.toBe(indexBefore);
 }
@@ -388,7 +407,7 @@ test('ms-suite-07 : trou au milieu d\'une suite AB', async ({ page }) => {
 
 // ==================== 5. Progression sur la carte + tableau de bord (captures pleine page) ====================
 
-test('progression sur la carte à 20 niveaux et tableau de bord parent', async ({ page }) => {
+test('progression sur la carte à 23 niveaux et tableau de bord parent', async ({ page }) => {
   test.slow();
   await onboardWithChild(page, 'Yanis', { sessionMinutes: '', dailyMinutes: '' });
   await chooseProfile(page, 'Yanis');
@@ -416,7 +435,7 @@ test('progression sur la carte à 20 niveaux et tableau de bord parent', async (
   if (!lastLevelId) throw new Error('content/tracks/ms.json : parcours vide.');
 
   // La carte défile dans un conteneur interne (.map-scroll), pas dans le document : on agrandit
-  // temporairement le viewport pour que la capture "pleine page" montre les 20 niveaux sans coupe.
+  // temporairement le viewport pour que la capture "pleine page" montre les 23 niveaux sans coupe.
   await page.setViewportSize({ width: defaultViewport.width, height: 3600 });
   await expect(mapNode(page, lastLevelId)).toBeVisible(); // le dernier niveau de la carte est bien rendu
   await page.screenshot({ path: shot('17-carte-20-niveaux.png'), fullPage: true });
@@ -445,14 +464,14 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   await page.screenshot({ path: shot('16-ecran-de-fin.png') });
 });
 
-// ==================== 7. Mise en page des 20 niveaux (test paramétré, standard + petit téléphone) ====================
+// ==================== 7. Mise en page des 23 niveaux (test paramétré, standard + petit téléphone) ====================
 
-test('mise en page : les 20 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(180_000); // 20 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+test('mise en page : les 23 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
+  test.setTimeout(180_000); // 23 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
-  // aussi valide que de rejouer les 20 niveaux dans l'ordre pour un test purement visuel.
+  // aussi valide que de rejouer les 23 niveaux dans l'ordre pour un test purement visuel.
   await openChildStats(page, 'Zoé');
   for (const levelId of TRACK.levels) {
     await page.getByTestId(`override-${levelId}-unlocked`).click();
@@ -478,4 +497,35 @@ test('mise en page : les 20 niveaux tiennent à l\'écran, en standard et sur pe
       await page.setViewportSize(defaultViewport);
     });
   }
+});
+
+// ==================== 8. Color-mix : le laboratoire des couleurs (mélange faux puis juste) ====================
+
+test('ms-couleurs-01 : un mélange faux (pas puni) puis le bon fait avancer la manche', async ({ page }) => {
+  test.slow();
+  await onboardWithChild(page, 'Nolan', { sessionMinutes: '', dailyMinutes: '' });
+  await unlockLevel(page, 'Nolan', 'ms-couleurs-01');
+  await chooseProfile(page, 'Nolan');
+  await openLevelHash(page, 'ms-couleurs-01');
+
+  // La main du tutoriel doit apparaître avant le tout premier tap (et mimer les deux versements).
+  await expect(page.locator('.tutorial-hand')).toBeVisible();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('20-couleurs-labo.png') });
+
+  const indexBefore = await currentRoundIndex(page);
+
+  // Mélange faux : rouge + rouge redonne toujours du rouge, jamais orange/vert/violet (les cibles de
+  // ce niveau) — un vrai mélange quand même (objet révélé), jamais une punition (ARCHITECTURE.md §9).
+  await page.locator('[data-choice="red"]').click();
+  await page.locator('[data-choice="red"]').click();
+  // Bulles (1 s) + objet révélé (1,5 s) + chaudron qui se vide tout seul (0,7 s) avant de pouvoir réessayer.
+  await page.waitForTimeout(3600);
+  expect(await currentRoundIndex(page)).toBe(indexBefore); // toujours la même manche, cible inchangée
+
+  await answerCorrectly(page); // le bon mélange, cette fois : la manche avance
+  await playPerfectly(page, 3); // manches 2 à 4 (ms-couleurs-01.json : rounds = 4)
+
+  await waitForLevelEndButtons(page);
+  await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '2'); // 1 raté au 1er coup
 });

@@ -3,7 +3,7 @@
 Jeux éducatifs pour la maternelle, sous forme de PWA : installable sur Android, plein écran, hors ligne,
 sans compte et sans serveur. Les données restent sur le téléphone.
 
-- **Pour l'enfant** : une carte à étoiles, trois mécaniques (compléter une suite, compter, trouver l'intrus), aucun texte à lire.
+- **Pour l'enfant** : une carte à étoiles, quatre mécaniques (compléter une suite, compter, trouver l'intrus, mélanger des couleurs), aucun texte à lire.
 - **Pour le parent** : espace protégé par code, statistiques par enfant et par niveau, minuteur et quota quotidien, export et import JSON.
 
 ## Documentation

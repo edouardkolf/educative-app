@@ -15,11 +15,11 @@
     },
     "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
     "skill": {
-      "enum": ["patterns", "counting", "visual-discrimination", "categorization"],
-      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie."
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix"], "description": "Mécanique de jeu. Détermine la forme de params." },
     "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
@@ -54,6 +54,10 @@
     {
       "if": { "type": "object", "properties": { "mechanic": { "const": "odd-one-out" } } },
       "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/oddOneOutParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "color-mix" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/colorMixParams" } } }
     }
   ],
   "definitions": {
@@ -109,6 +113,21 @@
         "shapes": { "type": "array", "items": { "$ref": "#/definitions/shape" }, "minItems": 2, "uniqueItems": true },
         "categories": { "type": "array", "items": { "$ref": "#/definitions/category" }, "minItems": 2, "uniqueItems": true },
         "distract": { "type": "boolean", "description": "Plus difficile : les autres éléments varient sur une autre dimension." }
+      }
+    },
+    "colorMixParams": {
+      "type": "object",
+      "description": "Le laboratoire des couleurs : mélanger deux fioles pour obtenir la couleur cible.",
+      "required": ["targets"],
+      "additionalProperties": false,
+      "properties": {
+        "targets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/color" },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Couleurs cibles proposées (une couleur primaire cible se réalise en versant deux fois la même fiole)."
+        }
       }
     }
   }

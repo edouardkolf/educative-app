@@ -1,0 +1,13 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-couleurs-01",
+  "title": "Couleurs : orange, vert, violet",
+  "skill": "color-mixing",
+  "objective": "Découvrir qu'on obtient l'orange, le vert et le violet en mélangeant deux couleurs primaires.",
+  "mechanic": "color-mix",
+  "rounds": 4,
+  "tutorial": true,
+  "params": {
+    "targets": ["orange", "green", "purple"]
+  }
+}

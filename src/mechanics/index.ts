@@ -1,5 +1,6 @@
 // Registre des mécaniques. Ajouter une mécanique = une ligne ici + son dossier.
 import type { MechanicDefinition, MechanicId } from '../engine/types';
+import { colorMix } from './color-mix';
 import { count } from './count';
 import { oddOneOut } from './odd-one-out';
 import { sequence } from './sequence';
@@ -11,6 +12,7 @@ const registry: Partial<Record<MechanicId, AnyMechanic>> = {
   sequence,
   count,
   'odd-one-out': oddOneOut,
+  'color-mix': colorMix,
 };
 
 export function getMechanic(id: MechanicId): AnyMechanic | undefined {

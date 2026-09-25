@@ -100,3 +100,60 @@ export function playTap(): void {
   if (!context || !soundEnabled) return;
   tone(880, context.currentTime, 0.05, { type: 'square', peak: 0.05, attack: 0.002, release: 0.03 });
 }
+
+/** Une note dont la fréquence glisse (montée ou descente), pour les bruits de liquide. */
+function glide(
+  startFreq: number,
+  endFreq: number,
+  startAt: number,
+  duration: number,
+  opts: { type?: OscillatorType; peak?: number } = {},
+): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  try {
+    const { type = 'sine', peak = 0.16 } = opts;
+    const osc = context.createOscillator();
+    osc.type = type;
+    osc.frequency.setValueAtTime(startFreq, startAt);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(endFreq, 1), startAt + duration);
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(peak, startAt + Math.min(0.02, duration / 4));
+    gain.gain.linearRampToValueAtTime(0, startAt + duration);
+    osc.connect(gain).connect(context.destination);
+    osc.start(startAt);
+    osc.stop(startAt + duration + 0.02);
+  } catch {
+    // silencieux par contrat
+  }
+}
+
+/** Laboratoire des couleurs : une goutte qui tombe dans le chaudron (glissé descendant bref). */
+export function playPour(): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  glide(700, 260, context.currentTime, 0.22, { type: 'sine', peak: 0.16 });
+}
+
+/** Laboratoire des couleurs : le chaudron qui mélange (petites bulles qui remontent, ~1 s). */
+export function playBubble(): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  const now = context.currentTime;
+  const bubbles = 7;
+  for (let i = 0; i < bubbles; i += 1) {
+    const startAt = now + i * 0.13;
+    const base = 260 + ((i * 53) % 180);
+    glide(base, base + 140, startAt, 0.11, { type: 'triangle', peak: 0.09 });
+  }
+}
+
+/** Laboratoire des couleurs : le chaudron se vide (glissé grave descendant, « glouglou »). */
+export function playDrain(): void {
+  const context = getContext();
+  if (!context || !soundEnabled) return;
+  const now = context.currentTime;
+  glide(320, 90, now, 0.35, { type: 'sine', peak: 0.14 });
+  glide(220, 70, now + 0.16, 0.3, { type: 'sine', peak: 0.1 });
+}

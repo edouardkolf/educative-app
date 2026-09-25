@@ -26,10 +26,10 @@ export type ObjectId = string;
 
 // ---------- Niveaux et parcours ----------
 
-export const MECHANICS = ['sequence', 'count', 'odd-one-out'] as const;
+export const MECHANICS = ['sequence', 'count', 'odd-one-out', 'color-mix'] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
-export const SKILLS = ['patterns', 'counting', 'visual-discrimination', 'categorization'] as const;
+export const SKILLS = ['patterns', 'counting', 'visual-discrimination', 'categorization', 'color-mixing'] as const;
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
 
@@ -80,10 +80,20 @@ export interface OddOneOutParams {
   distract: boolean;
 }
 
+/** Le laboratoire des couleurs : mélanger deux couleurs primaires pour obtenir une couleur cible. */
+export interface ColorMixParams {
+  /**
+   * Couleurs cibles proposées, tirées au hasard manche après manche (jamais deux fois de suite).
+   * Une cible primaire (red/blue/yellow) se réalise en versant deux fois la même fiole.
+   */
+  targets: Color[];
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
   'odd-one-out': OddOneOutParams;
+  'color-mix': ColorMixParams;
 }
 
 interface LevelBase {
@@ -162,6 +172,17 @@ export interface MechanicDefinition<M extends MechanicId, D = unknown> {
   /** Génère `count` manches, différentes entre elles quand les paramètres le permettent. */
   generateRounds(params: MechanicParamsMap[M], count: number, rng: Rng): Round<D>[];
   View: FunctionComponent<MechanicViewProps<D>>;
+  /**
+   * Délai (ms) avant de passer à la manche suivante après une bonne réponse. Défaut du moteur : 900 ms.
+   * Permet à une mécanique avec sa propre animation de réussite (ex. color-mix) de durer plus longtemps
+   * sans que le moteur n'enchaîne trop tôt.
+   */
+  solvedDelayMs?: number;
+  /**
+   * Suite de `data-choice` que la main du tutoriel doit taper l'un après l'autre pendant la première
+   * manche (ex. color-mix : deux fioles à verser). Défaut du moteur : `[round.answer]`.
+   */
+  tutorialTargets?(round: Round<D>): ChoiceId[];
 }
 
 // ---------- État de la carte ----------
