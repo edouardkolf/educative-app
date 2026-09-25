@@ -1,0 +1,578 @@
+/*
+ * Espace parent (préfixe de classes : pa-).
+ * Interface pour adultes : sobre, lisible en portrait 360–412 px, boutons ≥ 48 px, cartes empilées
+ * (jamais de tableau large), fond clair. Importé une fois depuis ParentSpace.tsx.
+ */
+
+.pa-space {
+  --pa-bg: #fff8ec;
+  --pa-surface: #ffffff;
+  --pa-border: #e7dcc8;
+  --pa-text: #2b2118;
+  --pa-muted: #6b5e4f;
+  --pa-primary: #ffb347;
+  --pa-primary-text: #3a2400;
+  --pa-danger: #b3261e;
+  --pa-danger-bg: #fbeae8;
+  --pa-success: #21692b;
+  --pa-success-bg: #e9f6ea;
+  --pa-focus: #1d7fd8;
+  --pa-radius: 14px;
+
+  box-sizing: border-box;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--pa-bg);
+  color: var(--pa-text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.pa-space *,
+.pa-space *::before,
+.pa-space *::after {
+  box-sizing: border-box;
+}
+
+.pa-space *:focus-visible {
+  outline: 3px solid var(--pa-focus);
+  outline-offset: 2px;
+}
+
+/* Les champs de saisie doivent rester sélectionnables même si le style global les en empêche. */
+.pa-space input,
+.pa-space textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
+
+.pa-space--center {
+  justify-content: center;
+  align-items: center;
+}
+
+.pa-space h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.pa-space h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.pa-space h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.pa-space p {
+  margin: 0;
+}
+
+.pa-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pa-muted {
+  color: var(--pa-muted);
+}
+
+.pa-error {
+  color: var(--pa-danger);
+  background: var(--pa-danger-bg);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.pa-success {
+  color: var(--pa-success);
+}
+
+/* ---------- Boutons ---------- */
+
+.pa-button {
+  min-height: 48px;
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  width: 100%;
+  color: var(--pa-text);
+  background: var(--pa-surface);
+}
+
+.pa-button--primary {
+  background: var(--pa-primary);
+  border-color: var(--pa-primary);
+  color: var(--pa-primary-text);
+}
+
+.pa-button--secondary {
+  background: var(--pa-surface);
+  border-color: var(--pa-border);
+}
+
+.pa-button--ghost {
+  background: transparent;
+  border-color: var(--pa-border);
+  color: var(--pa-muted);
+}
+
+.pa-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pa-link {
+  background: none;
+  border: none;
+  padding: 10px;
+  min-height: 48px;
+  color: var(--pa-focus);
+  font-size: 16px;
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Sections (cartes) ---------- */
+
+.pa-section {
+  background: var(--pa-surface);
+  border: 1px solid var(--pa-border);
+  border-radius: var(--pa-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pa-section__title {
+  font-size: 18px;
+}
+
+/* ---------- Tableau de bord : liste d'enfants ---------- */
+
+.pa-child-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pa-child-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--pa-bg);
+  border: 1px solid var(--pa-border);
+  border-radius: 12px;
+}
+
+.pa-child-card__avatar {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  background: var(--pa-surface);
+  border-radius: 50%;
+}
+
+.pa-child-card__info {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.pa-child-card__name {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.pa-child-card__track {
+  color: var(--pa-muted);
+  margin-top: 2px;
+}
+
+.pa-child-card__actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.pa-child-card__actions .pa-button {
+  width: auto;
+  flex: 1;
+  padding: 10px 8px;
+}
+
+/* ---------- Code parent (PinGate) ---------- */
+
+.pa-pin-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--pa-surface);
+  border: 1px solid var(--pa-border);
+  border-radius: var(--pa-radius);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.pa-pin-title {
+  font-size: 20px;
+}
+
+.pa-pin-hint {
+  color: var(--pa-muted);
+}
+
+.pa-pin-dots {
+  display: flex;
+  gap: 16px;
+}
+
+.pa-pin-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--pa-border);
+  background: transparent;
+}
+
+.pa-pin-dot--filled {
+  background: var(--pa-primary);
+  border-color: var(--pa-primary);
+}
+
+.pa-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.pa-keypad__key {
+  min-height: 64px;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 12px;
+  border: 1px solid var(--pa-border);
+  background: var(--pa-bg);
+  color: var(--pa-text);
+  cursor: pointer;
+}
+
+.pa-keypad__key--spacer {
+  border: none;
+  background: none;
+  cursor: default;
+}
+
+.pa-keypad__key--delete {
+  font-size: 20px;
+  color: var(--pa-danger);
+}
+
+.pa-keypad__key:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@keyframes pa-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(8px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.pa-shake {
+  animation: pa-shake 400ms ease-in-out;
+}
+
+.pa-recovery {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pa-recovery__sum {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.pa-recovery__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- Champs de formulaire ---------- */
+
+.pa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pa-field__label {
+  font-weight: 700;
+  padding: 0;
+}
+
+.pa-input {
+  min-height: 48px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-family: inherit;
+  border-radius: 10px;
+  border: 1px solid var(--pa-border);
+  background: var(--pa-surface);
+  color: var(--pa-text);
+}
+
+.pa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pa-form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- Avatar et parcours ---------- */
+
+.pa-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.pa-avatar-option {
+  min-height: 56px;
+  font-size: 28px;
+  border-radius: 12px;
+  border: 2px solid var(--pa-border);
+  background: var(--pa-surface);
+  cursor: pointer;
+}
+
+.pa-avatar-option--selected {
+  border-color: var(--pa-primary);
+  background: color-mix(in srgb, var(--pa-primary) 25%, var(--pa-surface));
+}
+
+.pa-track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pa-track-option {
+  min-height: 48px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-family: inherit;
+  text-align: left;
+  border-radius: 10px;
+  border: 2px solid var(--pa-border);
+  background: var(--pa-surface);
+  color: var(--pa-text);
+  cursor: pointer;
+}
+
+.pa-track-option--selected {
+  border-color: var(--pa-primary);
+  background: color-mix(in srgb, var(--pa-primary) 20%, var(--pa-surface));
+  font-weight: 700;
+}
+
+/* ---------- Statistiques ---------- */
+
+.pa-stats-header__avatar {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  background: var(--pa-surface);
+  border: 1px solid var(--pa-border);
+  border-radius: 50%;
+}
+
+.pa-summary {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.pa-stat {
+  flex: 1 1 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pa-stat__value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pa-stat__label {
+  color: var(--pa-muted);
+}
+
+.pa-level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pa-level-card {
+  border: 1px solid var(--pa-border);
+  border-radius: 12px;
+  padding: 14px;
+  background: var(--pa-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pa-level-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pa-level-card__skill {
+  color: var(--pa-muted);
+  margin-top: 2px;
+}
+
+.pa-badge {
+  flex: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 16px;
+  white-space: nowrap;
+  background: var(--pa-border);
+  color: var(--pa-text);
+}
+
+.pa-badge--completed {
+  background: var(--pa-success-bg);
+  color: var(--pa-success);
+}
+
+.pa-badge--unlocked {
+  background: #e6f0fb;
+  color: var(--pa-focus);
+}
+
+.pa-badge--locked {
+  background: var(--pa-border);
+  color: var(--pa-muted);
+}
+
+.pa-stars {
+  display: flex;
+  gap: 4px;
+}
+
+.pa-star {
+  font-size: 24px;
+  color: var(--pa-border);
+}
+
+.pa-star--filled {
+  color: var(--pa-primary);
+}
+
+.pa-stat-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 12px;
+}
+
+.pa-stat-grid__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--pa-surface);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.pa-stat-grid__item dt {
+  color: var(--pa-muted);
+}
+
+.pa-stat-grid__item dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.pa-help-box {
+  background: var(--pa-surface);
+  border: 1px dashed var(--pa-border);
+  border-radius: var(--pa-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pa-help-box ul {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
