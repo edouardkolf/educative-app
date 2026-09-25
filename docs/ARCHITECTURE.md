@@ -9,7 +9,7 @@ Ce document est la référence pour les humains et pour les agents : en cas de d
 |---|---|---|
 | **Vite + TypeScript strict** | Build rapide, typage qui attrape les erreurs avant le téléphone. | `npm run build` produit un dossier `dist/` statique. |
 | **Preact** (API React, 4 ko) | Composants lisibles, écosystème React, très léger. | Tout développeur ou agent qui connaît React s'y retrouve. |
-| **vite-plugin-pwa** (Workbox) | Manifest + service worker générés : installable, plein écran, hors ligne. | Mise à jour automatique au lancement suivant quand une nouvelle version est publiée. |
+| **vite-plugin-pwa** (Workbox) | Manifest + service worker générés : installable, plein écran, hors ligne. | Nouvelle version recherchée au lancement puis toutes les heures, installée au retour sur l'écran des profils, jamais pendant une partie. |
 | **IndexedDB via `idb`** | Stockage local durable, requêtable ; `idb` = 1 ko autour de l'API native. | Données liées au navigateur du téléphone : **l'export JSON est la sauvegarde**. |
 | **Navigation par hash** (`#/map`) | Marche sur GitHub Pages sans configuration serveur, gère le bouton retour Android. | Compatible Capacitor tel quel. |
 | **Sons synthétisés (Web Audio)** | Aucun fichier audio, aucune licence, fonctionne hors ligne. | Les consignes vocales (V2) utiliseront de vrais fichiers via le champ `audio`. |
@@ -88,7 +88,7 @@ Le conteneur de manche porte `data-answer` (utile aux tests e2e, invisible pour 
 | `runs` | `id` (index `profileId`, `[profileId, levelId]`) | une partie : début, fin, statut, raison d'arrêt, rejeu, manches, étoiles |
 | `overrides` | `[profileId, levelId]` | niveau forcé débloqué ou verrouillé par le parent |
 | `usage` | `[profileId, day]` | secondes de jeu actives par jour, minutes bonus accordées |
-| `settings` | `"app"` | empreinte du code parent, son, session en cours, écran de fin actif |
+| `settings` | `"app"` | empreinte du code parent, son, session en cours de chaque enfant, écran de fin actif |
 
 La progression (étoiles, niveaux débloqués) est **recalculée à partir des parties** (`computeLevelStates`) : aucune donnée dupliquée qui pourrait diverger.
 Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persistant oui/non) s'affiche dans l'espace parent.
@@ -113,10 +113,11 @@ Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persis
 
 - **Code parent** : 4 chiffres, stocké haché (SHA-256 avec sel). Si le code est oublié, une multiplication d'adulte (ex. 17 × 23) permet de le réinitialiser.
 - **Accès** : appui long de 2 s sur le cadenas de l'écran profils, puis saisie du code. Un tap bref ne fait rien.
-- **Minuteur de session** (par enfant, en minutes) : compte le temps actif (app visible, profil sélectionné).
-  À l'échéance, la manche en cours se termine, puis l'écran de fin s'affiche et la partie passe en `time-up`.
+- **Minuteur de session** (par enfant, en minutes) : compte le temps actif (app visible, profil sélectionné, carte ou partie).
+  Chaque enfant a sa propre session. Elle reprend s'il revient dans les 10 minutes, donc passer par le profil de sa sœur ne remet pas le compteur à zéro.
+  À l'échéance, la manche en cours se termine (60 s maximum), puis l'écran de fin s'affiche et la partie passe en `time-up`.
 - **Quota quotidien** (par enfant) : même mécanisme, cumulé sur la journée locale.
-- **Écran de fin** : visuel calme (lune, sans texte), persisté (`settings.lock`), donc un rechargement ne le contourne pas.
+- **Écran de fin** : visuel calme (lune, sans texte), persisté (`settings.lock`). Ni un rechargement, ni le bouton retour Android, ni la navigation directe ne le contournent.
   Après le code parent, le parent choisit : +5 min, +15 min (minutes bonus du jour) ou retour aux profils.
 - **Hors périmètre** : empêcher de quitter l'app. C'est l'épinglage d'écran Android qui s'en charge.
 

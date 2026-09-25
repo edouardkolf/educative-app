@@ -52,9 +52,11 @@ Géré par Android, pas par l'app :
 
 ## 6. Au quotidien
 
-- **Mises à jour** : l'app vérifie s'il existe une nouvelle version à chaque lancement et se recharge seule quelques secondes après.
+- **Mises à jour** : l'app cherche une nouvelle version au lancement, puis toutes les heures. Elle l'installe dès qu'on revient
+  sur l'écran des profils, jamais pendant une partie. Avec l'épinglage d'écran, l'app reste ouverte des jours : c'est ce retour
+  à l'écran des profils qui déclenche la mise à jour.
 - **Sauvegarde** : les données vivent dans Chrome sur ce téléphone. *Espace parent → Exporter la progression* avant
-  de changer de téléphone ou d'effacer les données de Chrome. L'import (étape 3 du plan) restaure le fichier.
+  de changer de téléphone ou d'effacer les données de Chrome. *Importer une sauvegarde* restaure le fichier sur le même téléphone ou sur un nouveau.
 - **Ajouter un niveau** : voir `docs/CONTENU.md`. On crée un fichier JSON, on l'ajoute au parcours, on pousse sur `main`.
 
 ## Pour développer en local (optionnel)
