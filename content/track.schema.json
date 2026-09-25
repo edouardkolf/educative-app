@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "track.schema.json",
+  "title": "Parcours",
+  "description": "Un parcours = la carte d'un niveau scolaire. L'ordre de `levels` est l'ordre sur la carte.",
+  "type": "object",
+  "required": ["id", "title", "levels"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Identifiant, identique au nom du fichier sans .json." },
+    "title": { "type": "string", "minLength": 1, "description": "Nom lisible par le parent." },
+    "minStarsToUnlockNext": { "type": "integer", "minimum": 1, "maximum": 3, "description": "Étoiles minimum pour débloquer le niveau suivant (défaut 1)." },
+    "levels": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true, "description": "Identifiants des niveaux, dans l'ordre de la carte." }
+  }
+}

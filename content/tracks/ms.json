@@ -1,0 +1,7 @@
+{
+  "$schema": "../track.schema.json",
+  "id": "ms",
+  "title": "Moyenne section",
+  "minStarsToUnlockNext": 1,
+  "levels": ["ms-suite-01", "ms-suite-02", "ms-suite-03"]
+}

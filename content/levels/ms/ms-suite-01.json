@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-01",
+  "title": "Suite de 2 couleurs",
+  "skill": "patterns",
+  "objective": "Continuer une suite qui alterne 2 couleurs (rouge, bleu, rouge, bleu…).",
+  "mechanic": "sequence",
+  "rounds": 4,
+  "tutorial": true,
+  "params": {
+    "pattern": "AB",
+    "vary": "color",
+    "colors": ["red", "blue", "yellow"],
+    "shapes": ["circle"],
+    "length": 5,
+    "blank": "end",
+    "choices": 2
+  }
+}

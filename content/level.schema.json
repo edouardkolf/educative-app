@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level.schema.json",
+  "title": "Niveau",
+  "description": "Un niveau de jeu. Ajouter un niveau = créer un fichier content/levels/<parcours>/<id>.json puis l'ajouter au parcours (content/tracks/<parcours>.json).",
+  "type": "object",
+  "required": ["id", "title", "skill", "objective", "mechanic", "rounds", "params"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Identifiant unique, identique au nom du fichier sans .json (ex. ms-suite-01)."
+    },
+    "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
+    "skill": {
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie."
+    },
+    "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
+    "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
+    "stars": {
+      "type": "object",
+      "description": "Seuils d'étoiles en nombre de manches ratées au premier essai. Défaut : 0 raté = 3 étoiles, 1 raté = 2 étoiles, sinon 1.",
+      "required": ["maxMissesFor3", "maxMissesFor2"],
+      "additionalProperties": false,
+      "properties": {
+        "maxMissesFor3": { "type": "integer", "minimum": 0 },
+        "maxMissesFor2": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "audio": {
+      "type": "object",
+      "description": "Réservé aux consignes audio (V2). Laisser absent ou vide en V1.",
+      "additionalProperties": false,
+      "properties": {
+        "instruction": { "type": "string", "description": "Chemin d'un fichier audio de consigne (V2)." }
+      }
+    },
+    "params": { "type": "object", "description": "Paramètres de difficulté, propres à la mécanique." }
+  },
+  "allOf": [
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "sequence" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/sequenceParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "count" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/countParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "odd-one-out" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/oddOneOutParams" } } }
+    }
+  ],
+  "definitions": {
+    "color": { "enum": ["red", "blue", "yellow", "green", "purple", "orange"] },
+    "shape": { "enum": ["circle", "square", "triangle", "star", "heart", "diamond"] },
+    "category": { "enum": ["fruit", "animal", "vehicle", "toy"] },
+    "objectId": {
+      "enum": [
+        "apple", "banana", "pear", "strawberry", "cherries", "grapes",
+        "dog", "cat", "rabbit", "fish", "bird", "ladybug",
+        "car", "bus", "bike", "boat", "train", "tractor",
+        "ball", "teddy", "balloon", "kite", "yoyo", "drum"
+      ]
+    },
+    "sequenceParams": {
+      "type": "object",
+      "description": "Compléter une suite.",
+      "required": ["pattern", "vary", "colors", "shapes", "length", "blank", "choices"],
+      "additionalProperties": false,
+      "properties": {
+        "pattern": { "type": "string", "pattern": "^[A-D]{2,6}$", "description": "Motif répété ; chaque lettre = un élément distinct (AB, AAB, ABB, ABC, AABB…)." },
+        "vary": { "enum": ["color", "shape", "both"], "description": "Ce qui distingue les éléments du motif." },
+        "colors": { "type": "array", "items": { "$ref": "#/definitions/color" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de couleurs." },
+        "shapes": { "type": "array", "items": { "$ref": "#/definitions/shape" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de formes." },
+        "length": { "type": "integer", "minimum": 4, "maximum": 10, "description": "Nombre total de cases, case à compléter comprise." },
+        "blank": { "enum": ["end", "middle"], "description": "end = continuer la suite ; middle = combler un trou." },
+        "choices": { "type": "integer", "minimum": 2, "maximum": 4, "description": "Nombre de propositions." }
+      }
+    },
+    "countParams": {
+      "type": "object",
+      "description": "Compter des objets et taper le bon nombre.",
+      "required": ["min", "max", "objects", "layout", "choices", "answers"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "max": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "objects": { "type": "array", "items": { "$ref": "#/definitions/objectId" }, "minItems": 1, "uniqueItems": true, "description": "Objets possibles (un type d'objet par manche)." },
+        "layout": { "enum": ["line", "scatter", "dice"], "description": "line = alignés ; scatter = éparpillés ; dice = constellations de dé (max 6)." },
+        "choices": { "type": "integer", "minimum": 2, "maximum": 4, "description": "Nombre de propositions." },
+        "answers": { "enum": ["digits", "dots", "digits+dots"], "description": "Présentation des réponses." }
+      }
+    },
+    "oddOneOutParams": {
+      "type": "object",
+      "description": "Trouver l'intrus.",
+      "required": ["items", "differBy", "distract"],
+      "additionalProperties": false,
+      "properties": {
+        "items": { "type": "integer", "minimum": 3, "maximum": 6, "description": "Nombre d'éléments affichés, intrus compris." },
+        "differBy": { "enum": ["color", "shape", "category"], "description": "En quoi l'intrus diffère." },
+        "colors": { "type": "array", "items": { "$ref": "#/definitions/color" }, "minItems": 2, "uniqueItems": true },
+        "shapes": { "type": "array", "items": { "$ref": "#/definitions/shape" }, "minItems": 2, "uniqueItems": true },
+        "categories": { "type": "array", "items": { "$ref": "#/definitions/category" }, "minItems": 2, "uniqueItems": true },
+        "distract": { "type": "boolean", "description": "Plus difficile : les autres éléments varient sur une autre dimension." }
+      }
+    }
+  }
+}
