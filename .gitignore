@@ -6,3 +6,5 @@ playwright-report
 *.local
 .DS_Store
 .claude/settings.local.json
+dist-e2e-*
+test-results-*
