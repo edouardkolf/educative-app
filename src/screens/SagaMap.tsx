@@ -5,6 +5,7 @@ import type { LevelState, MechanicId } from '../engine/types';
 import { listOverrides, listRuns } from '../storage';
 import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
+import { useSession } from '../app/SessionProvider';
 import { Shape } from '../ui/Shape';
 import { StarRow } from '../ui/StarRow';
 
@@ -56,8 +57,31 @@ function MechanicIcon({ mechanic }: { mechanic: MechanicId | undefined }) {
   return null;
 }
 
+/** Indicateur discret (§8) : un soleil entouré d'un anneau qui se vide selon le temps restant. */
+function TimeRing({ ratio }: { ratio: number }) {
+  const radius = 16;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - Math.max(0, Math.min(1, ratio)));
+  return (
+    <div class="map-time-ring" aria-hidden="true">
+      <svg class="map-time-ring__ring" viewBox="0 0 40 40" width={40} height={40}>
+        <circle class="map-time-ring__track" cx="20" cy="20" r={radius} />
+        <circle
+          class="map-time-ring__progress"
+          cx="20"
+          cy="20"
+          r={radius}
+          style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
+        />
+      </svg>
+      <span class="map-time-ring__sun">☀️</span>
+    </div>
+  );
+}
+
 export function SagaMap() {
   const { profile, setProfile } = useProfile();
+  const { remainingRatio } = useSession();
   const [states, setStates] = useState<LevelState[] | null>(null);
   const [shakeId, setShakeId] = useState<string | null>(null);
   const scrolledRef = useRef(false);
@@ -126,6 +150,7 @@ export function SagaMap() {
       <button type="button" class="map-back-avatar" onClick={backToProfiles} aria-label="Retour aux profils">
         {profile.avatar}
       </button>
+      {remainingRatio !== null && <TimeRing ratio={remainingRatio} />}
       <div class="map-scroll">
         <div class="map-track" style={{ height }}>
           <span class="map-decor" style={{ left: '12%', top: '8%' }} aria-hidden="true">

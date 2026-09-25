@@ -10,11 +10,13 @@ interface LevelEndProps {
   onNext: () => void;
   onReplay: () => void;
   onToMap: () => void;
+  /** Appelé une fois (quand l'animation des étoiles se termine) : minuteur, écran de fin différé. */
+  onDone?: () => void;
 }
 
 const STAR_INTERVAL_MS = 600;
 
-export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap }: LevelEndProps) {
+export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap, onDone }: LevelEndProps) {
   const [shown, setShown] = useState(0);
 
   useEffect(() => {
@@ -34,6 +36,12 @@ export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap }: LevelEnd
   }, [stars]);
 
   const done = shown >= stars;
+
+  useEffect(() => {
+    if (done) onDone?.();
+    // Ne doit se déclencher qu'au moment où l'animation se termine, pas à chaque changement de `onDone`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
 
   return (
     <div class="screen screen--level-end" data-testid="level-end" data-stars={shown}>

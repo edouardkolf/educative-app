@@ -17,6 +17,7 @@ import { abandonRun, completeRun, listOverrides, listRuns, recordRound, startRun
 import { getMechanic } from '../mechanics';
 import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
+import { useSession } from '../app/SessionProvider';
 import { playError, playSuccess } from '../ui/sound';
 import { IconButton } from '../ui/IconButton';
 import { TutorialHand } from '../ui/TutorialHand';
@@ -24,8 +25,11 @@ import { LevelEnd } from './LevelEnd';
 
 type Phase = 'loading' | 'not-found' | 'unavailable' | 'playing' | 'end';
 
+const NO_ANSWER_TIMEOUT_MS = 60_000;
+
 export function LevelPlayer({ levelId }: { levelId: string }) {
   const { profile } = useProfile();
+  const { timeUp, timeUpRef } = useSession();
   const [phase, setPhase] = useState<Phase>('loading');
   const [level, setLevel] = useState<Level | null>(null);
   const [rounds, setRounds] = useState<Round<unknown>[] | null>(null);
@@ -44,6 +48,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   const firstTryRef = useRef(true);
   const roundStartRef = useRef(0);
   const busyRef = useRef(false);
+  const starsDoneRef = useRef(false);
+  const lockAfterStarsRef = useRef(false);
 
   // Charge le niveau et démarre une partie. Se relance au changement de niveau ou de `runToken`
   // (rejouer) ; le nettoyage abandonne toute partie encore en cours (bouton maison, retour Android,
@@ -89,6 +95,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       tapsRef.current = 0;
       firstTryRef.current = true;
       busyRef.current = false;
+      starsDoneRef.current = false;
+      lockAfterStarsRef.current = false;
       roundStartRef.current = performance.now();
       setLevel(lvl);
       setRounds(generated);
@@ -143,10 +151,34 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
     setPhase('end');
   };
 
+  // Fin douce (§8) : le minuteur ou le quota est atteint pendant une manche non finale — la manche
+  // en cours a été laissée se terminer (bonne réponse ou 60 s sans réponse), mais on s'arrête là :
+  // abandon "time-up" (une interruption, pas un abandon) puis écran de fin. `endedRef` avant l'appel
+  // réseau pour que le nettoyage au démontage (changement de route) ne compte pas aussi un "quit".
+  const timeUpEnd = async () => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    const runId = runIdRef.current;
+    if (runId) {
+      try {
+        await abandonRun(runId, 'time-up');
+      } catch (err) {
+        console.error('abandonRun (time-up) failed', err);
+      }
+    }
+    navigate({ name: 'locked' }, { replace: true });
+  };
+
   const advance = () => {
     if (endedRef.current) return; // partie déjà quittée pendant le délai de 900 ms
     const total = rounds?.length ?? 0;
     const next = roundIndex + 1;
+    // Lu via une ref (pas l'état réactif `timeUp`) : ce callback différé (setTimeout 900 ms) a pu
+    // capturer un rendu antérieur à l'apparition du minuteur.
+    if (next < total && timeUpRef.current) {
+      void timeUpEnd();
+      return;
+    }
     if (next >= total) {
       void finish();
       return;
@@ -159,6 +191,26 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
     firstTryRef.current = true;
     roundStartRef.current = performance.now();
   };
+
+  // Sans réponse dans les 60 s après l'apparition du minuteur pendant une manche : même fin douce.
+  useEffect(() => {
+    if (!timeUp || phase !== 'playing' || solved) return undefined;
+    const id = window.setTimeout(() => void timeUpEnd(), NO_ANSWER_TIMEOUT_MS);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeUp, phase, roundIndex, solved]);
+
+  // Niveau terminé (étoiles) : écran de fin 3 s après la fin de l'animation, dans les deux ordres
+  // possibles — le minuteur peut arriver avant ou après la dernière étoile (`onDone` couvre le
+  // premier cas, cet effet le second, une fois `starsDoneRef` déjà vrai).
+  const scheduleLockAfterStars = () => {
+    if (lockAfterStarsRef.current) return;
+    lockAfterStarsRef.current = true;
+    window.setTimeout(() => navigate({ name: 'locked' }, { replace: true }), 3000);
+  };
+  useEffect(() => {
+    if (phase === 'end' && timeUp && starsDoneRef.current) scheduleLockAfterStars();
+  }, [phase, timeUp]);
 
   const onChoose = (choice: ChoiceId) => {
     if (phase !== 'playing' || solved || busyRef.current || !rounds) return;
@@ -222,6 +274,10 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
         onNext={() => nextLevelId && navigate({ name: 'play', levelId: nextLevelId })}
         onReplay={() => setRunToken((t) => t + 1)}
         onToMap={() => navigate({ name: 'map' })}
+        onDone={() => {
+          starsDoneRef.current = true;
+          if (timeUpRef.current) scheduleLockAfterStars();
+        }}
       />
     );
   }
