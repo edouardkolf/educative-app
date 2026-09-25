@@ -35,6 +35,12 @@ export const OBJECTS: readonly ObjectDef[] = [
   { id: 'kite', emoji: '🪁', category: 'toy', label: 'cerf-volant' },
   { id: 'yoyo', emoji: '🪀', category: 'toy', label: 'yoyo' },
   { id: 'drum', emoji: '🥁', category: 'toy', label: 'tambour' },
+  { id: 'sunflower', emoji: '🌻', category: 'plant', label: 'tournesol' },
+  { id: 'tulip', emoji: '🌷', category: 'plant', label: 'tulipe' },
+  { id: 'cactus', emoji: '🌵', category: 'plant', label: 'cactus' },
+  { id: 'tree', emoji: '🌳', category: 'plant', label: 'arbre' },
+  { id: 'fir', emoji: '🌲', category: 'plant', label: 'sapin' },
+  { id: 'clover', emoji: '🍀', category: 'plant', label: 'trèfle' },
 ];
 
 export function getObject(id: ObjectId): ObjectDef | undefined {

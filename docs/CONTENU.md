@@ -50,12 +50,30 @@ Continuer un motif répété. Exemple complet (extrait de ms-suite-01.json) :
 
 **Champs** :
 - `pattern` : Motif répété (AB, AAB, ABB, ABC, etc.)
-- `vary` : Ce qui distingue les éléments (`"color"`, `"shape"`, `"both"`)
-- `colors` : Liste des couleurs disponibles
-- `shapes` : Liste des formes disponibles
+- `vary` : Ce qui distingue les éléments (`"color"`, `"shape"`, `"both"`, `"object"`)
+- `colors` : Liste des couleurs disponibles (requis si `vary` ≠ `"object"`)
+- `shapes` : Liste des formes disponibles (requis si `vary` ≠ `"object"`)
+- `objects` : Liste d'objets illustrés du catalogue (requis, et utilisé uniquement, si `vary` = `"object"`) — au moins autant d'objets que de lettres distinctes du motif
 - `length` : Nombre total de cases
 - `blank` : `"end"` (continuer) ou `"middle"` (combler un trou)
 - `choices` : Nombre de propositions (2–4)
+
+`vary` = `"object"` remplace formes/couleurs par des émojis du catalogue (`src/ui/objects.ts`), par exemple des
+animaux ou des plantes, pour varier les thèmes. Exemple (extrait de ms-suite-nature-01.json) :
+
+```json
+{
+  "mechanic": "sequence",
+  "params": {
+    "pattern": "AB",
+    "vary": "object",
+    "objects": ["dog", "cat", "rabbit", "fish", "bird", "ladybug"],
+    "length": 6,
+    "blank": "end",
+    "choices": 3
+  }
+}
+```
 
 ### Count (dénombrement)
 
@@ -137,8 +155,8 @@ Consulter le fichier `content/level.schema.json`, section `definitions`.
 
 **Couleurs** : red, blue, yellow, green, purple, orange
 **Formes** : circle, square, triangle, star, heart, diamond
-**Catégories** : fruit, animal, vehicle, toy
-**Objets** : apple, banana, pear, strawberry, cherries, grapes, dog, cat, rabbit, fish, bird, ladybug, car, bus, bike, boat, train, tractor, ball, teddy, balloon, kite, yoyo, drum
+**Catégories** : fruit, animal, vehicle, toy, plant
+**Objets** : apple, banana, pear, strawberry, cherries, grapes, dog, cat, rabbit, fish, bird, ladybug, car, bus, bike, boat, train, tractor, ball, teddy, balloon, kite, yoyo, drum, sunflower, tulip, cactus, tree, fir, clover
 
 ## Vérifier le contenu en local
 

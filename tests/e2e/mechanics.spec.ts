@@ -1,5 +1,5 @@
 // Mécaniques « compter » et « intrus », dispositions de comptage (dé, éparpillé), trou de suite au
-// milieu, progression sur la carte à 23 niveaux, tableau de bord parent et mise en page des 23
+// milieu, progression sur la carte à 26 niveaux, tableau de bord parent et mise en page des 26
 // niveaux sur deux tailles d'écran (voir docs/ARCHITECTURE.md §3, §5, §7, §9 et docs/PROGRESSION-MS.md).
 // Chaque test démarre avec un contexte Playwright neuf, donc un stockage IndexedDB vierge.
 // Aides de navigation copiées de vertical-slice.spec.ts (même convention : non partagées entre fichiers).
@@ -13,7 +13,7 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
-// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 23 niveaux ----------
+// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 26 niveaux ----------
 
 interface TrackJson {
   levels: string[];
@@ -407,7 +407,7 @@ test('ms-suite-07 : trou au milieu d\'une suite AB', async ({ page }) => {
 
 // ==================== 5. Progression sur la carte + tableau de bord (captures pleine page) ====================
 
-test('progression sur la carte à 23 niveaux et tableau de bord parent', async ({ page }) => {
+test('progression sur la carte à 26 niveaux et tableau de bord parent', async ({ page }) => {
   test.slow();
   await onboardWithChild(page, 'Yanis', { sessionMinutes: '', dailyMinutes: '' });
   await chooseProfile(page, 'Yanis');
@@ -435,7 +435,7 @@ test('progression sur la carte à 23 niveaux et tableau de bord parent', async (
   if (!lastLevelId) throw new Error('content/tracks/ms.json : parcours vide.');
 
   // La carte défile dans un conteneur interne (.map-scroll), pas dans le document : on agrandit
-  // temporairement le viewport pour que la capture "pleine page" montre les 23 niveaux sans coupe.
+  // temporairement le viewport pour que la capture "pleine page" montre les 26 niveaux sans coupe.
   await page.setViewportSize({ width: defaultViewport.width, height: 3600 });
   await expect(mapNode(page, lastLevelId)).toBeVisible(); // le dernier niveau de la carte est bien rendu
   await page.screenshot({ path: shot('17-carte-20-niveaux.png'), fullPage: true });
@@ -464,14 +464,14 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   await page.screenshot({ path: shot('16-ecran-de-fin.png') });
 });
 
-// ==================== 7. Mise en page des 23 niveaux (test paramétré, standard + petit téléphone) ====================
+// ==================== 7. Mise en page des 26 niveaux (test paramétré, standard + petit téléphone) ====================
 
-test('mise en page : les 23 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(180_000); // 23 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+test('mise en page : les 26 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
+  test.setTimeout(180_000); // 26 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
-  // aussi valide que de rejouer les 23 niveaux dans l'ordre pour un test purement visuel.
+  // aussi valide que de rejouer les 26 niveaux dans l'ordre pour un test purement visuel.
   await openChildStats(page, 'Zoé');
   for (const levelId of TRACK.levels) {
     await page.getByTestId(`override-${levelId}-unlocked`).click();

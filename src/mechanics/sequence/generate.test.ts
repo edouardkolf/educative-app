@@ -26,8 +26,11 @@ describe('sequence.generateRounds', () => {
       choices: 3,
     });
     const [round] = generateRounds(params, 1, createRng(1));
-    const correct = round!.data.choices.find((c) => c.id === round!.answer)!.token;
-    const full: Token[] = [...round!.data.items].map((t, i) => (i === round!.data.blankIndex ? correct : (t as Token)));
+    const correctItem = round!.data.choices.find((c) => c.id === round!.answer)!.item;
+    const correct = (correctItem as { kind: 'token'; token: Token }).token;
+    const full: Token[] = [...round!.data.items].map((it, i) =>
+      i === round!.data.blankIndex ? correct : ((it as { kind: 'token'; token: Token }).token as Token),
+    );
 
     for (let i = 0; i < full.length; i += 1) {
       for (let j = i + 1; j < full.length; j += 1) {
@@ -106,8 +109,11 @@ describe('sequence.generateRounds', () => {
       choices: 3,
     });
     const [round] = generateRounds(params, 1, createRng(11));
-    const correct = round!.data.choices.find((c) => c.id === round!.answer)!.token;
-    const full: Token[] = [...round!.data.items].map((t, i) => (i === round!.data.blankIndex ? correct : (t as Token)));
+    const correctItem = round!.data.choices.find((c) => c.id === round!.answer)!.item;
+    const correct = (correctItem as { kind: 'token'; token: Token }).token;
+    const full: Token[] = [...round!.data.items].map((it, i) =>
+      i === round!.data.blankIndex ? correct : ((it as { kind: 'token'; token: Token }).token as Token),
+    );
     const firstThree = full.slice(0, 3); // "ABCABC" : A, B, C sur les 3 premières cases
     expect(new Set(firstThree.map((t) => t.color)).size).toBe(3);
     expect(new Set(firstThree.map((t) => t.shape)).size).toBe(3);
@@ -116,6 +122,78 @@ describe('sequence.generateRounds', () => {
   it('reste robuste (sans erreur) même avec un réservoir trop petit pour params.choices', () => {
     const params = seqParams({ pattern: 'AA', colors: ['red'], shapes: ['circle'], length: 4, choices: 2 });
     expect(() => generateRounds(params, 5, createRng(1))).not.toThrow();
+  });
+
+  it('vary "object" : un objet distinct par lettre du motif', () => {
+    const params = seqParams({
+      pattern: 'AAB',
+      vary: 'object',
+      colors: undefined,
+      shapes: undefined,
+      objects: ['dog', 'cat', 'rabbit', 'fish'],
+      length: 7,
+      choices: 3,
+    });
+    const [round] = generateRounds(params, 1, createRng(5));
+    const correctItem = round!.data.choices.find((c) => c.id === round!.answer)!.item;
+    const full = [...round!.data.items].map((it, i) => (i === round!.data.blankIndex ? correctItem : it)) as {
+      kind: 'object';
+      objectId: string;
+    }[];
+
+    for (let i = 0; i < full.length; i += 1) {
+      for (let j = i + 1; j < full.length; j += 1) {
+        const sameLetter = params.pattern[i % params.pattern.length] === params.pattern[j % params.pattern.length];
+        if (sameLetter) expect(full[i]!.objectId).toBe(full[j]!.objectId);
+        else expect(full[i]!.objectId).not.toBe(full[j]!.objectId);
+      }
+    }
+  });
+
+  it('vary "object" : la réponse fait partie des propositions, et les ids sont uniques', () => {
+    const params = seqParams({
+      pattern: 'AB',
+      vary: 'object',
+      colors: undefined,
+      shapes: undefined,
+      objects: ['sunflower', 'tulip', 'cactus', 'tree', 'fir', 'clover'],
+      length: 6,
+      choices: 4,
+    });
+    for (const round of generateRounds(params, 10, createRng(9))) {
+      const ids = round.data.choices.map((c) => c.id);
+      expect(ids).toContain(round.answer);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(round.data.choices).toHaveLength(4);
+      for (const { item } of round.data.choices) expect(item.kind).toBe('object');
+    }
+  });
+
+  it('vary "object" : respecte le motif AB sur toute la longueur', () => {
+    const params = seqParams({
+      pattern: 'AB',
+      vary: 'object',
+      colors: undefined,
+      shapes: undefined,
+      objects: ['dog', 'cat'],
+      length: 6,
+      choices: 2,
+    });
+    for (const round of generateRounds(params, 5, createRng(2))) {
+      const correctItem = round.data.choices.find((c) => c.id === round.answer)!.item as {
+        kind: 'object';
+        objectId: string;
+      };
+      const full = round.data.items.map((it, i) => (i === round.data.blankIndex ? correctItem : it)) as {
+        kind: 'object';
+        objectId: string;
+      }[];
+      expect(full[0]!.objectId).toBe(full[2]!.objectId);
+      expect(full[0]!.objectId).toBe(full[4]!.objectId);
+      expect(full[1]!.objectId).toBe(full[3]!.objectId);
+      expect(full[1]!.objectId).toBe(full[5]!.objectId);
+      expect(full[0]!.objectId).not.toBe(full[1]!.objectId);
+    }
   });
 
   it('reste robuste (sans erreur) si le motif est plus long que ce que permet blank "middle"', () => {

@@ -1,13 +1,26 @@
 // Vue de la mécanique « compléter une suite ». Aucun texte : formes, couleurs, animations.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { ChoiceId, MechanicViewProps, Token } from '../../engine/types';
+import type { ChoiceId, MechanicViewProps } from '../../engine/types';
 import { Shape } from '../../ui/Shape';
-import type { SequenceRoundData } from './types';
+import { getObject } from '../../ui/objects';
+import type { SequenceItem, SequenceRoundData } from './types';
 import './sequence.css';
 
 interface Cell {
-  token: Token | null;
+  item: SequenceItem | null;
   index: number;
+}
+
+/** Rendu d'un élément de suite : forme SVG (token) ou émoji géant (object), même gabarit de case. */
+function ItemView({ item, size }: { item: SequenceItem; size: number }) {
+  if (item.kind === 'token') {
+    return <Shape shape={item.token.shape} color={item.token.color} size={size} />;
+  }
+  return (
+    <span class="seq-emoji" style={{ fontSize: size }} aria-hidden="true">
+      {getObject(item.objectId)?.emoji}
+    </span>
+  );
 }
 
 export function SequenceView({ round, wrongChoices, solved, onChoose }: MechanicViewProps<SequenceRoundData>) {
@@ -16,12 +29,12 @@ export function SequenceView({ round, wrongChoices, solved, onChoose }: Mechanic
   const half = Math.ceil(items.length / 2);
   const rows: Cell[][] = twoLines
     ? [
-        items.slice(0, half).map((token, i) => ({ token, index: i })),
-        items.slice(half).map((token, i) => ({ token, index: i + half })),
+        items.slice(0, half).map((item, i) => ({ item, index: i })),
+        items.slice(half).map((item, i) => ({ item, index: i + half })),
       ]
-    : [items.map((token, i) => ({ token, index: i }))];
+    : [items.map((item, i) => ({ item, index: i }))];
 
-  const correctToken = choices.find((c) => c.id === round.answer)?.token ?? null;
+  const correctItem = choices.find((c) => c.id === round.answer)?.item ?? null;
 
   // Détecte le choix qui VIENT d'être marqué faux pour ne le faire trembler qu'une fois.
   const [shaking, setShaking] = useState<ChoiceId | null>(null);
@@ -52,7 +65,7 @@ export function SequenceView({ round, wrongChoices, solved, onChoose }: Mechanic
       <div class={twoLines ? 'seq-strip seq-strip--wrap' : 'seq-strip'}>
         {rows.map((row) => (
           <div class="seq-row" key={row[0]?.index ?? 0}>
-            {row.map(({ token, index }) => {
+            {row.map(({ item, index }) => {
               const isBlank = index === blankIndex;
               return (
                 <div
@@ -63,10 +76,10 @@ export function SequenceView({ round, wrongChoices, solved, onChoose }: Mechanic
                       : 'seq-cell'
                   }
                 >
-                  {token ? (
-                    <Shape shape={token.shape} color={token.color} size={48} />
-                  ) : solved && correctToken ? (
-                    <Shape shape={correctToken.shape} color={correctToken.color} size={48} />
+                  {item ? (
+                    <ItemView item={item} size={48} />
+                  ) : solved && correctItem ? (
+                    <ItemView item={correctItem} size={48} />
                   ) : null}
                 </div>
               );
@@ -76,7 +89,7 @@ export function SequenceView({ round, wrongChoices, solved, onChoose }: Mechanic
       </div>
 
       <div class="seq-choices">
-        {choices.map(({ id, token }) => {
+        {choices.map(({ id, item }) => {
           const isWrong = wrongChoices.has(id);
           const isCorrectAndSolved = solved && id === round.answer;
           const classes = [
@@ -96,7 +109,7 @@ export function SequenceView({ round, wrongChoices, solved, onChoose }: Mechanic
               disabled={isWrong || solved}
               onClick={() => handleChoose(id)}
             >
-              <Shape shape={token.shape} color={token.color} size={60} />
+              <ItemView item={item} size={60} />
             </button>
           );
         })}

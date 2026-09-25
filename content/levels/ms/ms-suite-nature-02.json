@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-nature-02",
+  "title": "Suite : les plantes",
+  "skill": "patterns",
+  "objective": "Continuer une suite AAB avec des plantes (tournesol, tulipe…).",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "AAB",
+    "vary": "object",
+    "objects": ["sunflower", "tulip", "cactus", "tree", "fir", "clover"],
+    "length": 6,
+    "blank": "end",
+    "choices": 3
+  }
+}

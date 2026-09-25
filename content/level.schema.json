@@ -63,29 +63,38 @@
   "definitions": {
     "color": { "enum": ["red", "blue", "yellow", "green", "purple", "orange"] },
     "shape": { "enum": ["circle", "square", "triangle", "star", "heart", "diamond"] },
-    "category": { "enum": ["fruit", "animal", "vehicle", "toy"] },
+    "category": { "enum": ["fruit", "animal", "vehicle", "toy", "plant"] },
     "objectId": {
       "enum": [
         "apple", "banana", "pear", "strawberry", "cherries", "grapes",
         "dog", "cat", "rabbit", "fish", "bird", "ladybug",
         "car", "bus", "bike", "boat", "train", "tractor",
-        "ball", "teddy", "balloon", "kite", "yoyo", "drum"
+        "ball", "teddy", "balloon", "kite", "yoyo", "drum",
+        "sunflower", "tulip", "cactus", "tree", "fir", "clover"
       ]
     },
     "sequenceParams": {
       "type": "object",
       "description": "Compléter une suite.",
-      "required": ["pattern", "vary", "colors", "shapes", "length", "blank", "choices"],
+      "required": ["pattern", "vary", "length", "blank", "choices"],
       "additionalProperties": false,
       "properties": {
         "pattern": { "type": "string", "pattern": "^[A-D]{2,6}$", "description": "Motif répété ; chaque lettre = un élément distinct (AB, AAB, ABB, ABC, AABB…)." },
-        "vary": { "enum": ["color", "shape", "both"], "description": "Ce qui distingue les éléments du motif." },
-        "colors": { "type": "array", "items": { "$ref": "#/definitions/color" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de couleurs." },
-        "shapes": { "type": "array", "items": { "$ref": "#/definitions/shape" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de formes." },
+        "vary": { "enum": ["color", "shape", "both", "object"], "description": "Ce qui distingue les éléments du motif. object = émojis (animaux, plantes…) plutôt que forme/couleur." },
+        "colors": { "type": "array", "items": { "$ref": "#/definitions/color" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de couleurs (requis si vary ≠ object)." },
+        "shapes": { "type": "array", "items": { "$ref": "#/definitions/shape" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de formes (requis si vary ≠ object)." },
+        "objects": { "type": "array", "items": { "$ref": "#/definitions/objectId" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir d'objets (requis, et utilisé uniquement, si vary = object)." },
         "length": { "type": "integer", "minimum": 4, "maximum": 10, "description": "Nombre total de cases, case à compléter comprise." },
         "blank": { "enum": ["end", "middle"], "description": "end = continuer la suite ; middle = combler un trou." },
         "choices": { "type": "integer", "minimum": 2, "maximum": 4, "description": "Nombre de propositions." }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "vary": { "const": "object" } } },
+          "then": { "required": ["objects"] },
+          "else": { "required": ["colors", "shapes"] }
+        }
+      ]
     },
     "countParams": {
       "type": "object",

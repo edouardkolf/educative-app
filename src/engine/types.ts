@@ -18,7 +18,7 @@ export interface Token {
   color: Color;
 }
 
-export const OBJECT_CATEGORIES = ['fruit', 'animal', 'vehicle', 'toy'] as const;
+export const OBJECT_CATEGORIES = ['fruit', 'animal', 'vehicle', 'toy', 'plant'] as const;
 export type ObjectCategory = (typeof OBJECT_CATEGORIES)[number];
 
 /** Identifiant d'un objet illustré du catalogue `src/ui/objects.ts` (ex. "apple"). */
@@ -36,12 +36,14 @@ export type SkillId = (typeof SKILLS)[number];
 /** Compléter une suite. Chaque lettre du motif est un élément distinct : "AB", "AAB", "ABC"… */
 export interface SequenceParams {
   pattern: string;
-  /** Ce qui distingue les éléments du motif. */
-  vary: 'color' | 'shape' | 'both';
-  /** Réservoir de couleurs où piocher (au moins autant que de lettres distinctes si vary ≠ shape). */
-  colors: Color[];
-  /** Réservoir de formes où piocher (au moins autant que de lettres distinctes si vary ≠ color). */
-  shapes: Shape[];
+  /** Ce qui distingue les éléments du motif. "object" : émojis du catalogue plutôt que forme/couleur. */
+  vary: 'color' | 'shape' | 'both' | 'object';
+  /** Réservoir de couleurs où piocher (requis si vary = "color"/"shape"/"both", au moins autant que de lettres distinctes si vary ≠ shape). */
+  colors?: Color[];
+  /** Réservoir de formes où piocher (requis si vary = "color"/"shape"/"both", au moins autant que de lettres distinctes si vary ≠ color). */
+  shapes?: Shape[];
+  /** Réservoir d'objets où piocher (requis, et uniquement utilisé, si vary = "object" ; au moins autant que de lettres distinctes). */
+  objects?: ObjectId[];
   /** Nombre total de cases affichées, case à compléter comprise (4 à 10). */
   length: number;
   /** "end" : continuer la suite ; "middle" : combler un trou. */

@@ -45,20 +45,35 @@ function semanticErrors(level: Level): string[] {
       break;
     }
     case 'sequence': {
-      const { pattern, vary, colors, shapes, choices } = level.params;
+      const { pattern, vary, colors, shapes, objects, choices } = level.params;
       const distinctLetters = new Set(pattern.split('')).size;
-      if ((vary === 'color' || vary === 'both') && distinctLetters > colors.length) {
+
+      if (vary === 'object') {
+        const poolSize = objects?.length ?? 0;
+        if (distinctLetters > poolSize) {
+          errors.push(
+            `sequence : le motif "${pattern}" a ${distinctLetters} lettre(s) distincte(s), objects n'en propose que ${poolSize}`,
+          );
+        }
+        if (choices > poolSize) {
+          errors.push(`sequence : choices (${choices}) dépasse le nombre d'objets distincts possibles (${poolSize})`);
+        }
+        break;
+      }
+
+      const colorCount = colors?.length ?? 0;
+      const shapeCount = shapes?.length ?? 0;
+      if ((vary === 'color' || vary === 'both') && distinctLetters > colorCount) {
         errors.push(
-          `sequence : le motif "${pattern}" a ${distinctLetters} lettre(s) distincte(s), colors n'en propose que ${colors.length}`,
+          `sequence : le motif "${pattern}" a ${distinctLetters} lettre(s) distincte(s), colors n'en propose que ${colorCount}`,
         );
       }
-      if ((vary === 'shape' || vary === 'both') && distinctLetters > shapes.length) {
+      if ((vary === 'shape' || vary === 'both') && distinctLetters > shapeCount) {
         errors.push(
-          `sequence : le motif "${pattern}" a ${distinctLetters} lettre(s) distincte(s), shapes n'en propose que ${shapes.length}`,
+          `sequence : le motif "${pattern}" a ${distinctLetters} lettre(s) distincte(s), shapes n'en propose que ${shapeCount}`,
         );
       }
-      const maxTokens =
-        vary === 'both' ? colors.length * shapes.length : vary === 'color' ? colors.length : shapes.length;
+      const maxTokens = vary === 'both' ? colorCount * shapeCount : vary === 'color' ? colorCount : shapeCount;
       if (choices > maxTokens) {
         errors.push(`sequence : choices (${choices}) dépasse le nombre de jetons distincts possibles (${maxTokens})`);
       }

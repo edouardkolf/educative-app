@@ -59,6 +59,11 @@
   border-style: solid;
 }
 
+.seq-emoji {
+  font-family: var(--emoji-font);
+  line-height: 1;
+}
+
 .seq-choices {
   display: flex;
   flex-wrap: wrap;
