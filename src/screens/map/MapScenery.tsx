@@ -1,16 +1,21 @@
-// Décor de la carte : sol de chaque monde, éléments dessinés (arbres, vagues, sommets…) et chemin crème.
+// Décor de la carte : sol de chaque monde, rivière et pont entre deux mondes, éléments dessinés
+// (arbres, vagues, sommets…) et chemin crème.
 // Un seul SVG en pixels, sous les niveaux ; purement décoratif.
 import { useMemo } from 'preact/hooks';
 import type { JSX } from 'preact';
 import {
+  BRIDGE_HALF,
   PATH_WIDTH,
-  nodePosition,
-  pathWaypoints,
+  RIVER_HALF,
+  bridges,
+  buildRoute,
   placeDecor,
   samplePath,
+  signPosition,
   smoothPathD,
   trackHeightFor,
   worldBands,
+  type Bridge,
   type Decor,
   type Point,
   type WorldBand,
@@ -21,22 +26,30 @@ import { WORLD_META } from './worlds';
 interface WorldTheme {
   ground: string;
   patch: string;
+  /** Berge qui borde la rivière, côté de ce monde. */
+  bank: string;
 }
 
 const THEMES: Record<WorldId, WorldTheme> = {
   forest: {
     ground: '#b5d98a',
     patch: '#c4e39c',
+    bank: '#8fbf5f',
   },
   sea: {
     ground: '#8ecfe8',
     patch: '#a3daee',
+    bank: '#f3e2b0',
   },
   mountain: {
     ground: '#cbdcae',
     patch: '#dbe7c4',
+    bank: '#aab5a0',
   },
 };
+
+const RIVER_FILL = '#4aa3d4';
+const BANK_WIDTH = 9;
 
 /** Chemin crème, identique dans tous les mondes : le repère qui ne change pas. */
 const PATH_EDGE = '#dcc796';
@@ -199,8 +212,95 @@ function groundPatches(band: WorldBand): number[] {
   return out;
 }
 
-export function signPosition(band: WorldBand, width: number, height: number): Point {
-  return { x: width * 0.16, y: band.worldIndex === 0 ? height - 56 : band.bottom - 24 };
+/** Bord ondulé d'une bande horizontale, de gauche à droite puis retour. */
+function wavyBandD(width: number, top: number, bottom: number, phase: number): string {
+  const step = 24;
+  let d = `M -4 ${top}`;
+  for (let x = 0; x <= width + step; x += step) {
+    d += ` L ${x} ${Math.round((top + Math.sin(x / 37 + phase) * 3) * 10) / 10}`;
+  }
+  for (let x = Math.ceil((width + step) / step) * step; x >= 0; x -= step) {
+    d += ` L ${x} ${Math.round((bottom + Math.sin(x / 41 + phase * 2) * 3) * 10) / 10}`;
+  }
+  return `${d} L -4 ${bottom} Z`;
+}
+
+/** Rivière qui traverse la carte à la frontière entre deux mondes, bordée des berges de chacun. */
+function River({ bridge, width, below }: { bridge: Bridge; width: number; below: WorldId }) {
+  const { y } = bridge;
+  const top = y - RIVER_HALF;
+  const bottom = y + RIVER_HALF;
+  const ripples = [];
+  for (let x = 30 + (bridge.worldIndex % 3) * 17; x < width; x += 74) {
+    if (Math.abs(x - bridge.x) < BRIDGE_HALF + 20) continue;
+    const dy = ((x / 74) % 2 < 1 ? -7 : 6) + y;
+    ripples.push(
+      <path key={x} d={`M ${x - 9} ${dy} Q ${x} ${dy - 5} ${x + 9} ${dy}`} stroke="#ffffff" stroke-opacity="0.7" />,
+    );
+  }
+  return (
+    <g data-testid="map-river">
+      <path d={wavyBandD(width, top - BANK_WIDTH, y, bridge.worldIndex)} fill={THEMES[bridge.world].bank} />
+      <path d={wavyBandD(width, y, bottom + BANK_WIDTH, bridge.worldIndex + 1)} fill={THEMES[below].bank} />
+      <path d={wavyBandD(width, top, bottom, bridge.worldIndex + 2)} fill={RIVER_FILL} />
+      <g fill="none" stroke-width="2.5" stroke-linecap="round">
+        {ripples}
+      </g>
+    </g>
+  );
+}
+
+/** Pont que le chemin emprunte pour changer de monde : pierre vers la montagne, bois ailleurs. */
+function BridgeSprite({ bridge }: { bridge: Bridge }) {
+  const stone = bridge.world === 'mountain';
+  const half = PATH_WIDTH / 2 + 3;
+  const deck = stone ? '#c3cad0' : '#c68a4e';
+  const joint = stone ? '#9aa4ad' : '#8b5a2b';
+  const rail = stone ? '#8e99a3' : '#8b5a2b';
+  const post = stone ? '#77838e' : '#6e4420';
+  const lines = [];
+  for (let k = 1; k < 8; k += 1) {
+    const ly = -BRIDGE_HALF + (k * BRIDGE_HALF * 2) / 8;
+    lines.push(<path key={k} d={`M ${-half} ${ly} L ${half} ${ly}`} stroke={joint} stroke-width="1.6" />);
+    if (stone && k < 8) {
+      const jx = k % 2 === 0 ? -8 : 10;
+      lines.push(
+        <path
+          key={`j${k}`}
+          d={`M ${jx} ${ly} L ${jx} ${ly - (BRIDGE_HALF * 2) / 8}`}
+          stroke={joint}
+          stroke-width="1.4"
+        />,
+      );
+    }
+  }
+  return (
+    <g transform={`translate(${Math.round(bridge.x)} ${Math.round(bridge.y)})`} data-testid="map-bridge">
+      <rect
+        x={-half - 4}
+        y={-RIVER_HALF + 2}
+        width={half * 2 + 8}
+        height={RIVER_HALF * 2}
+        rx="6"
+        fill="rgba(20,50,80,0.22)"
+      />
+      <rect x={-half} y={-BRIDGE_HALF} width={half * 2} height={BRIDGE_HALF * 2} rx="4" fill={deck} />
+      {lines}
+      <rect x={-half - 5} y={-BRIDGE_HALF - 2} width="8" height={BRIDGE_HALF * 2 + 4} rx="3" fill={rail} />
+      <rect x={half - 3} y={-BRIDGE_HALF - 2} width="8" height={BRIDGE_HALF * 2 + 4} rx="3" fill={rail} />
+      {[-1, 1].flatMap((sx) =>
+        [-1, 1].map((sy) => (
+          <circle
+            key={`${sx}${sy}`}
+            cx={sx * (half - 1 + (sx > 0 ? 2 : 0))}
+            cy={sy * (BRIDGE_HALF + 1)}
+            r="6"
+            fill={post}
+          />
+        )),
+      )}
+    </g>
+  );
 }
 
 interface Props {
@@ -211,14 +311,23 @@ interface Props {
 export function MapScenery({ count, width }: Props) {
   const scene = useMemo(() => {
     const height = trackHeightFor(count);
-    const waypoints = pathWaypoints(count, width);
-    const samples = samplePath(waypoints);
-    const nodes = Array.from({ length: count }, (_, i) => nodePosition(i, count, width));
+    const route = buildRoute(count, width);
+    const samples = samplePath(route.points);
+    const nodes = route.nodeAt.map((k) => route.points[k] as Point);
     const bands = worldBands(count).map((band) => {
-      const sign = signPosition(band, width, height);
-      return { band, sign, decor: placeDecor(band, width, samples, [...nodes, sign]) };
+      const sign = signPosition(band, width, count);
+      return {
+        band,
+        sign,
+        decor: placeDecor(band, width, samples, [...nodes, sign]),
+      };
     });
-    return { height, d: smoothPathD(waypoints), bands };
+    return {
+      height,
+      d: smoothPathD(route.points),
+      bands,
+      bridges: bridges(count, width),
+    };
   }, [count, width]);
 
   if (count === 0 || width <= 0) return null;
@@ -233,19 +342,6 @@ export function MapScenery({ count, width }: Props) {
       aria-hidden="true"
       data-testid="map-scenery"
     >
-      <defs>
-        {bands.slice(1).map(({ band }) => {
-          const above = THEMES[band.world];
-          const below = THEMES[(bands[band.worldIndex - 1] as { band: WorldBand }).band.world];
-          return (
-            <linearGradient key={band.worldIndex} id={`map-blend-${band.worldIndex}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color={above.ground} />
-              <stop offset="1" stop-color={below.ground} />
-            </linearGradient>
-          );
-        })}
-      </defs>
-
       {bands.map(({ band }) => (
         <g key={`ground-${band.worldIndex}`} data-world={band.world}>
           <rect x="0" y={band.top} width={width} height={band.bottom - band.top} fill={THEMES[band.world].ground} />
@@ -261,14 +357,12 @@ export function MapScenery({ count, width }: Props) {
           ))}
         </g>
       ))}
-      {bands.slice(1).map(({ band }) => (
-        <rect
-          key={`blend-${band.worldIndex}`}
-          x="0"
-          y={band.bottom - 110}
+      {scene.bridges.map((bridge) => (
+        <River
+          key={`river-${bridge.worldIndex}`}
+          bridge={bridge}
           width={width}
-          height="220"
-          fill={`url(#map-blend-${band.worldIndex})`}
+          below={(bands[bridge.worldIndex - 1] as { band: WorldBand }).band.world}
         />
       ))}
 
@@ -276,6 +370,10 @@ export function MapScenery({ count, width }: Props) {
       <path d={d} class="map-scenery__path" stroke={PATH_FILL} stroke-width={PATH_WIDTH - 10} />
       <path d={d} class="map-scenery__path" stroke={PATH_SHINE} stroke-width={PATH_WIDTH - 34} />
       <path d={d} class="map-scenery__path map-scenery__pebbles" stroke={PATH_EDGE} stroke-width="4" />
+
+      {scene.bridges.map((bridge) => (
+        <BridgeSprite key={`bridge-${bridge.worldIndex}`} bridge={bridge} />
+      ))}
 
       {bands.map(({ band, sign, decor }) => (
         <g key={`decor-${band.worldIndex}`}>

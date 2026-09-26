@@ -25,11 +25,66 @@ export function trackHeightFor(count: number): number {
   return TOP_PAD + BOTTOM_PAD + Math.max(0, count - 1) * SPACING;
 }
 
-/** Niveau 0 en bas, zigzag doux vers le haut. */
+/** Demi-hauteur de la rivière qui sépare deux mondes, et demi-longueur du pont qui l'enjambe. */
+export const RIVER_HALF = 22;
+export const BRIDGE_HALF = 36;
+
+/** Hasard déterministe indexé (sans état) : même carte à chaque visite, quel que soit l'ordre des appels. */
+function hash01(n: number): number {
+  let h = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+
+/** Motifs de 4 niveaux, en fraction de largeur : c'est leur enchaînement qui fait varier les angles. */
+const MOTIFS: readonly (readonly number[])[] = [
+  [0.28, 0.72, 0.3, 0.7], // zigzag serré
+  [0.24, 0.4, 0.58, 0.76], // longue traversée en diagonale
+  [0.5, 0.76, 0.66, 0.34], // grand virage
+  [0.36, 0.64, 0.74, 0.46], // vague
+];
+const MOTIF_LEN = 4;
+
+const xCache: number[] = [];
+
+/** Abscisse du pont entre le monde `worldIndex - 1` et `worldIndex`, en fraction de largeur. */
+function bridgeFraction(worldIndex: number): number {
+  return 0.38 + hash01(worldIndex * 31 + 7) * 0.24;
+}
+
+/** Les deux niveaux qui encadrent un pont s'alignent sur lui : on arrive droit sur le pont. */
+function bridgeWorldAt(index: number): number | null {
+  const k = index % LEVELS_PER_WORLD;
+  if (k === 0 && index > 0) return worldIndexForLevel(index);
+  if (k === LEVELS_PER_WORLD - 1) return worldIndexForLevel(index) + 1;
+  return null;
+}
+
+/** Abscisse (fraction de largeur) du niveau `index`, indépendante du nombre de niveaux. */
+function xFraction(index: number): number {
+  while (xCache.length <= index) {
+    const i = xCache.length;
+    const block = Math.floor(i / MOTIF_LEN);
+    // Motif du bloc : tiré au hasard, jamais deux fois le même d'affilée ; miroir gauche/droite aléatoire.
+    let m = Math.floor(hash01(block * 101 + 3) * MOTIFS.length);
+    const prev = block > 0 ? Math.floor(hash01((block - 1) * 101 + 3) * MOTIFS.length) : -1;
+    if (m === prev) m = (m + 1) % MOTIFS.length;
+    const mirror = hash01(block * 53 + 11) < 0.5;
+    const base = (MOTIFS[m] as readonly number[])[i % MOTIF_LEN] as number;
+    const jitter = (hash01(i * 17 + 1) - 0.5) * 0.08;
+    const bridgeWorld = bridgeWorldAt(i);
+    xCache.push(bridgeWorld !== null ? bridgeFraction(bridgeWorld) : (mirror ? 1 - base : base) + jitter);
+  }
+  return xCache[index] as number;
+}
+
+/** Niveau 0 en bas ; le chemin monte en enchaînant zigzags, traversées et virages. */
 export function nodePosition(index: number, count: number, width: number): Point {
   const height = trackHeightFor(count);
   return {
-    x: width / 2 + Math.sin(index * (Math.PI / 2)) * width * 0.28,
+    x: xFraction(index) * width,
     y: height - BOTTOM_PAD - index * SPACING,
   };
 }
@@ -42,13 +97,80 @@ export function worldIndexForLevel(levelIndex: number): number {
   return Math.floor(levelIndex / LEVELS_PER_WORLD);
 }
 
+/** Ordonnée de la frontière (rivière) sous le monde `worldIndex` (≥ 1) : à mi-chemin entre deux niveaux. */
+function boundaryY(worldIndex: number, count: number): number {
+  return trackHeightFor(count) - BOTTOM_PAD - (worldIndex * LEVELS_PER_WORLD - 0.5) * SPACING;
+}
+
+export interface Bridge {
+  /** Monde auquel le pont donne accès. */
+  worldIndex: number;
+  world: WorldId;
+  x: number;
+  y: number;
+}
+
+/** Un pont par frontière entre deux mondes, là où le chemin franchit la rivière. */
+export function bridges(count: number, width: number): Bridge[] {
+  const out: Bridge[] = [];
+  for (let w = 1; w * LEVELS_PER_WORLD < count; w += 1) {
+    out.push({
+      worldIndex: w,
+      world: worldIdAt(w),
+      x: bridgeFraction(w) * width,
+      y: boundaryY(w, count),
+    });
+  }
+  return out;
+}
+
+export interface Route {
+  /** Points de passage de la courbe lisse (niveaux, virages, extrémités du pont…). */
+  points: Point[];
+  /** Indice, dans `points`, du point de chaque niveau. */
+  nodeAt: number[];
+}
+
+/**
+ * Tracé complet : entre deux niveaux proches en abscisse, un virage vient parfois bomber le chemin ;
+ * à chaque frontière, deux points alignés rendent le passage du pont parfaitement droit.
+ */
+export function buildRoute(count: number, width: number): Route {
+  if (count === 0) return { points: [], nodeAt: [] };
+  const height = trackHeightFor(count);
+  const points: Point[] = [];
+  const nodeAt: number[] = [];
+  const first = nodePosition(0, count, width);
+  points.push({ x: first.x, y: height + 20 });
+  for (let i = 0; i < count; i += 1) {
+    const a = nodePosition(i, count, width);
+    nodeAt.push(points.length);
+    points.push(a);
+    if (i === count - 1) break;
+    const b = nodePosition(i + 1, count, width);
+    if ((i + 1) % LEVELS_PER_WORLD === 0) {
+      const w = worldIndexForLevel(i + 1);
+      const y = boundaryY(w, count);
+      points.push({ x: a.x, y: y + BRIDGE_HALF }, { x: a.x, y: y - BRIDGE_HALF });
+      continue;
+    }
+    const dx = Math.abs(b.x - a.x) / width;
+    if (dx < 0.22 && hash01(i * 13 + 5) < 0.55) {
+      // Virage : le milieu est poussé du côté où il y a le plus de place.
+      const mid = (a.x + b.x) / 2 / width;
+      const side = mid < 0.5 ? 1 : -1;
+      const bulge = 0.16 + hash01(i * 29 + 2) * 0.08;
+      const x = Math.min(0.88, Math.max(0.12, mid + side * bulge));
+      points.push({ x: x * width, y: (a.y + b.y) / 2 });
+    }
+  }
+  points.push({ x: width / 2, y: -20 });
+  return { points, nodeAt };
+}
+
 /** Points de passage du chemin : il entre par le bas de l'écran et ressort par le haut. */
 export function pathWaypoints(count: number, width: number): Point[] {
-  if (count === 0) return [];
-  const height = trackHeightFor(count);
-  const nodes = Array.from({ length: count }, (_, i) => nodePosition(i, count, width));
-  const first = nodes[0] as Point;
-  return [{ x: first.x, y: height + 20 }, ...nodes, { x: width / 2, y: -20 }];
+  return buildRoute(count, width).points;
 }
 
 /** Segment de Catmull-Rom (tension 0,5) converti en courbe de Bézier cubique. */
@@ -90,6 +212,34 @@ export function pointOnSegment(points: Point[], i: number, t: number): Point {
   };
 }
 
+/** Point à la fraction `t` (0…1), en longueur parcourue, du trajet entre le niveau `from` et le suivant. */
+export function pointBetweenNodes(route: Route, from: number, t: number): Point {
+  const start = route.nodeAt[from] as number;
+  const end = route.nodeAt[from + 1] ?? start;
+  const samples: Point[] = [];
+  for (let i = start; i < end; i += 1) {
+    for (let s = 0; s < 16; s += 1) samples.push(pointOnSegment(route.points, i, s / 16));
+  }
+  samples.push(route.points[end] as Point);
+  const lengths = [0];
+  for (let i = 1; i < samples.length; i += 1) {
+    const p = samples[i] as Point;
+    const q = samples[i - 1] as Point;
+    lengths.push((lengths[i - 1] as number) + Math.hypot(p.x - q.x, p.y - q.y));
+  }
+  const target = Math.max(0, Math.min(1, t)) * (lengths[lengths.length - 1] as number);
+  const k = Math.max(
+    1,
+    lengths.findIndex((l) => l >= target),
+  );
+  const l0 = lengths[k - 1] as number;
+  const l1 = lengths[k] as number;
+  const f = l1 > l0 ? (target - l0) / (l1 - l0) : 0;
+  const a = samples[k - 1] as Point;
+  const b = samples[k] ?? a;
+  return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+}
+
 /** Échantillonne la courbe lisse (pour tenir le décor à distance du chemin). */
 export function samplePath(points: Point[], stepsPerSegment = 12): Point[] {
   const out: Point[] = [];
@@ -115,10 +265,8 @@ export function worldBands(count: number): WorldBand[] {
   const worldCount = worldIndexForLevel(count - 1) + 1;
   const bands: WorldBand[] = [];
   for (let w = 0; w < worldCount; w += 1) {
-    const firstLevel = w * LEVELS_PER_WORLD;
-    const bottom = w === 0 ? height : height - BOTTOM_PAD - (firstLevel - 0.5) * SPACING;
-    const top =
-      w === worldCount - 1 ? 0 : height - BOTTOM_PAD - (firstLevel + LEVELS_PER_WORLD - 0.5) * SPACING;
+    const bottom = w === 0 ? height : boundaryY(w, count);
+    const top = w === worldCount - 1 ? 0 : boundaryY(w + 1, count);
     bands.push({ worldIndex: w, world: worldIdAt(w), top, bottom });
   }
   return bands;
@@ -198,6 +346,9 @@ export function placeDecor(band: WorldBand, width: number, pathSamples: Point[],
       const px = x + (rng.next() - 0.5) * CELL * 0.8;
       const py = y + (rng.next() - 0.5) * CELL * 0.8;
       if (py < band.top + radius * 0.5 || py > band.bottom) continue;
+      // Rien sur les berges : ni au bord de la rivière d'en bas, ni dépassant sur celle d'en haut.
+      if (band.worldIndex > 0 && py > band.bottom - RIVER_HALF - 10) continue;
+      if (band.top > 0 && py - radius * 1.6 < band.top + RIVER_HALF + 6) continue;
       const clearOf = (pts: Point[], min: number) =>
         pts.every((p) => (p.x - px) ** 2 + (p.y - py) ** 2 >= min * min);
       if (!clearOf(nearby, PATH_CLEARANCE + radius)) continue;
@@ -207,4 +358,23 @@ export function placeDecor(band: WorldBand, width: number, pathSamples: Point[],
     }
   }
   return placed.sort((a, b) => a.y - b.y).map(({ radius: _r, ...d }) => d);
+}
+
+/**
+ * Panneau d'entrée d'un monde : à côté du premier niveau pour le premier monde,
+ * sinon sur la berge d'arrivée, juste à côté du pont, du côté où il y a de la place.
+ */
+export function signPosition(band: WorldBand, width: number, count: number): Point {
+  if (band.worldIndex === 0) {
+    const first = nodePosition(0, count, width);
+    return {
+      x: first.x + (first.x < width / 2 ? 84 : -84),
+      y: trackHeightFor(count) - 56,
+    };
+  }
+  const x = bridgeFraction(band.worldIndex) * width;
+  return {
+    x: x + (x < width / 2 ? 80 : -80),
+    y: band.bottom - RIVER_HALF - 12,
+  };
 }

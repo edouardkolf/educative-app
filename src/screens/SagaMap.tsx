@@ -13,9 +13,9 @@ import { LongPressButton } from '../ui/LongPressButton';
 import { MapScenery } from './map/MapScenery';
 import {
   NODE_SIZE,
+  buildRoute,
   nodePosition,
-  pathWaypoints,
-  pointOnSegment,
+  pointBetweenNodes,
   trackHeightFor,
   worldIdAt,
   worldIndexForLevel,
@@ -176,14 +176,14 @@ export function SagaMap() {
     if (arrival?.phase !== 'travel' || arrival.entry.fromIndex === null || !states) return undefined;
     const from = arrival.entry.fromIndex;
     const count = states.length;
-    const waypoints = pathWaypoints(count, width);
+    const route = buildRoute(count, width);
     let frame = 0;
     let start = 0;
     const step = (now: number) => {
       if (!start) start = now;
       const t = Math.min(1, (now - start) / TRAVEL_MS);
       const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-      const point = pointOnSegment(waypoints, from + 1, eased); // nœud k = waypoints[k + 1]
+      const point = pointBetweenNodes(route, from, eased); // traverse le pont entre les deux mondes
       const hop = Math.abs(Math.sin(eased * Math.PI * 4)) * 16;
       setTraveller({ x: point.x, y: point.y - hop });
       const scroller = scrollRef.current;
