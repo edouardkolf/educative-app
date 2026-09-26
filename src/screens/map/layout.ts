@@ -3,7 +3,11 @@
 import { createRng } from '../../engine';
 
 export const NODE_SIZE = 80;
+/** Écart vertical moyen entre deux niveaux ; il varie de ±SPACING_JITTER d'un niveau à l'autre. */
 export const SPACING = 168;
+export const SPACING_JITTER = 0.15;
+/** Écart plus grand autour d'une frontière, pour laisser la place au passage (pont, ponton, col). */
+export const BORDER_SPACING = 224;
 export const TOP_PAD = 120;
 export const BOTTOM_PAD = 140;
 /** Largeur visible du chemin (bordure comprise). */
@@ -22,12 +26,12 @@ export interface Point {
 }
 
 export function trackHeightFor(count: number): number {
-  return TOP_PAD + BOTTOM_PAD + Math.max(0, count - 1) * SPACING;
+  return TOP_PAD + BOTTOM_PAD + nodeRise(Math.max(0, count - 1));
 }
 
-/** Demi-hauteur de la rivière qui sépare deux mondes, et demi-longueur du pont qui l'enjambe. */
-export const RIVER_HALF = 22;
-export const BRIDGE_HALF = 36;
+/** Demi-hauteur de la bande frontière (rivière, plage, crête), et demi-longueur du passage rectiligne. */
+export const BORDER_HALF = 30;
+export const PASSAGE_HALF = 44;
 
 /** Hasard déterministe indexé (sans état) : même carte à chaque visite, quel que soit l'ordre des appels. */
 function hash01(n: number): number {
@@ -36,6 +40,23 @@ function hash01(n: number): number {
   h = Math.imul(h, 0xc2b2ae35);
   h ^= h >>> 16;
   return (h >>> 0) / 4294967296;
+}
+
+/** Écart vertical entre le niveau `i` et le suivant. */
+function gapAfter(i: number): number {
+  if ((i + 1) % LEVELS_PER_WORLD === 0) return BORDER_SPACING;
+  return Math.round(SPACING * (1 - SPACING_JITTER + hash01(i * 7 + 4) * 2 * SPACING_JITTER));
+}
+
+const riseCache: number[] = [0];
+
+/** Hauteur du niveau `index` au-dessus du niveau 0, indépendante du nombre de niveaux. */
+function nodeRise(index: number): number {
+  while (riseCache.length <= index) {
+    const i = riseCache.length - 1;
+    riseCache.push((riseCache[i] as number) + gapAfter(i));
+  }
+  return riseCache[index] as number;
 }
 
 /** Motifs de 4 niveaux, en fraction de largeur : c'est leur enchaînement qui fait varier les angles. */
@@ -49,12 +70,12 @@ const MOTIF_LEN = 4;
 
 const xCache: number[] = [];
 
-/** Abscisse du pont entre le monde `worldIndex - 1` et `worldIndex`, en fraction de largeur. */
+/** Abscisse du passage entre le monde `worldIndex - 1` et `worldIndex`, en fraction de largeur. */
 function bridgeFraction(worldIndex: number): number {
   return 0.38 + hash01(worldIndex * 31 + 7) * 0.24;
 }
 
-/** Les deux niveaux qui encadrent un pont s'alignent sur lui : on arrive droit sur le pont. */
+/** Les deux niveaux qui encadrent un passage s'alignent sur lui : on y arrive tout droit. */
 function bridgeWorldAt(index: number): number | null {
   const k = index % LEVELS_PER_WORLD;
   if (k === 0 && index > 0) return worldIndexForLevel(index);
@@ -85,7 +106,7 @@ export function nodePosition(index: number, count: number, width: number): Point
   const height = trackHeightFor(count);
   return {
     x: xFraction(index) * width,
-    y: height - BOTTOM_PAD - index * SPACING,
+    y: height - BOTTOM_PAD - nodeRise(index),
   };
 }
 
@@ -97,26 +118,42 @@ export function worldIndexForLevel(levelIndex: number): number {
   return Math.floor(levelIndex / LEVELS_PER_WORLD);
 }
 
-/** Ordonnée de la frontière (rivière) sous le monde `worldIndex` (≥ 1) : à mi-chemin entre deux niveaux. */
+/** Ordonnée de la frontière sous le monde `worldIndex` (≥ 1) : à mi-chemin entre deux niveaux. */
 function boundaryY(worldIndex: number, count: number): number {
-  return trackHeightFor(count) - BOTTOM_PAD - (worldIndex * LEVELS_PER_WORLD - 0.5) * SPACING;
+  const first = worldIndex * LEVELS_PER_WORLD;
+  return trackHeightFor(count) - BOTTOM_PAD - (nodeRise(first - 1) + nodeRise(first)) / 2;
 }
 
-export interface Bridge {
-  /** Monde auquel le pont donne accès. */
+/**
+ * Manière de passer d'un monde à l'autre, selon le monde d'arrivée :
+ * un ponton qui avance dans la mer, un col rocheux vers la montagne, un pont sur la rivière vers la forêt.
+ */
+export type PassageKind = 'pier' | 'pass' | 'bridge';
+
+export const PASSAGE_BY_WORLD: Record<WorldId, PassageKind> = {
+  sea: 'pier',
+  mountain: 'pass',
+  forest: 'bridge',
+};
+
+export interface Passage {
+  /** Monde auquel le passage donne accès. */
   worldIndex: number;
   world: WorldId;
+  kind: PassageKind;
   x: number;
   y: number;
 }
 
-/** Un pont par frontière entre deux mondes, là où le chemin franchit la rivière. */
-export function bridges(count: number, width: number): Bridge[] {
-  const out: Bridge[] = [];
+/** Un passage par frontière entre deux mondes, là où le chemin la franchit. */
+export function passages(count: number, width: number): Passage[] {
+  const out: Passage[] = [];
   for (let w = 1; w * LEVELS_PER_WORLD < count; w += 1) {
+    const world = worldIdAt(w);
     out.push({
       worldIndex: w,
-      world: worldIdAt(w),
+      world,
+      kind: PASSAGE_BY_WORLD[world],
       x: bridgeFraction(w) * width,
       y: boundaryY(w, count),
     });
@@ -133,7 +170,7 @@ export interface Route {
 
 /**
  * Tracé complet : entre deux niveaux proches en abscisse, un virage vient parfois bomber le chemin ;
- * à chaque frontière, deux points alignés rendent le passage du pont parfaitement droit.
+ * à chaque frontière, deux points alignés rendent le passage (pont, ponton, col) parfaitement droit.
  */
 export function buildRoute(count: number, width: number): Route {
   if (count === 0) return { points: [], nodeAt: [] };
@@ -151,7 +188,7 @@ export function buildRoute(count: number, width: number): Route {
     if ((i + 1) % LEVELS_PER_WORLD === 0) {
       const w = worldIndexForLevel(i + 1);
       const y = boundaryY(w, count);
-      points.push({ x: a.x, y: y + BRIDGE_HALF }, { x: a.x, y: y - BRIDGE_HALF });
+      points.push({ x: a.x, y: y + PASSAGE_HALF }, { x: a.x, y: y - PASSAGE_HALF });
       continue;
     }
     const dx = Math.abs(b.x - a.x) / width;
@@ -346,9 +383,9 @@ export function placeDecor(band: WorldBand, width: number, pathSamples: Point[],
       const px = x + (rng.next() - 0.5) * CELL * 0.8;
       const py = y + (rng.next() - 0.5) * CELL * 0.8;
       if (py < band.top + radius * 0.5 || py > band.bottom) continue;
-      // Rien sur les berges : ni au bord de la rivière d'en bas, ni dépassant sur celle d'en haut.
-      if (band.worldIndex > 0 && py > band.bottom - RIVER_HALF - 10) continue;
-      if (band.top > 0 && py - radius * 1.6 < band.top + RIVER_HALF + 6) continue;
+      // Rien sur la frontière : ni au bord de celle d'en bas, ni dépassant sur celle d'en haut.
+      if (band.worldIndex > 0 && py > band.bottom - BORDER_HALF - 10) continue;
+      if (band.top > 0 && py - radius * 1.6 < band.top + BORDER_HALF + 6) continue;
       const clearOf = (pts: Point[], min: number) =>
         pts.every((p) => (p.x - px) ** 2 + (p.y - py) ** 2 >= min * min);
       if (!clearOf(nearby, PATH_CLEARANCE + radius)) continue;
@@ -375,6 +412,6 @@ export function signPosition(band: WorldBand, width: number, count: number): Poi
   const x = bridgeFraction(band.worldIndex) * width;
   return {
     x: x + (x < width / 2 ? 80 : -80),
-    y: band.bottom - RIVER_HALF - 12,
+    y: band.bottom - BORDER_HALF - 12,
   };
 }

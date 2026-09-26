@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BRIDGE_HALF,
+  BORDER_HALF,
+  BORDER_SPACING,
   LEVELS_PER_WORLD,
   NODE_SIZE,
   PATH_WIDTH,
-  RIVER_HALF,
-  bridges,
+  PASSAGE_HALF,
+  SPACING,
+  SPACING_JITTER,
+  passages,
   buildRoute,
   nodePosition,
   pointBetweenNodes,
@@ -91,32 +94,62 @@ describe('chemin', () => {
   });
 });
 
-describe('pont entre deux mondes', () => {
-  const count = LEVELS_PER_WORLD * 2 + 3;
-  const route = buildRoute(count, WIDTH);
-  const list = bridges(count, WIDTH);
-
-  it('un pont par frontière, posé sur la rivière', () => {
-    expect(list).toHaveLength(2);
-    const bands = worldBands(count);
-    list.forEach((bridge) => expect(bridge.y).toBe(bands[bridge.worldIndex]!.bottom));
+describe('écart entre niveaux', () => {
+  it('varie autour de SPACING, sans jamais serrer les niveaux', () => {
+    const count = LEVELS_PER_WORLD * 3;
+    const gaps = Array.from(
+      { length: count - 1 },
+      (_, i) => nodePosition(i, count, WIDTH).y - nodePosition(i + 1, count, WIDTH).y,
+    );
+    const inner = gaps.filter((_, i) => (i + 1) % LEVELS_PER_WORLD !== 0);
+    for (const g of inner) {
+      expect(g).toBeGreaterThanOrEqual(Math.floor(SPACING * (1 - SPACING_JITTER)));
+      expect(g).toBeLessThanOrEqual(Math.ceil(SPACING * (1 + SPACING_JITTER)));
+      expect(g).toBeGreaterThan(NODE_SIZE + 40); // place pour le disque et ses étoiles
+    }
+    expect(new Set(inner).size).toBeGreaterThan(10);
+    // Plus de place autour de chaque frontière, pour le passage.
+    expect(gaps[LEVELS_PER_WORLD - 1]).toBe(BORDER_SPACING);
   });
 
-  it('le chemin le franchit en ligne droite', () => {
-    for (const bridge of list) {
-      const last = bridge.worldIndex * LEVELS_PER_WORLD - 1;
+  it('la carte a la bonne hauteur', () => {
+    const count = 20;
+    expect(nodePosition(count - 1, count, WIDTH).y).toBe(120);
+    expect(nodePosition(0, count, WIDTH).y).toBe(trackHeightFor(count) - 140);
+  });
+});
+
+describe('passage entre deux mondes', () => {
+  const count = LEVELS_PER_WORLD * 3 + 3;
+  const route = buildRoute(count, WIDTH);
+  const list = passages(count, WIDTH);
+
+  it('un passage par frontière, adapté au monde d’arrivée', () => {
+    expect(list.map((p) => [p.world, p.kind])).toEqual([
+      ['sea', 'pier'],
+      ['mountain', 'pass'],
+      ['forest', 'bridge'],
+    ]);
+    const bands = worldBands(count);
+    list.forEach((p) => expect(p.y).toBe(bands[p.worldIndex]!.bottom));
+  });
+
+  it('le chemin le franchit en ligne droite, loin des niveaux', () => {
+    for (const passage of list) {
+      const last = passage.worldIndex * LEVELS_PER_WORLD - 1;
       const start = route.nodeAt[last]!;
-      // Le segment qui enjambe la rivière est le 2e entre les deux niveaux.
-      expect(route.points[start + 1]).toEqual({
-        x: bridge.x,
-        y: bridge.y + BRIDGE_HALF,
-      });
-      for (let t = 0; t <= 1; t += 0.1) expect(pointOnSegment(route.points, start + 1, t).x).toBeCloseTo(bridge.x, 6);
-      expect(BRIDGE_HALF).toBeGreaterThan(RIVER_HALF);
+      // Le segment qui franchit la frontière est le 2e entre les deux niveaux.
+      expect(route.points[start + 1]).toEqual({ x: passage.x, y: passage.y + PASSAGE_HALF });
+      for (let t = 0; t <= 1; t += 0.1) expect(pointOnSegment(route.points, start + 1, t).x).toBeCloseTo(passage.x, 6);
+      expect(PASSAGE_HALF).toBeGreaterThan(BORDER_HALF);
+      const below = nodePosition(last, count, WIDTH);
+      expect(below.y - NODE_SIZE / 2).toBeGreaterThan(passage.y + PASSAGE_HALF);
+      const above = nodePosition(last + 1, count, WIDTH);
+      expect(above.y + NODE_SIZE / 2 + 16).toBeLessThan(passage.y - PASSAGE_HALF); // étoiles comprises
     }
   });
 
-  it("l'avatar va d'un niveau au suivant en passant par le pont", () => {
+  it("l'avatar va d'un niveau au suivant en franchissant le passage", () => {
     const from = LEVELS_PER_WORLD - 1;
     const a = nodePosition(from, count, WIDTH);
     const b = nodePosition(from + 1, count, WIDTH);
@@ -126,7 +159,7 @@ describe('pont entre deux mondes', () => {
     expect(end.y).toBeCloseTo(b.y, 6);
     const mid = pointBetweenNodes(route, from, 0.5);
     expect(mid.x).toBeCloseTo(list[0]!.x, 0);
-    expect(Math.abs(mid.y - list[0]!.y)).toBeLessThan(BRIDGE_HALF);
+    expect(Math.abs(mid.y - list[0]!.y)).toBeLessThan(PASSAGE_HALF);
   });
 });
 
@@ -147,7 +180,7 @@ describe('décor', () => {
         expect(minNode).toBeGreaterThan(NODE_SIZE / 2);
         expect(item.y).toBeGreaterThanOrEqual(band.top);
         expect(item.y).toBeLessThanOrEqual(band.bottom);
-        if (band.worldIndex > 0) expect(item.y).toBeLessThan(band.bottom - RIVER_HALF);
+        if (band.worldIndex > 0) expect(item.y).toBeLessThan(band.bottom - BORDER_HALF);
       }
     }
   });

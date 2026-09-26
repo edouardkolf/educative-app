@@ -183,7 +183,7 @@ export function SagaMap() {
       if (!start) start = now;
       const t = Math.min(1, (now - start) / TRAVEL_MS);
       const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-      const point = pointBetweenNodes(route, from, eased); // traverse le pont entre les deux mondes
+      const point = pointBetweenNodes(route, from, eased); // franchit le passage entre les deux mondes
       const hop = Math.abs(Math.sin(eased * Math.PI * 4)) * 16;
       setTraveller({ x: point.x, y: point.y - hop });
       const scroller = scrollRef.current;
