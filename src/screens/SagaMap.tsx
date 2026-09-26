@@ -1,4 +1,5 @@
-// Carte du parcours ("saga") : niveau 1 en bas, chemin en zigzag pointillé vers le haut.
+// Carte du parcours ("saga") : niveau 1 en bas, chemin crème qui serpente vers le haut à travers
+// des mondes successifs (forêt, mer, montagne…), un monde tous les LEVELS_PER_WORLD niveaux.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { computeLevelStates, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelState, MechanicId } from '../engine/types';
@@ -9,23 +10,11 @@ import { useSession } from '../app/SessionProvider';
 import { Shape } from '../ui/Shape';
 import { StarRow } from '../ui/StarRow';
 import { LongPressButton } from '../ui/LongPressButton';
+import { MapScenery } from './map/MapScenery';
+import { NODE_SIZE, nodePosition, trackHeightFor, worldIdAt, worldIndexForLevel } from './map/layout';
 
-const NODE_SIZE = 80;
-const SPACING = 168;
-const TOP_PAD = 120;
-const BOTTOM_PAD = 140;
-
-function trackHeightFor(count: number): number {
-  return TOP_PAD + BOTTOM_PAD + Math.max(0, count - 1) * SPACING;
-}
-
-function positionFor(index: number, count: number): { x: number; y: number } {
-  const height = trackHeightFor(count);
-  return {
-    x: 50 + Math.sin(index * (Math.PI / 2)) * 28,
-    y: height - BOTTOM_PAD - index * SPACING,
-  };
-}
+/** Largeur de repli avant la première mesure (viewport Pixel 7). */
+const FALLBACK_WIDTH = 412;
 
 function MechanicIcon({ mechanic }: { mechanic: MechanicId | undefined }) {
   if (mechanic === 'sequence') {
@@ -86,6 +75,24 @@ export function SagaMap() {
   const [states, setStates] = useState<LevelState[] | null>(null);
   const [shakeId, setShakeId] = useState<string | null>(null);
   const scrolledRef = useRef(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(() =>
+    typeof window === 'undefined' ? FALLBACK_WIDTH : window.innerWidth || FALLBACK_WIDTH,
+  );
+
+  // Le décor et le chemin sont en pixels : on suit la largeur réelle de la carte.
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return undefined;
+    const update = () => {
+      if (el.clientWidth > 0) setWidth(el.clientWidth);
+    };
+    update();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [states !== null]);
 
   useEffect(() => {
     if (!profile) return undefined;
@@ -148,8 +155,6 @@ export function SagaMap() {
 
   const count = states?.length ?? 0;
   const height = trackHeightFor(count);
-  const positions = states?.map((_, i) => positionFor(i, count)) ?? [];
-  const pathD = positions.length > 1 ? positions.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') : '';
 
   return (
     <div class="screen screen--map">
@@ -168,29 +173,10 @@ export function SagaMap() {
       </LongPressButton>
       {remainingRatio !== null && <TimeRing ratio={remainingRatio} />}
       <div class="map-scroll">
-        <div class="map-track" style={{ height }}>
-          <span class="map-decor" style={{ left: '12%', top: '8%' }} aria-hidden="true">
-            ☁️
-          </span>
-          <span class="map-decor" style={{ left: '72%', top: '18%' }} aria-hidden="true">
-            ☁️
-          </span>
-          <span class="map-decor" style={{ left: '18%', top: '45%' }} aria-hidden="true">
-            🌳
-          </span>
-          <span class="map-decor" style={{ left: '80%', top: '60%' }} aria-hidden="true">
-            ☁️
-          </span>
-          <span class="map-decor" style={{ left: '14%', top: '78%' }} aria-hidden="true">
-            🌳
-          </span>
-          {pathD && (
-            <svg class="map-path" viewBox={`0 0 100 ${height}`} preserveAspectRatio="none">
-              <path d={pathD} class="map-path__line" />
-            </svg>
-          )}
+        <div class="map-track" style={{ height }} ref={trackRef}>
+          <MapScenery count={count} width={width} />
           {states?.map((state, i) => {
-            const pos = positionFor(i, count);
+            const pos = nodePosition(i, count, width);
             const level = getLevel(state.levelId);
             return (
               <div
@@ -198,8 +184,9 @@ export function SagaMap() {
                 class={`map-node map-node--${state.status}${state.current ? ' is-current' : ''}${
                   shakeId === state.levelId ? ' is-shaking' : ''
                 }`}
-                style={{ left: `${pos.x}%`, top: `${pos.y}px`, width: NODE_SIZE, height: NODE_SIZE }}
+                style={{ left: `${pos.x}px`, top: `${pos.y}px`, width: NODE_SIZE, height: NODE_SIZE }}
                 data-level={state.levelId}
+                data-world={worldIdAt(worldIndexForLevel(i))}
                 data-status={state.status}
                 onClick={() => openLevel(state)}
               >

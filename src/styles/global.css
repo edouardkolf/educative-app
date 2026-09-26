@@ -387,7 +387,8 @@ svg {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  background: linear-gradient(180deg, var(--bg-sky-top) 0%, var(--bg-sky-bottom) 45%, var(--bg) 100%);
+  /* Couleur du sol de la forêt, visible seulement le temps de la première mesure. */
+  background: #b5d98a;
 }
 
 .map-track {
@@ -395,29 +396,27 @@ svg {
   width: 100%;
 }
 
-.map-decor {
+.map-scenery {
   position: absolute;
-  font-family: var(--emoji-font);
-  font-size: 40px;
-  opacity: 0.7;
+  inset: 0;
+  display: block;
   pointer-events: none;
 }
 
-.map-path {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.map-scenery__path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.map-path__line {
-  fill: none;
-  stroke: var(--ink-soft);
-  stroke-width: 3;
-  stroke-dasharray: 2 12;
-  stroke-linecap: round;
-  opacity: 0.4;
-  vector-effect: non-scaling-stroke;
+/* Petits cailloux au centre du chemin. */
+.map-scenery__pebbles {
+  stroke-dasharray: 0.5 22;
+  opacity: 0.7;
+}
+
+.map-scenery__sign-icon {
+  font-family: var(--emoji-font);
 }
 
 .map-node {
@@ -450,10 +449,26 @@ svg {
 
 .map-node--locked .map-node__disc {
   background: var(--locked-bg);
-  border-color: var(--locked-bg);
+  border-color: var(--surface);
   color: var(--locked-ink);
   box-shadow: none;
   font-size: 26px;
+}
+
+/* Étoiles lisibles sur le chemin crème ; rien sous un niveau verrouillé (moins de bruit). */
+.map-node .star-row {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.9);
+  box-shadow: var(--shadow-sm);
+}
+
+.map-node .star-row__star:not(.is-filled) {
+  filter: grayscale(1) opacity(0.55);
+}
+
+.map-node--locked .star-row {
+  visibility: hidden;
 }
 
 .map-node.is-current .map-node__disc {
