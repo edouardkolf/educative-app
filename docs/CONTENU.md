@@ -258,14 +258,14 @@ s'il en a une. Exemple (extrait de ce1-mots-05.json) :
 ```json
 {
   "mechanic": "spelling",
-  "params": { "words": ["apres", "aupres", "aussi", "aussitot", "assez"], "mode": "tiles", "sentence": true, "extraTiles": 2 }
+  "params": { "words": ["apres", "aupres", "aussi", "aussitot", "assez"], "mode": "pick", "sentence": true, "choices": 4, "closeness": 2 }
 }
 ```
 
 **Champs** :
 - `words` : identifiants sans accent — apres, aupres, aussi, aussitot, assez, afin, aujourdhui, autour, autant, autrefois
 - `mode` : `"pick"` (la bonne orthographe parmi des variantes fautives), `"gap"` (les lettres manquantes, ex. au▢itôt → ss),
-  `"tiles"` (reconstituer le mot avec des étiquettes-lettres, puis valider)
+  `"tiles"` (reconstituer le mot avec des étiquettes-lettres, puis valider — disponible, mais non utilisé dans le parcours CE1 : l'écriture se travaille en dictée)
 - `sentence` : affiche une phrase d'exemple avec le mot en trou
 - `choices` (pick, gap) : 2 à 4 propositions ; `extraTiles` (tiles) : 0 à 4 étiquettes pièges
 - `closeness` (pick, optionnel) : proximité des variantes fautives — 1 grossières (otant), 2 moyennes (autent),

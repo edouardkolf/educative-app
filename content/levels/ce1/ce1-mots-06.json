@@ -1,15 +1,22 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-mots-06",
-  "title": "Mots invariables groupe B (avec étiquettes)",
+  "title": "Groupe B : variantes proches",
   "skill": "spelling",
-  "objective": "Reconstituer les mots du groupe B en assemblant les lettres proposées.",
+  "objective": "Reconnaître l'orthographe de afin, aujourd'hui, autour, autant, autrefois parmi 4 propositions aux fautes assez proches, avec une phrase d'exemple.",
   "mechanic": "spelling",
   "rounds": 5,
   "params": {
-    "words": ["afin", "aujourdhui", "autour", "autant", "autrefois"],
-    "mode": "tiles",
+    "words": [
+      "afin",
+      "aujourdhui",
+      "autour",
+      "autant",
+      "autrefois"
+    ],
+    "mode": "pick",
     "sentence": true,
-    "extraTiles": 2
+    "choices": 4,
+    "closeness": 2
   }
 }

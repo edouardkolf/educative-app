@@ -1,5 +1,5 @@
 // Parcours CE1 : création d'un enfant sur le parcours CE1, une manche de chaque mécanique jusqu'aux
-// étoiles (calc en mode choix, calc au pavé, compare, spelling pick, spelling tiles), un mauvais
+// étoiles (calc en mode choix, calc au pavé, compare, spelling pick, spelling lettres manquantes), un mauvais
 // numéro au pavé qui n'avance pas la manche, et absence de défilement horizontal (voir
 // docs/ARCHITECTURE.md §8-9, src/mechanics/**). Aides de navigation copiées de parent.spec.ts /
 // mechanics.spec.ts (même convention : non partagées entre fichiers).
@@ -169,29 +169,6 @@ async function answerKeypadCorrectly(page: Page): Promise<void> {
   await waitForRoundAdvance(page, indexBefore);
 }
 
-/**
- * spelling tiles : pose les étiquettes portant les lettres du mot dans l'ordre (index stable
- * `data-choice="tile-<i>"`, voir SpellingView.tsx) puis valide avec « tiles-ok ».
- */
-async function answerSpellingTilesCorrectly(page: Page): Promise<void> {
-  const round = currentRound(page);
-  const answer = await round.getAttribute('data-answer');
-  if (!answer) throw new Error('Aucune manche affichée (data-answer introuvable).');
-  const indexBefore = await currentRoundIndex(page);
-
-  const tiles = page.locator('.spl-tile');
-  const letters = await tiles.evaluateAll((els) => els.map((el) => el.textContent ?? ''));
-  const used = new Set<number>();
-  for (const letter of answer) {
-    const index = letters.findIndex((l, i) => l === letter && !used.has(i));
-    if (index === -1) throw new Error(`spelling tiles : lettre « ${letter} » introuvable parmi les étiquettes restantes.`);
-    used.add(index);
-    await page.locator(`[data-choice="tile-${index}"]`).click();
-  }
-  await page.locator('[data-choice="tiles-ok"]').click();
-  await waitForRoundAdvance(page, indexBefore);
-}
-
 async function waitForLevelEndButtons(page: Page): Promise<void> {
   await page.getByTestId('replay').waitFor({ state: 'visible' });
   await page.getByTestId('to-map').waitFor({ state: 'visible' });
@@ -296,20 +273,20 @@ test('ce1-mots-01 (spelling, pick) : une manche jusqu’aux étoiles, sans défi
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
 });
 
-test('ce1-mots-05 (spelling, étiquettes) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
+test('ce1-mots-02 (spelling, lettres manquantes) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Noé');
   await page.getByTestId('back-to-game').click();
   await chooseProfile(page, 'Noé');
-  await unlockLevel(page, 'Noé', 'ce1-mots-05');
+  await unlockLevel(page, 'Noé', 'ce1-mots-02');
   await chooseProfile(page, 'Noé');
-  await openLevelHash(page, 'ce1-mots-05');
+  await openLevelHash(page, 'ce1-mots-02');
 
-  await expect(page.locator('.spl-board')).toBeVisible();
+  await expect(page.locator('.spl-gap-hole')).toBeVisible();
   await assertNoHorizontalOverflow(page);
-  await page.screenshot({ path: shot('ce1-spelling-tiles.png') });
+  await page.screenshot({ path: shot('ce1-spelling-gap.png') });
 
   for (let i = 0; i < 5; i += 1) {
-    await answerSpellingTilesCorrectly(page);
+    await answerByDirectChoice(page);
   }
   await waitForLevelEndButtons(page);
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');

@@ -1,16 +1,27 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-mots-08",
-  "title": "Tous les mots invariables (avec étiquettes, sans phrase)",
+  "title": "Les 10 mots : la lettre piège",
   "skill": "spelling",
-  "objective": "Reconstituer les 10 mots invariables en assemblant les lettres : défi pour consolidation.",
+  "objective": "Repérer, pour chacun des 10 mots, la bonne graphie de sa difficulté (ss, è, ô, z…) parmi 4 propositions.",
   "mechanic": "spelling",
   "rounds": 8,
   "params": {
-    "words": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois"],
-    "mode": "tiles",
+    "words": [
+      "apres",
+      "aupres",
+      "aussi",
+      "aussitot",
+      "assez",
+      "afin",
+      "aujourdhui",
+      "autour",
+      "autant",
+      "autrefois"
+    ],
+    "mode": "gap",
     "sentence": false,
-    "extraTiles": 3
+    "choices": 4
   },
   "stars": {
     "maxMissesFor3": 1,

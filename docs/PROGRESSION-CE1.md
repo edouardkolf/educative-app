@@ -2,7 +2,7 @@
 
 Repères : programme de CP-CE1, cycle 2. En CE1, on vise la maîtrise de l'addition et soustraction (entiers naturels jusqu'à 100, avec et sans retenue/emprunt), le début des tables de multiplication (2, 3, 4), la comparaison de nombres, et l'orthographe de mots invariables fréquents.
 
-**Principe de la carte** : cinq jeux sont entrelacés (addition, comparaison, orthographe, soustraction, tables), montant en difficulté par petites marches. Chaque jeu suit une progression : **reconnaissance (choix parmi) → production (clavier ou étiquettes)**. Chaque jeu commence par un niveau avec tutoriel. Les niveaux de 8 manches assouplissent les seuils d'étoiles pour tenir compte de la complexité accrue.
+**Principe de la carte** : cinq jeux sont entrelacés (addition, comparaison, orthographe, soustraction, tables), montant en difficulté par petites marches. Chaque jeu suit une progression : **reconnaissance (choix parmi) → production (pavé numérique)** pour le calcul ; en orthographe, reconnaissance seulement, de plus en plus fine (l'écriture se travaille en dictée à la maison). Chaque jeu commence par un niveau avec tutoriel. Les niveaux de 8 manches assouplissent les seuils d'étoiles pour tenir compte de la complexité accrue.
 
 ## Addition
 
@@ -38,10 +38,10 @@ Groupe B : afin, aujourd'hui, autour, autant, autrefois
 | 2 | ce1-mots-02 | Groupe A, trous, avec phrase | Compléter les lettres manquantes |
 | 3 | ce1-mots-03 | Groupe B, reconnaissance (choix), avec phrase, variantes grossières | Deuxième groupe, reconnaissance parmi variantes faciles à écarter |
 | 4 | ce1-mots-04 | Groupe B, trous, avec phrase | Deuxième groupe, compléter les trous |
-| 5 | ce1-mots-05 | Groupe A, étiquettes, avec phrase | Groupe A, production complète (assemblage) |
-| 6 | ce1-mots-06 | Groupe B, étiquettes, avec phrase | Groupe B, production complète (assemblage) |
+| 5 | ce1-mots-05 | Groupe A, reconnaissance (4 choix), avec phrase, variantes moyennes | Groupe A, fautes plus proches du bon mot |
+| 6 | ce1-mots-06 | Groupe B, reconnaissance (4 choix), avec phrase, variantes moyennes | Groupe B, fautes plus proches du bon mot |
 | 7 | ce1-mots-07 | 10 mots, reconnaissance (4 choix), sans phrase, variantes moyennes, **8 manches** | Tous les mots hors contexte, fautes plus proches : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 8 | ce1-mots-08 | 10 mots, étiquettes, sans phrase, **8 manches** | Tous les mots, production sans aide : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 8 | ce1-mots-08 | 10 mots, lettre piège (4 choix), sans phrase, **8 manches** | La difficulté de chaque mot (ss, è, ô, z…) : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 | 9 | ce1-mots-09 | 10 mots, reconnaissance (4 choix), sans phrase, variantes subtiles, **8 manches** | L'orthographe exacte, à un accent ou une lettre près (aprés / après) : dernier niveau du parcours |
 
 ## Soustraction

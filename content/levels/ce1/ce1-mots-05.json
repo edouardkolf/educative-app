@@ -1,15 +1,22 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-mots-05",
-  "title": "Mots invariables groupe A (avec étiquettes)",
+  "title": "Groupe A : variantes proches",
   "skill": "spelling",
-  "objective": "Reconstituer les mots du groupe A en assemblant les lettres proposées.",
+  "objective": "Reconnaître l'orthographe de après, auprès, aussi, aussitôt, assez parmi 4 propositions aux fautes assez proches, avec une phrase d'exemple.",
   "mechanic": "spelling",
   "rounds": 5,
   "params": {
-    "words": ["apres", "aupres", "aussi", "aussitot", "assez"],
-    "mode": "tiles",
+    "words": [
+      "apres",
+      "aupres",
+      "aussi",
+      "aussitot",
+      "assez"
+    ],
+    "mode": "pick",
     "sentence": true,
-    "extraTiles": 2
+    "choices": 4,
+    "closeness": 2
   }
 }
