@@ -6,7 +6,6 @@
   "objective": "Lire une phrase courte jusqu'au bout pour distinguer des mots qui se ressemblent (lapin / sapin).",
   "mechanic": "read",
   "rounds": 5,
-  "tutorial": true,
   "params": {
     "traps": [
       "noun"

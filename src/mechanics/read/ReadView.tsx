@@ -44,8 +44,16 @@ export function ReadView({ round, wrongChoices, solved, onChoose }: MechanicView
     onChoose(id);
   };
 
-  const gridClass =
-    choices.length === 4 ? 'rd-choices rd-choices--grid-4' : 'rd-choices rd-choices--three';
+  // Deux phrases → chaque image empile deux mini-scènes (voir Scene.tsx) : la case est plus haute,
+  // on le signale en CSS pour que la grille lui laisse la place plutôt que de l'écraser.
+  const isSplit = (choices[0]?.scene.placements.length ?? 0) > 1;
+  const gridClass = [
+    'rd-choices',
+    choices.length === 4 ? 'rd-choices--grid-4' : 'rd-choices--three',
+    isSplit ? 'rd-choices--split' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div class="rd-view" data-answer={round.answer}>
@@ -57,6 +65,7 @@ export function ReadView({ round, wrongChoices, solved, onChoose }: MechanicView
           const isCorrectAndSolved = solved && id === round.answer;
           const classes = [
             'rd-choice',
+            isSplit ? 'rd-choice--split' : '',
             imagesReady ? 'rd-choice--ready' : '',
             isWrong ? 'rd-choice--wrong' : '',
             shaking === id ? 'rd-choice--shake' : '',

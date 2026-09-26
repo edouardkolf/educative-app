@@ -1,296 +1,402 @@
 // Génération pure des manches de la mécanique « Lis et montre ». Aucun DOM, aucun stockage.
+//
+// Contre l'heuristique « taper l'image qui ressemble le plus aux autres » : on ne construit plus une
+// bonne image puis N images fausses à un trait chacune (la bonne porte alors la valeur majoritaire de
+// chaque trait, ce qui se repère sans lire). Chaque manche suit un des plans ci-dessous, tous symétriques
+// (chaque valeur de chaque trait apparaît sur le même nombre d'images) :
+//   - 3 images, UN trait : noun (sujet + 2 sosies) ou position (3 positions), même valeur pour les autres
+//     traits partout ;
+//   - 3 images, négation : {vraie position ✔}, {position citée, même nombre ✗}, {position citée, nombre
+//     inversé ✗} ;
+//   - 4 images, DEUX traits croisés (plan 2×2 ab / a'b / ab' / a'b'), sur une phrase ou, avec 2 phrases,
+//     un trait par phrase (il faut alors lire les deux).
 import { ANCHOR_RELATIONS } from '../../engine/types';
 import type { AnchorId, ChoiceId, ReadParams, Relation, Rng, Round } from '../../engine/types';
 import { ANCHOR_IDS, SUBJECTS, SUBJECT_IDS, anchorPhrase, capitalize, subjectPhrase, usableRelations } from './catalog';
 import type { SubjectId } from './catalog';
 import type { Placement, ReadRoundData, Scene } from './types';
 
-const MIN_CHOICES = 3;
-const MAX_CHOICES = 4;
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
-/** Un fait affirmé ou nié dans une phrase : « le lapin est sur la chaise ». */
-interface Statement {
-  subjectId: SubjectId;
-  count: 1 | 3;
-  anchor: AnchorId;
-  /** Relation citée dans la phrase. */
-  statedRelation: Relation;
-  /** Relation réellement vraie (= statedRelation si la phrase est affirmative). */
-  trueRelation: Relation;
-  negated: boolean;
-}
-
-function placementOf(s: Statement): Placement {
-  return { emoji: SUBJECTS[s.subjectId].emoji, count: s.count, relation: s.trueRelation, anchor: s.anchor };
-}
-
-function statementText(s: Statement): string {
-  const subject = capitalize(subjectPhrase(s.subjectId, s.count));
-  const verb = s.count === 1 ? (s.negated ? "n'est pas" : 'est') : s.negated ? 'ne sont pas' : 'sont';
-  return `${subject} ${verb} ${anchorPhrase(s.anchor, s.statedRelation)}.`;
-}
-
-/** Toutes les positions que ce support sait montrer (indépendamment des positions lues dans les phrases). */
+/** Toutes les positions que ce support sait montrer (répertoire complet, indépendant de `relations`). */
 function fullRelations(anchor: AnchorId): readonly Relation[] {
   return ANCHOR_RELATIONS[anchor] as readonly Relation[];
 }
 
-/** Supports dont l'intersection avec les relations autorisées (pour la phrase lue) a au moins 1 élément. */
-function candidateAnchors(relations: readonly Relation[], exclude: AnchorId[]): AnchorId[] {
-  return ANCHOR_IDS.filter((a) => !exclude.includes(a) && usableRelations(a, relations).length >= 1);
+// ---------- Traits et faisabilité structurelle (ne dépend que du catalogue et des paramètres) ----------
+
+export type TraitKind = 'noun' | 'number' | 'position';
+
+function hasTrioSubject(): boolean {
+  return SUBJECT_IDS.some((id) => SUBJECTS[id].lookAlikes.length >= 2);
+}
+
+function hasLookAlikeSubject(): boolean {
+  return SUBJECT_IDS.some((id) => SUBJECTS[id].lookAlikes.length >= 1);
+}
+
+/** Supports dont l'intersection avec `relations` (les positions lisibles) atteint `min` éléments. */
+function anchorsWithIntersect(relations: readonly Relation[], min: number): AnchorId[] {
+  return ANCHOR_IDS.filter((a) => usableRelations(a, relations).length >= min);
+}
+
+/** Traits individuellement exploitables (indépendamment les uns des autres) avec ces paramètres. */
+function availableTraits(params: ReadParams): TraitKind[] {
+  const traits: TraitKind[] = [];
+  if (params.traps.includes('noun') && hasLookAlikeSubject()) traits.push('noun');
+  if (params.traps.includes('number')) traits.push('number');
+  if (params.traps.includes('position') && anchorsWithIntersect(params.relations, 2).length > 0) traits.push('position');
+  return traits;
+}
+
+export type RoundKind =
+  | { type: 'noun3' }
+  | { type: 'position3' }
+  | { type: 'negation3' }
+  | { type: 'cross4'; pair: [TraitKind, TraitKind] }
+  | { type: 'twoSentenceCross4' };
+
+/** Description FR d'un type de manche, pour l'espace parent / les rapports (hors contrat). */
+export function describeRoundKind(kind: RoundKind): string {
+  switch (kind.type) {
+    case 'noun3':
+      return 'noun3 : 3 images, un sujet et ses 2 sosies, même position';
+    case 'position3':
+      return 'position3 : 3 images, 3 positions différentes, même sujet';
+    case 'negation3':
+      return 'negation3 : 3 images (une phrase niée), position vraie / affirmation / nombre inversé';
+    case 'cross4':
+      return `cross4(${kind.pair[0]}×${kind.pair[1]}) : 4 images, 2 traits croisés sur une phrase`;
+    case 'twoSentenceCross4':
+      return 'twoSentenceCross4 : 4 images, 2 phrases, un trait par phrase (il faut lire les deux)';
+  }
 }
 
 /**
- * Nombre exact d'images fausses que CE fait (affirmatif ou nié, sur ce support) peut fournir avec les
- * pièges actifs. Formule directe (pas d'énumération) : chaque piège ajoute un nombre fixe d'alternatives
- * distinctes (voir altPlacements, qui produit exactement ce compte). Négation coupe "position" (§ plus
- * bas : changer de position sur une phrase niée resterait vrai), donc les deux ne se cumulent jamais.
+ * Types de manche réalisables avec ces paramètres (structurel, ne dépend pas du hasard). Utilisé par le
+ * générateur (tirage du type de manche) et par validateParams (une liste vide = niveau irréalisable).
  */
-function statementCapacity(params: ReadParams, subjectId: SubjectId, anchor: AnchorId, negated: boolean): number {
-  let n = 0;
-  if (params.traps.includes('noun')) n += SUBJECTS[subjectId].lookAlikes.length;
-  if (params.traps.includes('number')) n += 1;
-  if (!negated && params.traps.includes('position')) n += fullRelations(anchor).length - 1;
-  if (negated && params.traps.includes('negation')) n += 1;
-  return n;
-}
+export function computeFeasibleKinds(params: ReadParams): RoundKind[] {
+  const sentences = params.sentences >= 2 ? 2 : 1;
+  const choices = params.choices === 4 ? 4 : 3;
+  const kinds: RoundKind[] = [];
 
-/** Couples (support, polarité) que ce sujet peut utiliser sans exclusion, triés par capacité décroissante. */
-function anchorNegationOptions(
-  params: ReadParams,
-  subjectId: SubjectId,
-  anchors: readonly AnchorId[],
-): { anchor: AnchorId; negated: boolean; capacity: number }[] {
-  const options: { anchor: AnchorId; negated: boolean; capacity: number }[] = [];
-  for (const anchor of anchors) {
-    options.push({ anchor, negated: false, capacity: statementCapacity(params, subjectId, anchor, false) });
-    if (params.traps.includes('negation') && fullRelations(anchor).length >= 2) {
-      options.push({ anchor, negated: true, capacity: statementCapacity(params, subjectId, anchor, true) });
+  if (sentences === 1 && choices === 3) {
+    if (params.traps.includes('noun') && hasTrioSubject()) kinds.push({ type: 'noun3' });
+    if (params.traps.includes('position') && anchorsWithIntersect(params.relations, 3).length > 0) {
+      kinds.push({ type: 'position3' });
     }
-  }
-  return options;
-}
-
-/**
- * Construit un fait : `statedRelation` (ce qui est écrit) vient toujours de `params.relations` ; en cas de
- * négation, `trueRelation` (ce qui est vraiment sur l'image) peut être n'importe quelle autre position que
- * ce support sait montrer — une image n'a pas besoin d'être une phrase lisible pour être vraie.
- *
- * Le couple (support, affirmatif/négatif) est choisi parmi ceux qui peuvent à eux seuls fournir `minAlts`
- * images fausses : jamais une manche à court d'images. Si aucun couple ne le peut, on prend le meilleur
- * (retenu par validateParams comme un niveau à corriger).
- */
-function buildStatement(
-  params: ReadParams,
-  rng: Rng,
-  subjectId: SubjectId,
-  excludeAnchors: AnchorId[],
-  minAlts: number,
-): Statement {
-  let anchors = candidateAnchors(params.relations, excludeAnchors);
-  if (anchors.length === 0) anchors = candidateAnchors(params.relations, []);
-
-  const options = anchorNegationOptions(params, subjectId, anchors);
-  const feasible = options.filter((o) => o.capacity >= minAlts);
-  let picked: { anchor: AnchorId; negated: boolean };
-  if (feasible.length > 0) {
-    picked = rng.pick(feasible);
-  } else {
-    // Repli : aucun couple ne suffit (configuration à corriger côté validateParams) — on prend le mieux.
-    const best = options.reduce((a, b) => (b.capacity > a.capacity ? b : a));
-    picked = best;
-  }
-
-  const { anchor, negated } = picked;
-  const rels = usableRelations(anchor, params.relations);
-  const statedRelation = rng.pick(rels);
-
-  let trueRelation = statedRelation;
-  if (negated) {
-    const others = fullRelations(anchor).filter((r) => r !== statedRelation);
-    trueRelation = others.includes('beside') ? 'beside' : rng.pick(others);
-  }
-
-  const count = rng.pick([1, 3] as const);
-  return { subjectId, count, anchor, statedRelation, trueRelation, negated };
-}
-
-/** Candidats d'image fausse pour la phrase `index` : un seul trait change par rapport à la vérité. */
-function altPlacements(params: ReadParams, statement: Statement): Placement[] {
-  const subject = SUBJECTS[statement.subjectId];
-  const alts: Placement[] = [];
-
-  if (params.traps.includes('noun')) {
-    for (const lookAlikeId of subject.lookAlikes) {
-      alts.push({
-        emoji: SUBJECTS[lookAlikeId].emoji,
-        count: statement.count,
-        relation: statement.trueRelation,
-        anchor: statement.anchor,
-      });
+    if (
+      params.traps.includes('negation') &&
+      params.traps.includes('number') &&
+      ANCHOR_IDS.some((a) => usableRelations(a, params.relations).length >= 1 && fullRelations(a).length >= 2)
+    ) {
+      kinds.push({ type: 'negation3' });
     }
-  }
-
-  if (params.traps.includes('number')) {
-    alts.push({
-      emoji: subject.emoji,
-      count: statement.count === 1 ? 3 : 1,
-      relation: statement.trueRelation,
-      anchor: statement.anchor,
-    });
-  }
-
-  // Piège "position" : seulement pour une phrase affirmative. Pour une phrase négative, changer la
-  // position vers n'importe quelle autre position que "statedRelation" resterait VRAI (la phrase dit
-  // juste que ce n'est pas à tel endroit) : seul le piège "negation" (l'affirmation) y est une image fausse.
-  if (params.traps.includes('position') && !statement.negated) {
-    const otherRelations = fullRelations(statement.anchor).filter((r) => r !== statement.trueRelation);
-    for (const r of otherRelations) {
-      alts.push({ emoji: subject.emoji, count: statement.count, relation: r, anchor: statement.anchor });
+  } else if (sentences === 1 && choices === 4) {
+    const traits = availableTraits(params);
+    for (let i = 0; i < traits.length; i += 1) {
+      for (let j = i + 1; j < traits.length; j += 1) {
+        kinds.push({ type: 'cross4', pair: [traits[i] as TraitKind, traits[j] as TraitKind] });
+      }
     }
+  } else if (sentences === 2 && choices === 4) {
+    if (availableTraits(params).length > 0) kinds.push({ type: 'twoSentenceCross4' });
   }
 
-  if (params.traps.includes('negation') && statement.negated) {
-    // Ce qu'on aurait vu si la phrase (négative) était en fait vraie : l'affirmation.
-    alts.push({
-      emoji: subject.emoji,
-      count: statement.count,
-      relation: statement.statedRelation,
-      anchor: statement.anchor,
-    });
-  }
-
-  const seen = new Set<string>();
-  return alts.filter((p) => {
-    const key = `${p.emoji}|${p.count}|${p.relation}|${p.anchor}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return kinds;
 }
 
-function sceneKey(scene: Scene): string {
-  return scene.placements.map((p) => `${p.emoji}|${p.count}|${p.relation}|${p.anchor}`).join('+');
+// ---------- Couverture des positions : chaque relation de `relations` sort au moins une fois ----------
+
+interface Coverage {
+  /** Renvoie une relation de `usable` à privilégier (couverture), ou undefined si `usable` est vide. */
+  prefer(usable: ReadonlySet<Relation>, rng: Rng): Relation | undefined;
+  mark(r: Relation): void;
 }
 
-/** Pioche un sujet parmi `pool`, en évitant `exclude` si possible. */
+function createCoverage(relations: readonly Relation[]): Coverage {
+  let remaining = new Set(relations);
+  return {
+    prefer(usable, rng) {
+      const notYetSeen = [...remaining].filter((r) => usable.has(r));
+      const pool = notYetSeen.length > 0 ? notYetSeen : [...usable];
+      if (pool.length === 0) return undefined;
+      return rng.pick(pool);
+    },
+    mark(r) {
+      remaining.delete(r);
+      if (remaining.size === 0) remaining = new Set(relations);
+    },
+  };
+}
+
+function unionCitable(anchors: readonly AnchorId[], relations: readonly Relation[]): Set<Relation> {
+  const s = new Set<Relation>();
+  for (const a of anchors) for (const r of usableRelations(a, relations)) s.add(r);
+  return s;
+}
+
+/** Pioche un support parmi ceux qui savent montrer `relation`, en préférant varier par rapport à `avoid`. */
+function pickAnchorFor(candidates: readonly AnchorId[], relation: Relation, avoid: AnchorId | undefined, rng: Rng): AnchorId {
+  const withRelation = candidates.filter((a) => usableRelations(a, [relation]).length > 0);
+  const varied = avoid ? withRelation.filter((a) => a !== avoid) : withRelation;
+  const pool = varied.length > 0 ? varied : withRelation;
+  return rng.pick(pool.length > 0 ? pool : candidates);
+}
+
+// ---------- Sujets ----------
+
 function pickSubject(rng: Rng, pool: readonly SubjectId[], exclude: readonly SubjectId[]): SubjectId {
   const candidates = pool.filter((id) => !exclude.includes(id));
   return rng.pick(candidates.length > 0 ? candidates : pool);
 }
 
-interface BuiltRound {
+function subjectsWithLookAlikes(min: number): SubjectId[] {
+  return SUBJECT_IDS.filter((id) => SUBJECTS[id].lookAlikes.length >= min);
+}
+
+// ---------- Phrases et placements ----------
+
+interface Fact {
+  subjectId: SubjectId;
+  count: 1 | 3;
+  anchor: AnchorId;
+  relation: Relation;
+}
+
+function placementOf(f: Fact): Placement {
+  return { emoji: SUBJECTS[f.subjectId].emoji, count: f.count, relation: f.relation, anchor: f.anchor };
+}
+
+function factText(f: Fact, negated: boolean): string {
+  const subject = capitalize(subjectPhrase(f.subjectId, f.count));
+  const verb = f.count === 1 ? (negated ? "n'est pas" : 'est') : negated ? 'ne sont pas' : 'sont';
+  return `${subject} ${verb} ${anchorPhrase(f.anchor, f.relation)}.`;
+}
+
+/** La valeur "primée" (a') d'un trait pour ce fait : un seul champ du placement change. */
+function traitOverride(rng: Rng, trait: TraitKind, fact: Fact, relations: readonly Relation[]): Partial<Placement> {
+  if (trait === 'noun') {
+    const lookAlike = rng.pick(SUBJECTS[fact.subjectId].lookAlikes);
+    return { emoji: SUBJECTS[lookAlike].emoji };
+  }
+  if (trait === 'number') {
+    return { count: fact.count === 1 ? 3 : 1 };
+  }
+  const alt = usableRelations(fact.anchor, relations).filter((r) => r !== fact.relation);
+  return { relation: rng.pick(alt) };
+}
+
+// ---------- Contexte de génération (état qui varie manche après manche) ----------
+
+interface GenContext {
+  rng: Rng;
+  params: ReadParams;
+  coverage: Coverage;
+  subjectPool: readonly SubjectId[];
+  lastAnchor: AnchorId | undefined;
+  lastFirstSubject: SubjectId | undefined;
+}
+
+/** Choisit citedRelation + support pour un rôle qui a besoin d'au moins `minIntersect` positions utilisables. */
+function pickCitedAndAnchor(
+  ctx: GenContext,
+  minIntersect: number,
+  avoidAnchor?: AnchorId,
+): { relation: Relation; anchor: AnchorId } {
+  const qualifying = anchorsWithIntersect(ctx.params.relations, minIntersect).filter((a) => a !== avoidAnchor);
+  const pool = qualifying.length > 0 ? qualifying : anchorsWithIntersect(ctx.params.relations, minIntersect);
+  const usable = unionCitable(pool, ctx.params.relations);
+  const relation = ctx.coverage.prefer(usable, ctx.rng) ?? ctx.rng.pick(ctx.params.relations);
+  ctx.coverage.mark(relation);
+  const anchor = pickAnchorFor(pool, relation, ctx.lastAnchor, ctx.rng);
+  return { relation, anchor };
+}
+
+// ---------- Constructeurs de manche (un par plan) ----------
+
+interface Built {
   text: string;
-  correct: Scene;
-  wrongs: Scene[];
+  scenes: Scene[];
+  correctIndex: number;
   firstSubjectId: SubjectId;
 }
 
-function buildOneRound(
-  params: ReadParams,
-  rng: Rng,
-  subjectPool: readonly SubjectId[],
-  avoidFirstSubject: SubjectId | undefined,
-  wantedChoices: number,
-): BuiltRound {
-  const sentenceCount = params.sentences >= 2 ? 2 : 1;
-  const statements: Statement[] = [];
-  const usedSubjects: SubjectId[] = avoidFirstSubject ? [avoidFirstSubject] : [];
-  const usedAnchors: AnchorId[] = [];
+function buildNoun3(ctx: GenContext): Built {
+  const subjectId = pickSubject(ctx.rng, subjectsWithLookAlikes(2), ctx.lastFirstSubject ? [ctx.lastFirstSubject] : []);
+  const { relation, anchor } = pickCitedAndAnchor(ctx, 1);
+  const count = ctx.rng.pick([1, 3] as const);
+  const fact: Fact = { subjectId, count, anchor, relation };
+  const correct = placementOf(fact);
 
-  // Chaque phrase doit, à elle seule, pouvoir fournir toutes les images fausses demandées : la manche
-  // ne dépend jamais d'un heureux tirage combiné entre les deux phrases.
-  const minAlts = wantedChoices - 1;
-
-  for (let i = 0; i < sentenceCount; i += 1) {
-    const subjectId = pickSubject(rng, subjectPool, usedSubjects);
-    usedSubjects.push(subjectId);
-    const statement = buildStatement(params, rng, subjectId, usedAnchors, minAlts);
-    statements.push(statement);
-    usedAnchors.push(statement.anchor);
-  }
-
-  const text = statements.map(statementText).join(' ');
-  const correctPlacements = statements.map(placementOf);
-  const correct: Scene = { placements: correctPlacements };
-
-  // Candidats d'image fausse : pour chaque phrase, un trait modifié, les autres phrases restant vraies.
-  // L'image de l'affirmation d'une phrase négative passe en premier : c'est le piège de qui saute « ne… pas ».
-  const affirmations: Scene[] = [];
-  const wrongCandidates: Scene[] = [];
-  for (let i = 0; i < statements.length; i += 1) {
-    const statement = statements[i] as Statement;
-    for (const alt of altPlacements(params, statement)) {
-      const placements = correctPlacements.slice();
-      placements[i] = alt;
-      const isAffirmation =
-        statement.negated && alt.relation === statement.statedRelation && alt.count === statement.count;
-      (isAffirmation ? affirmations : wrongCandidates).push({ placements });
-    }
-  }
-
-  const shuffled = [...rng.shuffle(affirmations), ...rng.shuffle(wrongCandidates)];
-  const wrongs: Scene[] = [];
-  const seen = new Set<string>([sceneKey(correct)]);
-  for (const scene of shuffled) {
-    if (wrongs.length >= wantedChoices - 1) break;
-    const key = sceneKey(scene);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    wrongs.push(scene);
-  }
-
-  return { text, correct, wrongs, firstSubjectId: statements[0]?.subjectId as SubjectId };
+  const [alike1, alike2] = ctx.rng.shuffle(SUBJECTS[subjectId].lookAlikes) as [SubjectId, SubjectId];
+  const scenes: Scene[] = [
+    { placements: [correct] },
+    { placements: [{ ...correct, emoji: SUBJECTS[alike1].emoji }] },
+    { placements: [{ ...correct, emoji: SUBJECTS[alike2].emoji }] },
+  ];
+  return { text: factText(fact, false), scenes, correctIndex: 0, firstSubjectId: subjectId };
 }
 
-/** Images fausses que les autres pièges (hors "noun") peuvent fournir au mieux, pour une phrase. */
-function otherTrapsCapacity(params: ReadParams): number {
-  let n = 0;
-  if (params.traps.includes('number')) n += 1;
-  if (params.traps.includes('position')) {
-    n += Math.max(0, ...ANCHOR_IDS.map((a) => fullRelations(a).length - 1));
-  }
-  if (params.traps.includes('negation')) n += 1;
-  return n;
+function buildPosition3(ctx: GenContext): Built {
+  const { relation, anchor } = pickCitedAndAnchor(ctx, 3);
+  const subjectId = pickSubject(ctx.rng, ctx.subjectPool, ctx.lastFirstSubject ? [ctx.lastFirstSubject] : []);
+  const count = ctx.rng.pick([1, 3] as const);
+  const fact: Fact = { subjectId, count, anchor, relation };
+  const correct = placementOf(fact);
+
+  const others = usableRelations(anchor, ctx.params.relations).filter((r) => r !== relation);
+  const [other1, other2] = ctx.rng.shuffle(others) as [Relation, Relation];
+  const scenes: Scene[] = [
+    { placements: [correct] },
+    { placements: [{ ...correct, relation: other1 }] },
+    { placements: [{ ...correct, relation: other2 }] },
+  ];
+  return { text: factText(fact, false), scenes, correctIndex: 0, firstSubjectId: subjectId };
 }
+
+function buildNegation3(ctx: GenContext): Built {
+  const { relation: cited, anchor } = pickCitedAndAnchor(ctx, 1);
+  const subjectId = pickSubject(ctx.rng, ctx.subjectPool, ctx.lastFirstSubject ? [ctx.lastFirstSubject] : []);
+  const n = ctx.rng.pick([1, 3] as const);
+  const nPrime = n === 1 ? 3 : 1;
+
+  // La bonne image se pose sur une AUTRE position que celle citée : en priorité dans `relations`, sinon
+  // n'importe où ailleurs sur ce support (une image n'a pas besoin d'être une phrase lisible pour être vraie).
+  const withinRelations = usableRelations(anchor, ctx.params.relations).filter((r) => r !== cited);
+  const anyOther = fullRelations(anchor).filter((r) => r !== cited);
+  const truePosition = ctx.rng.pick(withinRelations.length > 0 ? withinRelations : anyOther);
+
+  const correct: Placement = { emoji: SUBJECTS[subjectId].emoji, count: n, relation: truePosition, anchor };
+  const affirmation: Placement = { ...correct, relation: cited };
+  const numberFlipAtCited: Placement = { ...affirmation, count: nPrime };
+
+  const scenes: Scene[] = [{ placements: [correct] }, { placements: [affirmation] }, { placements: [numberFlipAtCited] }];
+  const fact: Fact = { subjectId, count: n, anchor, relation: cited };
+  return { text: factText(fact, true), scenes, correctIndex: 0, firstSubjectId: subjectId };
+}
+
+function buildCross4(ctx: GenContext, pair: [TraitKind, TraitKind]): Built {
+  const minIntersect = pair.includes('position') ? 2 : 1;
+  const { relation, anchor } = pickCitedAndAnchor(ctx, minIntersect);
+  const needsLookAlike = pair.includes('noun');
+  const subjectId = pickSubject(
+    ctx.rng,
+    needsLookAlike ? subjectsWithLookAlikes(1) : ctx.subjectPool,
+    ctx.lastFirstSubject ? [ctx.lastFirstSubject] : [],
+  );
+  const count = ctx.rng.pick([1, 3] as const);
+  const fact: Fact = { subjectId, count, anchor, relation };
+  const correct = placementOf(fact);
+
+  const ov1 = traitOverride(ctx.rng, pair[0], fact, ctx.params.relations);
+  const ov2 = traitOverride(ctx.rng, pair[1], fact, ctx.params.relations);
+  const scenes: Scene[] = [
+    { placements: [correct] }, // ab (vrai)
+    { placements: [{ ...correct, ...ov1 }] }, // a'b
+    { placements: [{ ...correct, ...ov2 }] }, // ab'
+    { placements: [{ ...correct, ...ov1, ...ov2 }] }, // a'b'
+  ];
+  return { text: factText(fact, false), scenes, correctIndex: 0, firstSubjectId: subjectId };
+}
+
+function buildTwoSentenceCross4(ctx: GenContext): Built {
+  const traits = availableTraits(ctx.params);
+  const t1 = ctx.rng.pick(traits) as TraitKind;
+  const t2 = ctx.rng.pick(traits) as TraitKind;
+
+  const min1 = t1 === 'position' ? 2 : 1;
+  const { relation: rel1, anchor: anchor1 } = pickCitedAndAnchor(ctx, min1);
+  const subject1 = pickSubject(
+    ctx.rng,
+    t1 === 'noun' ? subjectsWithLookAlikes(1) : ctx.subjectPool,
+    ctx.lastFirstSubject ? [ctx.lastFirstSubject] : [],
+  );
+  const count1 = ctx.rng.pick([1, 3] as const);
+  const fact1: Fact = { subjectId: subject1, count: count1, anchor: anchor1, relation: rel1 };
+
+  const min2 = t2 === 'position' ? 2 : 1;
+  const { relation: rel2, anchor: anchor2 } = pickCitedAndAnchor(ctx, min2, anchor1);
+  const subject2 = pickSubject(ctx.rng, t2 === 'noun' ? subjectsWithLookAlikes(1) : ctx.subjectPool, [subject1]);
+  const count2 = ctx.rng.pick([1, 3] as const);
+  const fact2: Fact = { subjectId: subject2, count: count2, anchor: anchor2, relation: rel2 };
+
+  const correct1 = placementOf(fact1);
+  const correct2 = placementOf(fact2);
+  const ov1 = traitOverride(ctx.rng, t1, fact1, ctx.params.relations);
+  const ov2 = traitOverride(ctx.rng, t2, fact2, ctx.params.relations);
+
+  const scenes: Scene[] = [
+    { placements: [correct1, correct2] }, // ab (les 2 phrases vraies)
+    { placements: [{ ...correct1, ...ov1 }, correct2] }, // a'b : phrase 1 fausse
+    { placements: [correct1, { ...correct2, ...ov2 }] }, // ab' : phrase 2 fausse
+    { placements: [{ ...correct1, ...ov1 }, { ...correct2, ...ov2 }] }, // a'b' : les 2 fausses
+  ];
+  const text = `${factText(fact1, false)} ${factText(fact2, false)}`;
+  return { text, scenes, correctIndex: 0, firstSubjectId: subject1 };
+}
+
+function build(ctx: GenContext, kind: RoundKind): Built {
+  switch (kind.type) {
+    case 'noun3':
+      return buildNoun3(ctx);
+    case 'position3':
+      return buildPosition3(ctx);
+    case 'negation3':
+      return buildNegation3(ctx);
+    case 'cross4':
+      return buildCross4(ctx, kind.pair);
+    case 'twoSentenceCross4':
+      return buildTwoSentenceCross4(ctx);
+  }
+}
+
+// ---------- Orchestration ----------
 
 export function generateRounds(params: ReadParams, count: number, rng: Rng): Round<ReadRoundData>[] {
-  const wantedChoices = clamp(params.choices, MIN_CHOICES, MAX_CHOICES);
-  // Si "noun" est actif, ne piocher que des sujets dont le nombre de sosies (combiné aux autres pièges)
-  // peut fournir assez d'images fausses distinctes pour ce nombre de choix.
-  const subjectPool = params.traps.includes('noun')
-    ? SUBJECT_IDS.filter((id) => SUBJECTS[id].lookAlikes.length + otherTrapsCapacity(params) >= wantedChoices - 1)
-    : SUBJECT_IDS;
+  const kinds = computeFeasibleKinds(params);
+  if (kinds.length === 0) {
+    // Configuration irréalisable (validateParams doit normalement l'avoir déjà refusée) : rien à générer.
+    return [];
+  }
+
+  const ctx: GenContext = {
+    rng,
+    params,
+    coverage: createCoverage(params.relations),
+    subjectPool: SUBJECT_IDS,
+    lastAnchor: undefined,
+    lastFirstSubject: undefined,
+  };
 
   const rounds: Round<ReadRoundData>[] = [];
   const seenTexts = new Set<string>();
-  let lastFirstSubject: SubjectId | undefined;
 
   for (let i = 0; i < count; i += 1) {
-    let built: BuiltRound | null = null;
-    for (let attempt = 0; attempt < 30; attempt += 1) {
-      const candidate = buildOneRound(params, rng, subjectPool, lastFirstSubject, wantedChoices);
-      if (candidate.wrongs.length < wantedChoices - 1) continue; // pas assez d'images fausses distinctes
-      if (seenTexts.has(candidate.text) && attempt < 29) continue; // évite une manche identique
+    let built: Built | null = null;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const kind = rng.pick(kinds);
+      const candidate = build(ctx, kind);
+      if (seenTexts.has(candidate.text) && attempt < 11) continue; // évite une manche identique
       built = candidate;
       break;
     }
-    if (!built) built = buildOneRound(params, rng, subjectPool, lastFirstSubject, wantedChoices);
+    if (!built) built = build(ctx, rng.pick(kinds));
 
     seenTexts.add(built.text);
 
-    const scenes = rng.shuffle([built.correct, ...built.wrongs]);
-    const choices = scenes.map((scene, index) => ({ id: `img-${index}` as ChoiceId, scene }));
-    const answerId = (choices[scenes.indexOf(built.correct)] as (typeof choices)[number]).id;
+    const order = rng.shuffle(built.scenes.map((_, idx) => idx));
+    const choices = order.map((sceneIndex, position) => ({
+      id: `img-${position}` as ChoiceId,
+      scene: built.scenes[sceneIndex] as Scene,
+    }));
+    const answerPosition = order.indexOf(built.correctIndex);
+    const answer = (choices[answerPosition] as (typeof choices)[number]).id;
 
-    rounds.push({ data: { text: built.text, choices }, answer: answerId });
+    rounds.push({ data: { text: built.text, choices }, answer });
 
-    // Mémorise le sujet de la première phrase pour ne pas le répéter d'une manche à l'autre.
-    lastFirstSubject = built.firstSubjectId;
+    ctx.lastFirstSubject = built.firstSubjectId;
+    const lastPlacement = built.scenes[built.correctIndex]?.placements.slice(-1)[0];
+    if (lastPlacement) ctx.lastAnchor = lastPlacement.anchor;
   }
 
   return rounds;

@@ -86,18 +86,27 @@ pour limiter la lecture et l'exposition à des formes fautives. Après une réus
 ## Lecture : Lis et montre
 
 Pour une lectrice qui lit vite et **devine** les mots au lieu de les lire. Elle lit une ou deux phrases, puis tape
-l'image qui correspond. Chaque image fausse ne change qu'**un seul trait** : exactement ce qu'on « lirait » en devinant.
-Les images n'apparaissent qu'un instant après le texte (sans compte à rebours visible), pour qu'elle lise d'abord.
-Pas de bouton 🔊 : c'est la lecture qu'on entraîne.
+l'image qui correspond. Les images n'apparaissent qu'un instant après le texte (sans compte à rebours visible), pour
+qu'elle lise d'abord. Pas de bouton 🔊 : c'est la lecture qu'on entraîne. Pas de tutoriel : la main montrerait la
+réponse avant même que les images n'apparaissent.
+
+**Aucun raccourci visuel.** Si chaque image fausse changeait un seul détail de la bonne, la bonne serait toujours
+« celle qui ressemble le plus aux autres », trouvable sans lire. Les images sont donc construites de façon symétrique :
+- à 3 images : un seul trait varie (3 sujets qui se ressemblent à l'écrit, ou 3 positions) ;
+- à 4 images : deux traits croisés (le chat / le chapeau × un / plusieurs) : chaque détail est sur 2 images sur 4 ;
+- phrase négative (3 images) : la bonne image, l'affirmation, et l'affirmation au mauvais nombre — jamais une image
+  qu'on pourrait défendre comme vraie ;
+- deux phrases (4 images) : chaque phrase élimine des images, il faut lire les deux.
 
 | # | Niveau | Pièges | Pourquoi |
 |---|---|---|---|
-| 1 | ce1-lire-01 | Nom qui ressemble (lapin / sapin), **tutoriel** | Lire le mot entier, pas ses premières lettres |
-| 2 | ce1-lire-02 | Un / plusieurs (le lapin est / les lapins sont) + nom | Les petits mots et l'accord du verbe |
+| 1 | ce1-lire-01 | Mot qui ressemble (lapin / sapin / patin) | Lire le mot entier, pas ses premières lettres |
+| 2 | ce1-lire-02 | Un / plusieurs × mot qui ressemble, 4 images | Les petits mots et l'accord du verbe (est / sont) |
 | 3 | ce1-lire-03 | Sur / sous / à côté | Le mot de position, souvent sauté |
 | 4 | ce1-lire-04 | Sur / devant / à côté | Positions plus fines (« derrière » n'est pas proposé : impossible à dessiner sans ambiguïté) |
-| 5 | ce1-lire-05 | Négation (n'est pas) + position + un/plusieurs | Le « ne… pas » qui inverse le sens |
-| 6 | ce1-lire-06 | Tous les pièges, 4 images, **8 manches** | Tout mot peut compter |
-| 7 | ce1-lire-07 | Deux phrases, **8 manches** | Garder deux informations en tête |
+| 5 | ce1-lire-05 | Négation (n'est pas) ou position | Le « ne… pas » qui inverse le sens |
+| 6 | ce1-lire-06 | Tous les pièges, **8 manches** | Tout mot peut compter |
+| 7 | ce1-lire-07 | Deux phrases, 4 images, **8 manches** | Garder deux informations en tête |
 
-Les phrases et les paires de mots qui se ressemblent sont dans `src/mechanics/read/catalog.ts`.
+Les sujets et les familles de mots qui se ressemblent sont dans `src/mechanics/read/catalog.ts`.
+

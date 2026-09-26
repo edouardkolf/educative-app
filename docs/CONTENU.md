@@ -274,13 +274,14 @@ s'il en a une. Exemple (extrait de ce1-mots-05.json) :
 ### Read (Lis et montre — CE1)
 
 Lire une ou deux phrases (« Les lapins ne sont pas sur la chaise. ») et taper l'image qui correspond parmi 3 ou 4.
-Chaque image fausse ne change qu'un seul trait. Les phrases sont générées à partir de `src/mechanics/read/catalog.ts`
+Les images sont symétriques (à 3 images un seul trait varie, à 4 deux traits sont croisés) : impossible de
+trouver la bonne sans lire. Les phrases sont générées à partir de `src/mechanics/read/catalog.ts`
 (sujets, paires de mots qui se ressemblent, supports). Exemple (extrait de ce1-lire-05.json) :
 
 ```json
 {
   "mechanic": "read",
-  "params": { "traps": ["negation", "position"], "relations": ["on", "under", "beside"], "sentences": 1, "choices": 3 }
+  "params": { "traps": ["negation", "number", "position"], "relations": ["on", "under", "beside"], "sentences": 1, "choices": 3 }
 }
 ```
 
@@ -289,7 +290,8 @@ Chaque image fausse ne change qu'un seul trait. Les phrases sont générées à 
   `"position"` (sur / sous…), `"negation"` (environ une phrase sur deux est négative, une image montre l'affirmation)
 - `relations` : positions utilisées — `"on"` sur, `"under"` sous, `"beside"` à côté de, `"in-front"` devant (selon le support : table sur/sous/à côté, chaise et lit sur/à côté,
   boîte sur/à côté/devant, arbre à côté/devant — voir `ANCHOR_RELATIONS`)
-- `sentences` : 1 ou 2 phrases ; `choices` : 3 ou 4 images
+- `sentences` : 1 ou 2 phrases ; `choices` : 3 ou 4 images. La négation se joue à 3 images et exige aussi `"number"` ;
+  deux phrases se jouent à 4 images. `npm run validate:content` refuse une combinaison irréalisable.
 
 ## Valeurs autorisées
 

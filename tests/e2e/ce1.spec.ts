@@ -313,6 +313,30 @@ test('ce1-lire-01 (Lis et montre) : les images arrivent après le texte, une man
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
 });
 
+test('ce1-lire-07 (Lis et montre, 2 phrases) : 4 images lisibles, sans défilement sur petit téléphone', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await onboardWithCe1Child(page, 'Lou');
+  await page.getByTestId('back-to-game').click();
+  await chooseProfile(page, 'Lou');
+  await unlockLevel(page, 'Lou', 'ce1-lire-07');
+  await chooseProfile(page, 'Lou');
+  await openLevelHash(page, 'ce1-lire-07');
+
+  await expect(page.locator('[data-choice]')).toHaveCount(4);
+  await expect(page.locator('[data-choice]').first()).toBeEnabled();
+  await assertNoHorizontalOverflow(page);
+  for (const box of await page.locator('[data-choice]').evaluateAll((els) => els.map((el) => el.getBoundingClientRect().bottom))) {
+    expect(box, 'une image dépasse en bas de l’écran').toBeLessThanOrEqual(640);
+  }
+  await page.screenshot({ path: shot('ce1-read-2-phrases.png') });
+
+  for (let i = 0; i < 8; i += 1) {
+    await answerByDirectChoice(page);
+  }
+  await waitForLevelEndButtons(page);
+  await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
+});
+
 // ==================== 3. Pavé : une erreur n'avance pas la manche, la bonne réponse passe ====================
 
 test('ce1-add-03 (pavé) : un mauvais nombre validé ne fait pas avancer la manche, la bonne réponse passe', async ({ page }) => {

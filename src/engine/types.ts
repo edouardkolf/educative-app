@@ -256,8 +256,9 @@ export type ReadingTrap = (typeof READING_TRAPS)[number];
 export interface ReadParams {
   /**
    * Pièges utilisés : "noun" = un nom qui ressemble à l'œil (lapin/sapin) ; "number" = un / plusieurs
-   * (le lapin / les lapins) ; "position" = une autre position (sur/sous) ; "negation" = environ une phrase
-   * sur deux est négative (« n'est pas sur ») et une image montre l'affirmation.
+   * (le lapin / les lapins) ; "position" = une autre position (sur/sous) ; "negation" = certaines phrases sont
+   * négatives (« n'est pas sur ») et une image montre l'affirmation (à 3 images, avec "number").
+   * Les images sont symétriques : à 3, un seul trait varie ; à 4, deux traits sont croisés (voir generate.ts).
    */
   traps: ReadingTrap[];
   /** Positions utilisables dans les phrases (au moins 1 ; 2 si traps contient "position"). */

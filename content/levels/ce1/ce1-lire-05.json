@@ -9,8 +9,8 @@
   "params": {
     "traps": [
       "negation",
-      "position",
-      "number"
+      "number",
+      "position"
     ],
     "relations": [
       "on",

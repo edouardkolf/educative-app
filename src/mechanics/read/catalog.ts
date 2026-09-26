@@ -9,22 +9,19 @@ export const SUBJECT_ID_LIST = [
   'champignon',
   'poisson',
   'poussin',
-  'pomme',
+  'poule',
   'bateau',
   'gateau',
   'chateau',
   'cochon',
   'coq',
   'coccinelle',
-  'vache',
-  'valise',
-  'velo',
   'canard',
   'canape',
   'canoe',
-  'mouton',
-  'mouche',
-  'moto',
+  'lapin',
+  'sapin',
+  'patin',
   'escargot',
   'abeille',
   'ours',
@@ -77,14 +74,14 @@ export const SUBJECTS: Record<SubjectId, SubjectEntry> = {
     lookAlikes: ['chat', 'chapeau'],
   },
 
-  // Famille « po- » : poisson / poussin / pomme.
+  // Famille « pou-/poi- » : poisson / poussin / poule.
   poisson: {
     id: 'poisson',
     emoji: '🐟',
     gender: 'm',
     singular: 'le poisson',
     plural: 'les poissons',
-    lookAlikes: ['poussin', 'pomme'],
+    lookAlikes: ['poussin', 'poule'],
   },
   poussin: {
     id: 'poussin',
@@ -92,14 +89,14 @@ export const SUBJECTS: Record<SubjectId, SubjectEntry> = {
     gender: 'm',
     singular: 'le poussin',
     plural: 'les poussins',
-    lookAlikes: ['poisson', 'pomme'],
+    lookAlikes: ['poisson', 'poule'],
   },
-  pomme: {
-    id: 'pomme',
-    emoji: '🍎',
+  poule: {
+    id: 'poule',
+    emoji: '🐔',
     gender: 'f',
-    singular: 'la pomme',
-    plural: 'les pommes',
+    singular: 'la poule',
+    plural: 'les poules',
     lookAlikes: ['poisson', 'poussin'],
   },
 
@@ -155,30 +152,30 @@ export const SUBJECTS: Record<SubjectId, SubjectEntry> = {
     lookAlikes: ['cochon', 'coq'],
   },
 
-  // Famille « v- » : vache / valise / vélo.
-  vache: {
-    id: 'vache',
-    emoji: '🐄',
-    gender: 'f',
-    singular: 'la vache',
-    plural: 'les vaches',
-    lookAlikes: ['valise', 'velo'],
-  },
-  valise: {
-    id: 'valise',
-    emoji: '🧳',
-    gender: 'f',
-    singular: 'la valise',
-    plural: 'les valises',
-    lookAlikes: ['vache', 'velo'],
-  },
-  velo: {
-    id: 'velo',
-    emoji: '🚲',
+  // Famille « -in » (une lettre d'écart) : lapin / sapin / patin.
+  lapin: {
+    id: 'lapin',
+    emoji: '🐰',
     gender: 'm',
-    singular: 'le vélo',
-    plural: 'les vélos',
-    lookAlikes: ['vache', 'valise'],
+    singular: 'le lapin',
+    plural: 'les lapins',
+    lookAlikes: ['sapin', 'patin'],
+  },
+  sapin: {
+    id: 'sapin',
+    emoji: '🌲',
+    gender: 'm',
+    singular: 'le sapin',
+    plural: 'les sapins',
+    lookAlikes: ['lapin', 'patin'],
+  },
+  patin: {
+    id: 'patin',
+    emoji: '⛸️',
+    gender: 'm',
+    singular: 'le patin',
+    plural: 'les patins',
+    lookAlikes: ['lapin', 'sapin'],
   },
 
   // Famille « can- » : canard / canapé / canoë.
@@ -205,32 +202,6 @@ export const SUBJECTS: Record<SubjectId, SubjectEntry> = {
     singular: 'le canoë',
     plural: 'les canoës',
     lookAlikes: ['canard', 'canape'],
-  },
-
-  // Famille « mo- » : mouton / mouche / moto (mouche et moustique se confondent à l'image).
-  mouton: {
-    id: 'mouton',
-    emoji: '🐑',
-    gender: 'm',
-    singular: 'le mouton',
-    plural: 'les moutons',
-    lookAlikes: ['mouche', 'moto'],
-  },
-  mouche: {
-    id: 'mouche',
-    emoji: '🪰',
-    gender: 'f',
-    singular: 'la mouche',
-    plural: 'les mouches',
-    lookAlikes: ['mouton', 'moto'],
-  },
-  moto: {
-    id: 'moto',
-    emoji: '🏍️',
-    gender: 'f',
-    singular: 'la moto',
-    plural: 'les motos',
-    lookAlikes: ['mouton', 'mouche'],
   },
 
   // Sujets supplémentaires : diversité de genre et d'élision, sans sosie dédié.

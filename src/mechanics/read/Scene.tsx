@@ -109,15 +109,27 @@ function Subject({ emoji, slot, subjectFs }: { emoji: string; slot: Slot; subjec
   );
 }
 
-/** Une mini-scène (un support + son sujet), pour un placement. */
-function PlacementScene({ placement }: { placement: Placement }) {
+// Étendue verticale réellement utilisée par le contenu (supports + sujets), toutes relations
+// confondues : de ~26 (haut d'un sujet « on ») à ~95 (bas d'un sujet « in-front »).
+// En mode compact (2 phrases empilées), le viewBox est recadré sur cette zone pour que chaque
+// sujet reste lisible malgré la case deux fois plus basse (au lieu d'un carré 0 0 100 100 dont
+// la moitié serait vide une fois la case divisée en deux).
+const COMPACT_VIEWBOX = '0 22 100 76';
+
+/** Une mini-scène (un support + son sujet), pour un placement.
+ * `compact` : recadre le viewBox (voir COMPACT_VIEWBOX) quand deux scènes sont empilées dans la même case. */
+function PlacementScene({ placement, compact }: { placement: Placement; compact: boolean }) {
   const { emoji, count, relation, anchor } = placement;
   const slots = slotsFor(anchor, relation, count);
   const subjectFs = 20; // sujet ~45 % de la taille du support (support ~44-58)
   const back = slots.filter((s) => s.z === 'back');
   const front = slots.filter((s) => s.z === 'front');
   return (
-    <svg viewBox="0 0 100 100" class="rd-scene" preserveAspectRatio="xMidYMid meet">
+    <svg
+      viewBox={compact ? COMPACT_VIEWBOX : '0 0 100 100'}
+      class="rd-scene"
+      preserveAspectRatio="xMidYMid meet"
+    >
       <line x1={8} y1={GROUND_Y} x2={92} y2={GROUND_Y} class="rd-ground" />
       {back.map((slot, i) => (
         <Subject key={`b${i}`} emoji={emoji} slot={slot} subjectFs={subjectFs} />
@@ -130,12 +142,13 @@ function PlacementScene({ placement }: { placement: Placement }) {
   );
 }
 
-/** Une scène complète : 1 placement = une scène pleine case ; 2 placements = deux mini-scènes côte à côte. */
+/** Une scène complète : 1 placement = une scène pleine case ; 2 placements = deux mini-scènes
+ * empilées (l'une au-dessus de l'autre, séparées d'un fin trait), chacune recadrée pour rester lisible. */
 export function Scene({ scene }: { scene: SceneData }) {
   if (scene.placements.length <= 1) {
     return (
       <div class="rd-scene-frame">
-        {scene.placements[0] ? <PlacementScene placement={scene.placements[0]} /> : null}
+        {scene.placements[0] ? <PlacementScene placement={scene.placements[0]} compact={false} /> : null}
       </div>
     );
   }
@@ -143,7 +156,7 @@ export function Scene({ scene }: { scene: SceneData }) {
     <div class="rd-scene-frame rd-scene-frame--split">
       {scene.placements.map((placement, i) => (
         <div class="rd-scene-half" key={i}>
-          <PlacementScene placement={placement} />
+          <PlacementScene placement={placement} compact />
         </div>
       ))}
     </div>
