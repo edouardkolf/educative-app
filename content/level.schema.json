@@ -15,11 +15,11 @@
     },
     "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
     "skill": {
-      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes"],
-      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer."
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling"], "description": "Mécanique de jeu. Détermine la forme de params." },
     "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
@@ -66,6 +66,18 @@
     {
       "if": { "type": "object", "properties": { "mechanic": { "const": "builder" } } },
       "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/builderParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "compare" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/compareParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "calc" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/calcParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "spelling" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/spellingParams" } } }
     }
   ],
   "definitions": {
@@ -193,6 +205,50 @@
           "description": "Figures à construire (cycle sans répétition tant que le réservoir n'est pas épuisé)."
         },
         "distractors": { "type": "integer", "minimum": 0, "maximum": 2, "description": "Pièces en trop, qui ne correspondent à aucun emplacement." }
+      }
+    },
+    "intRange": {"type": "object", "required": ["min", "max"], "additionalProperties": false, "properties": {"min": {"type": "integer", "minimum": 0, "maximum": 999}, "max": {"type": "integer", "minimum": 0, "maximum": 999}}},
+    "wordId": {"enum": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois"]},
+    "compareParams": {
+      "type": "object",
+      "description": "Comparer deux quantités écrites et taper <, = ou >.",
+      "required": ["min", "max", "form", "equalRate"],
+      "additionalProperties": false,
+      "properties": {
+        "min": {"type": "integer", "minimum": 0, "maximum": 999},
+        "max": {"type": "integer", "minimum": 0, "maximum": 999},
+        "form": {"enum": ["numbers", "sum-vs-number", "sums"], "description": "numbers : 47 ? 52 ; sum-vs-number : 8 + 5 ? 12 ; sums : 8 + 5 ? 6 + 7."},
+        "equalRate": {"type": "number", "minimum": 0, "maximum": 0.5, "description": "Part approximative de manches à égalité."},
+        "maxGap": {"type": "integer", "minimum": 1, "description": "Écart maximal entre les deux côtés quand ils diffèrent."}
+      }
+    },
+    "calcParams": {
+      "type": "object",
+      "description": "Calcul : addition, soustraction, tables de multiplication.",
+      "required": ["operation", "a", "b", "unknown", "answer"],
+      "additionalProperties": false,
+      "properties": {
+        "operation": {"enum": ["add", "sub", "mul"]},
+        "a": {"$ref": "#/definitions/intRange"},
+        "b": {"$ref": "#/definitions/intRange"},
+        "carry": {"enum": ["any", "with", "without"], "description": "add : retenue ; sub : emprunt. Ignoré en mul."},
+        "unknown": {"enum": ["result", "operand"], "description": "result : 7 + 5 = ? ; operand : 7 + ? = 12."},
+        "answer": {"enum": ["choices", "keypad"]},
+        "choices": {"type": "integer", "minimum": 3, "maximum": 4},
+        "showArray": {"type": "boolean", "description": "mul : quadrillage de points en appui."}
+      }
+    },
+    "spellingParams": {
+      "type": "object",
+      "description": "Orthographe des mots invariables.",
+      "required": ["words", "mode", "sentence"],
+      "additionalProperties": false,
+      "properties": {
+        "words": {"type": "array", "items": {"$ref": "#/definitions/wordId"}, "minItems": 1, "uniqueItems": true},
+        "mode": {"enum": ["pick", "gap", "tiles"], "description": "pick : bonne orthographe parmi des variantes ; gap : lettres manquantes ; tiles : reconstituer le mot."},
+        "sentence": {"type": "boolean", "description": "Affiche une phrase d'exemple avec le mot en trou."},
+        "choices": {"type": "integer", "minimum": 2, "maximum": 4},
+        "extraTiles": {"type": "integer", "minimum": 0, "maximum": 4}
       }
     }
   }

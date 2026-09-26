@@ -1,6 +1,6 @@
 # Architecture — Petits Malins
 
-PWA éducative pour la maternelle, installée sur un téléphone Android partagé par deux enfants.
+PWA éducative pour la maternelle et le CE1, installée sur un téléphone Android partagé par deux enfants.
 Ce document est la référence pour les humains et pour les agents : en cas de doute, il fait foi.
 
 ## 1. Stack et raisons
@@ -26,8 +26,8 @@ donc il faut les migrer par export puis import.
 content/                     ← contenu pédagogique : du JSON uniquement
   level.schema.json          ← schéma d'un niveau (autocomplétion dans VS Code)
   track.schema.json          ← schéma d'un parcours
-  tracks/ms.json             ← parcours Moyenne section = ordre des niveaux sur la carte
-  levels/ms/*.json           ← un fichier par niveau
+  tracks/ms.json, ce1.json   ← un parcours par classe = ordre des niveaux sur la carte (choisi par enfant, espace parent)
+  levels/<parcours>/*.json   ← un fichier par niveau
 src/
   app/                       ← coquille : routes, état global (profil actif), App.tsx
   engine/                    ← logique pure : chargement du contenu, hasard, étoiles, progression, stats
@@ -124,6 +124,10 @@ Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persis
 ## 9. Règles UX pour l'enfant non lectrice
 
 - Aucun texte nécessaire dans les écrans enfant : pictos, couleurs, animations. Les textes de l'espace parent sont en français.
+  Exception CE1 : les mécaniques `compare`, `calc` et `spelling` affichent des nombres, des signes et des mots courts
+  (l'enfant apprend à lire) ; les écrans communs (profils, carte, fin de niveau) restent sans texte.
+  `calc` (pavé numérique) et `spelling` (étiquettes) répondent en composant puis en validant ✓ : c'est la valeur
+  composée qui est envoyée au moteur comme choix.
 - Cibles tactiles : ≥ 72 px pour les choix de jeu, ≥ 56 px pour la navigation. Tap uniquement, pas de glisser-déposer
   — exceptions : `sort` (le trieur magique) et `builder` (le constructeur) acceptent le glisser-déposer **et** le tap
   (sélectionner puis taper la cible équivaut à y déposer l'objet/la pièce), pour rester jouables même sans geste de

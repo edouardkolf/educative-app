@@ -26,6 +26,11 @@ const SKILL_LABELS: Record<SkillId, string> = {
   categorization: 'Catégoriser',
   'color-mixing': 'Couleurs',
   shapes: 'Formes',
+  comparison: 'Comparer les nombres',
+  addition: 'Addition',
+  subtraction: 'Soustraction',
+  multiplication: 'Tables de multiplication',
+  spelling: 'Orthographe',
 };
 
 const MECHANIC_LABELS: Record<MechanicId, string> = {
@@ -35,6 +40,9 @@ const MECHANIC_LABELS: Record<MechanicId, string> = {
   'color-mix': 'Labo des couleurs',
   sort: 'Trieur magique',
   builder: 'Constructeur',
+  compare: 'Plus grand, plus petit',
+  calc: 'Calcul',
+  spelling: 'Mots invariables',
 };
 
 type GroupBy = 'skill' | 'mechanic';

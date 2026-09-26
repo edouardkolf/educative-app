@@ -26,7 +26,17 @@ export type ObjectId = string;
 
 // ---------- Niveaux et parcours ----------
 
-export const MECHANICS = ['sequence', 'count', 'odd-one-out', 'color-mix', 'sort', 'builder'] as const;
+export const MECHANICS = [
+  'sequence',
+  'count',
+  'odd-one-out',
+  'color-mix',
+  'sort',
+  'builder',
+  'compare',
+  'calc',
+  'spelling',
+] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
 export const SKILLS = [
@@ -36,6 +46,11 @@ export const SKILLS = [
   'categorization',
   'color-mixing',
   'shapes',
+  'comparison',
+  'addition',
+  'subtraction',
+  'multiplication',
+  'spelling',
 ] as const;
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
@@ -124,6 +139,86 @@ export interface BuilderParams {
   distractors: number;
 }
 
+// ---------- Mécaniques CE1 (l'enfant sait lire les nombres ; les mots restent courts) ----------
+
+/** Réponse d'une manche « comparer » : data-choice des trois boutons <, =, >. */
+export const COMPARE_CHOICES = ['lt', 'eq', 'gt'] as const;
+export type CompareChoice = (typeof COMPARE_CHOICES)[number];
+
+/** Comparer deux quantités écrites et taper <, = ou > (les trois boutons sont toujours affichés). */
+export interface CompareParams {
+  /** Plage des nombres affichés, ou des résultats des sommes si form ≠ "numbers" (0 à 999). */
+  min: number;
+  max: number;
+  /** "numbers" : 47 ? 52 ; "sum-vs-number" : 8 + 5 ? 12 ; "sums" : 8 + 5 ? 6 + 7 (termes ≥ 1). */
+  form: 'numbers' | 'sum-vs-number' | 'sums';
+  /** Part approximative de manches où les deux côtés sont égaux (0 à 0,5). */
+  equalRate: number;
+  /** Écart maximal entre les deux côtés quand ils diffèrent (≥ 1). Petit écart = plus difficile. Absent : aucune limite. */
+  maxGap?: number;
+}
+
+/** Une plage d'entiers, bornes incluses. */
+export interface IntRange {
+  min: number;
+  max: number;
+}
+
+/** Calcul : additions, soustractions, tables de multiplication. */
+export interface CalcParams {
+  operation: 'add' | 'sub' | 'mul';
+  /** Premier terme (add), nombre de départ (sub), premier facteur (mul). */
+  a: IntRange;
+  /** Second terme (add), nombre retiré (sub), second facteur (mul). En sub, seules les paires a ≥ b sont tirées. */
+  b: IntRange;
+  /**
+   * add : "with" = au moins une retenue, "without" = aucune retenue ; sub : même sens pour l'emprunt
+   * (unités de a < unités de b). "any" ou absent : indifférent. Ignoré en mul.
+   */
+  carry?: 'any' | 'with' | 'without';
+  /** "result" : 7 + 5 = ? ; "operand" : 7 + ? = 12 (le second terme est caché). */
+  unknown: 'result' | 'operand';
+  /** "choices" : 3 ou 4 propositions à taper ; "keypad" : l'enfant compose le nombre sur un pavé et valide. */
+  answer: 'choices' | 'keypad';
+  /** Nombre de propositions (3 ou 4), requis si answer = "choices". */
+  choices?: number;
+  /** mul uniquement : affiche le produit en quadrillage de points (a rangées de b), comme appui. */
+  showArray?: boolean;
+}
+
+/** Mots invariables du CE1 (identifiants sans accent ; l'orthographe exacte est dans src/mechanics/spelling/words.ts). */
+export const WORD_IDS = [
+  'apres',
+  'aupres',
+  'aussi',
+  'aussitot',
+  'assez',
+  'afin',
+  'aujourdhui',
+  'autour',
+  'autant',
+  'autrefois',
+] as const;
+export type WordId = (typeof WORD_IDS)[number];
+
+/** Orthographe : écrire correctement un mot invariable. */
+export interface SpellingParams {
+  /** Mots travaillés (cycle sans répétition tant que le réservoir n'est pas épuisé). */
+  words: WordId[];
+  /**
+   * "pick" : choisir la bonne orthographe parmi des variantes fautives plausibles ;
+   * "gap" : choisir les lettres manquantes du mot (ex. au__itôt → ss / s / c) ;
+   * "tiles" : reconstituer le mot en tapant des étiquettes-lettres dans l'ordre, puis valider.
+   */
+  mode: 'pick' | 'gap' | 'tiles';
+  /** Affiche une phrase d'exemple où le mot est remplacé par un trou (sens + contexte). */
+  sentence: boolean;
+  /** pick / gap : nombre de propositions (2 à 4). */
+  choices?: number;
+  /** tiles : étiquettes pièges en plus des lettres du mot (0 à 4). */
+  extraTiles?: number;
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
@@ -131,6 +226,9 @@ export interface MechanicParamsMap {
   'color-mix': ColorMixParams;
   sort: SortParams;
   builder: BuilderParams;
+  compare: CompareParams;
+  calc: CalcParams;
+  spelling: SpellingParams;
 }
 
 interface LevelBase {

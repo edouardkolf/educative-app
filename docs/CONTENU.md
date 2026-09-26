@@ -18,9 +18,9 @@ Un niveau = un fichier JSON. Un parcours = l'ordre des niveaux sur la carte de l
 | `$schema` | Chemin vers le schéma (à copier tel quel) | `"../../level.schema.json"` |
 | `id` | Identifiant unique (lettres, chiffres, tirets) | `"ms-suite-01"` |
 | `title` | Titre lisible par le parent | `"Suite de 2 couleurs"` |
-| `skill` | Compétence cible | `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"`, `"shapes"` |
+| `skill` | Compétence cible | MS : `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"`, `"shapes"` — CE1 : `"comparison"`, `"addition"`, `"subtraction"`, `"multiplication"`, `"spelling"` |
 | `objective` | Objectif pédagogique en une phrase | `"Continuer une suite AB…"` |
-| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"`, `"builder"` |
+| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"`, `"builder"`, `"compare"`, `"calc"`, `"spelling"` |
 | `rounds` | Nombre de manches | 4 (avec tutoriel) ou 5+ |
 | `tutorial` | Affiche la main animée (optionnel) | `true` ou absent |
 | `stars` | Seuils d'étoiles (optionnel) | Défaut : 0 raté → 3 ⭐, 1 raté → 2 ⭐ |
@@ -210,6 +210,65 @@ vers le plateau (son doux, jamais punitif, elle reste disponible) et compte comm
 plusieurs emplacements : une seule pose ratée suffit donc à faire perdre le « premier coup » de toute la manche (à
 prendre en compte dans les seuils d'étoiles, voir docs/PROGRESSION-MS.md).
 
+### Compare (plus grand, plus petit — CE1)
+
+Deux quantités écrites côte à côte ; l'enfant tape `<`, `=` ou `>` (les trois boutons sont toujours affichés).
+Exemple (extrait de ce1-compare-03.json) :
+
+```json
+{
+  "mechanic": "compare",
+  "params": { "min": 10, "max": 99, "form": "numbers", "equalRate": 0.15, "maxGap": 3 }
+}
+```
+
+**Champs** :
+- `min` / `max` : plage des nombres (ou des résultats des sommes), 0 à 999
+- `form` : `"numbers"` (47 ? 52), `"sum-vs-number"` (8 + 5 ? 12), `"sums"` (8 + 5 ? 6 + 7)
+- `equalRate` : part approximative de manches à égalité (0 à 0,5)
+- `maxGap` (optionnel) : écart maximal quand les côtés diffèrent — un petit écart oblige à regarder les unités
+
+### Calc (addition, soustraction, tables — CE1)
+
+Une opération en gros chiffres, l'inconnue pulse. Exemple (extrait de ce1-add-03.json) :
+
+```json
+{
+  "mechanic": "calc",
+  "params": { "operation": "add", "a": { "min": 2, "max": 9 }, "b": { "min": 2, "max": 9 }, "carry": "with", "unknown": "result", "answer": "keypad" }
+}
+```
+
+**Champs** :
+- `operation` : `"add"`, `"sub"` (seules les paires a ≥ b sont tirées), `"mul"`
+- `a` / `b` : plages des deux termes (ou facteurs)
+- `carry` (optionnel) : `"with"` / `"without"` / `"any"` — retenue en addition, emprunt en soustraction
+- `unknown` : `"result"` (7 + 5 = ?) ou `"operand"` (7 + ? = 12)
+- `answer` : `"choices"` (reconnaître parmi `choices` = 3–4 propositions plausibles) ou `"keypad"` (produire le nombre sur un pavé, puis valider)
+- `showArray` (mul) : quadrillage de points a × b en appui, affiché seulement quand on cherche le résultat
+
+Le hasard : 1 chance sur `choices` en mode choix, quasi nulle au pavé — les statistiques le corrigent.
+
+### Spelling (mots invariables — CE1)
+
+Les 10 mots invariables sont décrits dans `src/mechanics/spelling/words.ts` (orthographe, variantes fautives,
+lettres à trou, phrases d'exemple). Un bouton 🔊 lit le mot (et la phrase) avec la synthèse vocale du téléphone,
+s'il en a une. Exemple (extrait de ce1-mots-05.json) :
+
+```json
+{
+  "mechanic": "spelling",
+  "params": { "words": ["apres", "aupres", "aussi", "aussitot", "assez"], "mode": "tiles", "sentence": true, "extraTiles": 2 }
+}
+```
+
+**Champs** :
+- `words` : identifiants sans accent — apres, aupres, aussi, aussitot, assez, afin, aujourdhui, autour, autant, autrefois
+- `mode` : `"pick"` (la bonne orthographe parmi des variantes fautives), `"gap"` (les lettres manquantes, ex. au▢itôt → ss),
+  `"tiles"` (reconstituer le mot avec des étiquettes-lettres, puis valider)
+- `sentence` : affiche une phrase d'exemple avec le mot en trou
+- `choices` (pick, gap) : 2 à 4 propositions ; `extraTiles` (tiles) : 0 à 4 étiquettes pièges
+
 ## Valeurs autorisées
 
 Consulter le fichier `content/level.schema.json`, section `definitions`.
@@ -231,4 +290,4 @@ En cas d'erreur, le message affiche le nom du fichier fautif. Corriger le JSON e
 
 ## Progression
 
-Voir le document `docs/PROGRESSION-MS.md` pour la structure générale du parcours moyenne section et les instructions pédagogiques.
+Voir `docs/PROGRESSION-MS.md` (moyenne section) et `docs/PROGRESSION-CE1.md` (CE1). Le parcours d'un enfant se choisit dans l'espace parent, fiche de l'enfant.

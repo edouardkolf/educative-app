@@ -12,7 +12,13 @@ const trackModules = import.meta.glob('/content/tracks/*.json', {
 }) as Record<string, Track>;
 
 const levels: Level[] = Object.values(levelModules);
-const tracks: Track[] = Object.values(trackModules);
+// Ordre scolaire : le premier parcours sert de défaut (nouvel enfant, parcours inconnu). Parcours hors liste : à la fin.
+const SCHOOL_ORDER = ['ps', 'ms', 'gs', 'cp', 'ce1', 'ce2', 'cm1', 'cm2'];
+const schoolRank = (id: string): number => {
+  const rank = SCHOOL_ORDER.indexOf(id);
+  return rank === -1 ? SCHOOL_ORDER.length : rank;
+};
+const tracks: Track[] = Object.values(trackModules).sort((a, b) => schoolRank(a.id) - schoolRank(b.id));
 
 const levelsById = new Map(levels.map((level) => [level.id, level]));
 const tracksById = new Map(tracks.map((track) => [track.id, track]));
