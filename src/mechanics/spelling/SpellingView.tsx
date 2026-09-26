@@ -36,13 +36,16 @@ function speechTextFor(word: string, sentence?: string): string {
   return sentence ? sentence.replace('___', word) : word;
 }
 
-/** Phrase avec un trou visuel à la place de « ___ » (suppose exactement une occurrence). */
-function SentenceWithHole({ sentence }: { sentence: string }) {
+/**
+ * Phrase avec un trou visuel à la place de « ___ » (suppose exactement une occurrence).
+ * Une fois la manche réussie (`filled`), le mot prend la place du trou, mis en valeur, le temps de relire.
+ */
+function SentenceWithHole({ sentence, filled }: { sentence: string; filled?: string }) {
   const [before, after] = sentence.split('___');
   return (
     <p class="spl-sentence">
       {before}
-      <span class="spl-hole" aria-label="mot manquant" />
+      {filled ? <span class="spl-filled">{filled}</span> : <span class="spl-hole" aria-label="mot manquant" />}
       {after}
     </p>
   );
@@ -80,7 +83,7 @@ function PickView({ round, wrongChoices, solved, onChoose }: MechanicViewProps<S
 
   return (
     <div class="spl-view" data-answer={round.answer}>
-      {data.sentence && <SentenceWithHole sentence={data.sentence} />}
+      {data.sentence && <SentenceWithHole sentence={data.sentence} filled={solved ? data.word : undefined} />}
       <SpeakButton text={speechTextFor(data.word, data.sentence)} />
       <div class="spl-choices">
         {data.choices.map(({ id, text }) => {
@@ -120,7 +123,7 @@ function GapView({ round, wrongChoices, solved, onChoose }: MechanicViewProps<Sp
 
   return (
     <div class="spl-view" data-answer={round.answer}>
-      {data.sentence && <SentenceWithHole sentence={data.sentence} />}
+      {data.sentence && <SentenceWithHole sentence={data.sentence} filled={solved ? data.word : undefined} />}
       <SpeakButton text={speechTextFor(data.word, data.sentence)} />
       <div class="spl-word">
         {solved ? (
@@ -211,7 +214,7 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
 
   return (
     <div class="spl-view" data-answer={round.answer}>
-      {sentence && <SentenceWithHole sentence={sentence} />}
+      {sentence && <SentenceWithHole sentence={sentence} filled={solved ? word : undefined} />}
       <SpeakButton text={speechTextFor(word, sentence)} />
 
       <div class={`spl-tiles-word${shake ? ' spl-tiles-word--shake' : ''}`}>

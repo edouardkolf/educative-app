@@ -34,6 +34,27 @@
   animation: spl-pulse 1.2s ease-in-out infinite;
 }
 
+.spl-filled {
+  display: inline-block;
+  padding: 0 4px;
+  border-radius: 8px;
+  font-weight: 800;
+  color: var(--ink, #3d2c1e);
+  background: #ffe7c7;
+  animation: spl-filled-in 0.35s ease-out;
+}
+
+@keyframes spl-filled-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .spl-speak {
   width: 64px;
   height: 64px;
@@ -280,6 +301,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .spl-hole,
+  .spl-filled,
   .spl-gap-hole,
   .spl-choice--shake,
   .spl-choice--bounce,

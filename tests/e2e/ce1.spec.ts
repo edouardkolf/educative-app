@@ -287,7 +287,19 @@ test('ce1-mots-02 (spelling, lettres manquantes) : une manche jusqu’aux étoil
   await assertNoHorizontalOverflow(page);
   await page.screenshot({ path: shot('ce1-spelling-gap.png') });
 
-  for (let i = 0; i < 5; i += 1) {
+  // Réussite : le mot entier prend la place du trou dans la phrase, et reste le temps de relire (~2,5 s).
+  const answer = await currentRound(page).getAttribute('data-answer');
+  const indexBefore = await currentRoundIndex(page);
+  await page.locator(`[data-choice="${answer}"]`).click();
+  await expect(page.locator('.spl-sentence .spl-filled')).toBeVisible();
+  await expect(page.locator('.spl-sentence .spl-hole')).toHaveCount(0);
+  await page.waitForTimeout(600); // fin de l'apparition du mot
+  await page.screenshot({ path: shot('ce1-spelling-filled.png') });
+  await page.waitForTimeout(900);
+  expect(await currentRoundIndex(page), 'la manche suivante ne doit pas arriver avant ~2,5 s').toBe(indexBefore);
+  await waitForRoundAdvance(page, indexBefore);
+
+  for (let i = 1; i < 5; i += 1) {
     await answerByDirectChoice(page);
   }
   await waitForLevelEndButtons(page);

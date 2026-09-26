@@ -316,7 +316,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       const runId = runIdRef.current;
       if (runId) recordRound(runId, record).catch((err) => console.error('recordRound failed', err));
       const mechanicForDelay = level ? getMechanic(level.mechanic) : undefined;
-      window.setTimeout(advance, mechanicForDelay?.solvedDelayMs ?? 900);
+      const delay = mechanicForDelay?.solvedDelayMs;
+      window.setTimeout(advance, (typeof delay === 'function' ? delay(round) : delay) ?? 900);
     } else {
       firstTryRef.current = false;
       playError();

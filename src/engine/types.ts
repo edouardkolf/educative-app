@@ -369,9 +369,10 @@ export interface MechanicDefinition<M extends MechanicId, D = unknown> {
   /**
    * Délai (ms) avant de passer à la manche suivante après une bonne réponse. Défaut du moteur : 900 ms.
    * Permet à une mécanique avec sa propre animation de réussite (ex. color-mix) de durer plus longtemps
-   * sans que le moteur n'enchaîne trop tôt.
+   * sans que le moteur n'enchaîne trop tôt. Une fonction permet un délai propre à chaque manche
+   * (ex. spelling : plus long quand le mot est remis dans sa phrase, le temps de la relire).
    */
-  solvedDelayMs?: number;
+  solvedDelayMs?: number | ((round: Round<D>) => number);
   /**
    * Suite de `data-choice` que la main du tutoriel doit taper l'un après l'autre pendant la première
    * manche (ex. color-mix : deux fioles à verser). Défaut du moteur : `[round.answer]`.

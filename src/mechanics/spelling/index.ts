@@ -23,11 +23,15 @@ function tutorialTargets(round: Round<SpellingRoundData>): ChoiceId[] {
   return targets;
 }
 
+/** Le mot remis dans sa phrase reste affiché le temps de relire la phrase entière. */
+export const SENTENCE_REVEAL_MS = 2500;
+
 export const spelling: MechanicDefinition<'spelling', SpellingRoundData> = {
   id: 'spelling',
   generateRounds,
   View: SpellingView,
   tutorialTargets,
+  solvedDelayMs: (round) => (round.data.sentence ? SENTENCE_REVEAL_MS : 900),
 };
 
 export type { SpellingRoundData } from './types';
