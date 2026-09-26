@@ -61,14 +61,18 @@ Groupe B : afin, aujourd'hui, autour, autant, autrefois
 Sans × 1, jusqu'à 4 × 4 et 3 × 5 (`maxProduct: 16` exclut 4 × 5). Les propositions fausses sont les voisins
 dans les tables (3 × 4 → 9, 15, 8, 16) et la confusion × / +, jamais une erreur de dizaine.
 
+**Le quadrillage de points n'apparaît qu'après une mauvaise réponse** (`showArray: "after-error"`, niveaux 01 à 05) :
+affiché d'emblée, il fait compter au lieu de retenir. Après une erreur, il devient l'aide qui permet de retrouver le
+résultat ; le taux de réussite du premier coup mesure donc bien la mémorisation.
+
 Facteurs jamais > 4 ; chaque niveau commence par un tutoriel ou une mécanique claire.
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-tables-01 | 2 × 2 à 2 × 5, quadrillage, choix, **tutoriel**, 4 manches | Table de 2 avec aide visuelle |
-| 2 | ce1-tables-02 | 3 × 2 à 3 × 5, quadrillage, choix, 4 manches | Table de 3 avec aide visuelle |
-| 3 | ce1-tables-03 | Tables de 2 à 4 mélangées, quadrillage, 4 choix | Mélange avec appui |
-| 4 | ce1-tables-04 | Les 8 résultats jusqu'à 4 × 4 et 3 × 5, sans quadrillage, **8 manches** | Mémorisation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 1 | ce1-tables-01 | 2 × 2 à 2 × 5, choix, **tutoriel**, 4 manches | Table de 2 |
+| 2 | ce1-tables-02 | 3 × 2 à 3 × 5, choix, 4 manches | Table de 3 |
+| 3 | ce1-tables-03 | Tables de 2 à 4 mélangées, 4 choix | Mélange |
+| 4 | ce1-tables-04 | Les 8 résultats jusqu'à 4 × 4 et 3 × 5, **8 manches** | Mémorisation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 | 5 | ce1-tables-05 | Mêmes tables, au pavé, **8 manches** | Production de mémoire (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 | 6 | ce1-tables-06 | Facteur manquant (3 × ? = 12), 4 choix | Réversibilité |
 

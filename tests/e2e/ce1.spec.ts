@@ -351,6 +351,27 @@ test('ce1-lire-07 (Lis et montre, 2 phrases) : 4 images lisibles, sans défileme
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
 });
 
+test('ce1-tables-01 : le quadrillage n’apparaît qu’après une mauvaise réponse', async ({ page }) => {
+  await onboardWithCe1Child(page, 'Tom');
+  await page.getByTestId('back-to-game').click();
+  await chooseProfile(page, 'Tom');
+  await unlockLevel(page, 'Tom', 'ce1-tables-01');
+  await chooseProfile(page, 'Tom');
+  await openLevelHash(page, 'ce1-tables-01');
+
+  const answer = await currentRound(page).getAttribute('data-answer');
+  await expect(page.locator('.calc-array')).toHaveCount(0);
+  const wrong = page.locator(`[data-choice]:not([data-choice="${answer}"])`).first();
+  await wrong.click();
+  await expect(page.locator('.calc-array')).toBeVisible();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('ce1-tables-apres-erreur.png') });
+  const indexBefore = await currentRoundIndex(page);
+  await page.locator(`[data-choice="${answer}"]`).click();
+  await waitForRoundAdvance(page, indexBefore);
+  await expect(page.locator('.calc-array')).toHaveCount(0); // nouvelle manche : de nouveau sans appui
+});
+
 // ==================== 3. Pavé : une erreur n'avance pas la manche, la bonne réponse passe ====================
 
 test('ce1-add-03 (pavé) : un mauvais nombre validé ne fait pas avancer la manche, la bonne réponse passe', async ({ page }) => {

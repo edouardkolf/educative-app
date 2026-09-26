@@ -15,4 +15,6 @@ export interface CalcRoundData {
   choices?: { id: ChoiceId; value: number }[];
   /** Quadrillage a × b sous l'opération : uniquement en mul, unknown = "result", showArray demandé. */
   showArray: boolean;
+  /** Le quadrillage n'apparaît qu'après une mauvaise réponse (showArray = "after-error"). */
+  arrayAfterError: boolean;
 }

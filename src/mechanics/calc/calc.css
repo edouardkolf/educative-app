@@ -59,6 +59,7 @@
   display: grid;
   gap: 6px;
   max-width: min(70vw, 220px);
+  animation: calc-array-in 0.4s ease-out;
 }
 
 .calc-array__dot {
@@ -218,6 +219,24 @@
   .calc-choice--shake,
   .calc-choice--bounce,
   .calc-op-wrap--shake .calc-op__num--blank {
+    animation: none;
+  }
+}
+
+/* Le quadrillage arrive en douceur (notamment quand il n'apparaît qu'après une erreur). */
+@keyframes calc-array-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calc-array {
     animation: none;
   }
 }

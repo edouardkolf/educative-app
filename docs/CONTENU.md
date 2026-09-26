@@ -245,7 +245,8 @@ Une opération en gros chiffres, l'inconnue pulse. Exemple (extrait de ce1-add-0
 - `carry` (optionnel) : `"with"` / `"without"` / `"any"` — retenue en addition, emprunt en soustraction
 - `unknown` : `"result"` (7 + 5 = ?) ou `"operand"` (7 + ? = 12)
 - `answer` : `"choices"` (reconnaître parmi `choices` = 3–4 propositions plausibles) ou `"keypad"` (produire le nombre sur un pavé, puis valider)
-- `showArray` (mul) : quadrillage de points a × b en appui, affiché seulement quand on cherche le résultat
+- `showArray` (mul) : quadrillage de points a × b en appui, seulement quand on cherche le résultat — `true` d'emblée,
+  `"after-error"` seulement après une mauvaise réponse
 - `maxProduct` (mul, optionnel) : produit maximal — 16 donne jusqu'à 4 × 4 et 3 × 5, sans 4 × 5
 
 Le hasard : 1 chance sur `choices` en mode choix, quasi nulle au pavé — les statistiques le corrigent.

@@ -149,6 +149,7 @@ function buildRound(params: CalcParams, a: number, b: number, rng: Rng): Round<C
     unknown: params.unknown,
     answerMode: params.answer,
     showArray,
+    arrayAfterError: showArray && params.showArray === 'after-error',
   };
   if (params.answer === 'choices') {
     data.choices = buildChoices(params, a, b, result, unknownValue, rng);

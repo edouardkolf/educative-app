@@ -195,4 +195,18 @@ describe('calc.generateRounds', () => {
       }
     }
   });
+
+  it('showArray "after-error" : quadrillage prévu, mais à n’afficher qu’après une erreur', () => {
+    const params: CalcParams = {
+      operation: 'mul', a: { min: 2, max: 4 }, b: { min: 2, max: 5 }, unknown: 'result', answer: 'choices', choices: 4,
+      showArray: 'after-error', maxProduct: 16,
+    };
+    for (const round of generateRounds(params, 8, createRng(1))) {
+      expect(round.data.showArray).toBe(true);
+      expect(round.data.arrayAfterError).toBe(true);
+    }
+    for (const round of generateRounds({ ...params, showArray: true }, 8, createRng(1))) {
+      expect(round.data.arrayAfterError).toBe(false);
+    }
+  });
 });

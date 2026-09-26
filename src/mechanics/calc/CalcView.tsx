@@ -198,7 +198,9 @@ export function CalcView(props: MechanicViewProps<CalcRoundData>) {
       <div class={`calc-op-wrap${shaking ? ' calc-op-wrap--shake' : ''}`}>
         <OperationDisplay data={data} typed={data.answerMode === 'keypad' ? typed : ''} />
       </div>
-      {data.showArray ? <ArrayGrid a={data.a} b={data.b} /> : null}
+      {data.showArray && (!data.arrayAfterError || props.wrongChoices.size > 0) ? (
+        <ArrayGrid a={data.a} b={data.b} />
+      ) : null}
       {data.answerMode === 'choices' ? (
         <ChoicesPad {...props} />
       ) : (

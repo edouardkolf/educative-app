@@ -1,9 +1,9 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-tables-03",
-  "title": "Tables de 2, 3 et 4 avec quadrillage",
+  "title": "Tables de 2, 3 et 4",
   "skill": "multiplication",
-  "objective": "Mélanger les tables de 2, 3 et 4 (jusqu'à 4 × 4 et 3 × 5), avec le quadrillage en appui.",
+  "objective": "Mélanger les tables de 2, 3 et 4 (jusqu'à 4 × 4 et 3 × 5) ; le quadrillage n'apparaît qu'après une erreur.",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
@@ -19,7 +19,7 @@
     "unknown": "result",
     "answer": "choices",
     "choices": 4,
-    "showArray": true,
+    "showArray": "after-error",
     "maxProduct": 16
   }
 }

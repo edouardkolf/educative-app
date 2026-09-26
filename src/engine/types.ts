@@ -190,8 +190,11 @@ export interface CalcParams {
   answer: 'choices' | 'keypad';
   /** Nombre de propositions (3 ou 4), requis si answer = "choices". */
   choices?: number;
-  /** mul uniquement : affiche le produit en quadrillage de points (a rangées de b), comme appui. */
-  showArray?: boolean;
+  /**
+   * mul uniquement : quadrillage de points (a rangées de b) en appui. true : affiché d'emblée ;
+   * "after-error" : seulement après une mauvaise réponse (sinon l'enfant compte au lieu de retenir).
+   */
+  showArray?: boolean | 'after-error';
   /** mul uniquement : produit maximal (ex. 16 : jusqu'à 4 × 4 et 3 × 5, sans 4 × 5). Absent : aucune limite. */
   maxProduct?: number;
 }

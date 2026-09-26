@@ -3,7 +3,7 @@
   "id": "ce1-tables-05",
   "title": "Tables mélangées, au pavé",
   "skill": "multiplication",
-  "objective": "Taper de mémoire les résultats des tables jusqu'à 4 × 4 et 3 × 5.",
+  "objective": "Taper de mémoire les résultats des tables jusqu'à 4 × 4 et 3 × 5 ; le quadrillage n'apparaît qu'après une erreur.",
   "mechanic": "calc",
   "rounds": 8,
   "params": {
@@ -18,7 +18,8 @@
     },
     "unknown": "result",
     "answer": "keypad",
-    "maxProduct": 16
+    "maxProduct": 16,
+    "showArray": "after-error"
   },
   "stars": {
     "maxMissesFor3": 1,
