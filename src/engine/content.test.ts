@@ -7,6 +7,9 @@ import levelSchema from '../../content/level.schema.json';
 import trackSchema from '../../content/track.schema.json';
 import { OBJECTS } from '../ui/objects';
 import { getMechanic } from '../mechanics';
+import { validateParams as validateCalc } from '../mechanics/calc/validate';
+import { validateParams as validateCompare } from '../mechanics/compare/validate';
+import { validateParams as validateSpelling } from '../mechanics/spelling/validate';
 import { createRng } from './rng';
 import type { CountParams, Level, OddOneOutParams, SequenceParams, Track } from './types';
 
@@ -102,6 +105,15 @@ function semanticErrors(level: Level): string[] {
       }
       break;
     }
+    case 'compare':
+      errors.push(...validateCompare(level.params).map((e) => `compare : ${e}`));
+      break;
+    case 'calc':
+      errors.push(...validateCalc(level.params).map((e) => `calc : ${e}`));
+      break;
+    case 'spelling':
+      errors.push(...validateSpelling(level.params).map((e) => `spelling : ${e}`));
+      break;
     default:
       break;
   }
@@ -270,5 +282,14 @@ describe('contrôles sémantiques par mécanique (cas synthétiques)', () => {
 
   it('sequence : refuse choices au-delà du nombre de jetons distincts possibles', () => {
     expect(semanticErrors(sequenceLevel({ colors: ['red', 'blue'], choices: 3 }))).not.toEqual([]);
+  });
+});
+
+describe('ordre des parcours', () => {
+  it("suit l'ordre scolaire : la moyenne section reste le parcours par défaut", async () => {
+    const { getTracks } = await import('./content');
+    const ids = getTracks().map((t) => t.id);
+    expect(ids[0]).toBe('ms');
+    expect(ids.indexOf('ce1')).toBeGreaterThan(ids.indexOf('ms'));
   });
 });
