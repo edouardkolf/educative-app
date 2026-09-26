@@ -263,7 +263,7 @@
       "additionalProperties": false,
       "properties": {
         "traps": {"type": "array", "items": {"enum": ["noun", "number", "position", "negation"]}, "minItems": 1, "uniqueItems": true, "description": "Ce que les images fausses changent : noun = nom qui ressemble (lapin/sapin), number = un/plusieurs, position = sur/sous…, negation = phrases négatives."},
-        "relations": {"type": "array", "items": {"enum": ["on", "under", "beside", "in-front", "behind"]}, "minItems": 1, "uniqueItems": true, "description": "on = sur, under = sous, beside = à côté de, in-front = devant, behind = derrière."},
+        "relations": {"type": "array", "items": {"enum": ["on", "under", "beside", "in-front"]}, "minItems": 1, "uniqueItems": true, "description": "on = sur, under = sous, beside = à côté de, in-front = devant."},
         "sentences": {"type": "integer", "minimum": 1, "maximum": 2},
         "choices": {"type": "integer", "minimum": 3, "maximum": 4}
       }

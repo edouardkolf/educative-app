@@ -1,0 +1,183 @@
+/* Vue « Lis et montre » — classes préfixées rd-. Seule mécanique CE1 avec du texte enfant : la phrase à lire. */
+
+.rd-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100%;
+  width: 100%;
+  gap: clamp(16px, 4vh, 32px);
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.rd-text {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; /* sans empattement */
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--ink, #3d2c1e);
+  max-width: 34ch;
+}
+
+.rd-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* 4 propositions → grille 2×2 régulière. */
+.rd-choices--grid-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+/* 3 propositions → 2 en haut + 1 en bas, centrée. */
+.rd-choices--three {
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.rd-choice {
+  width: 140px;
+  height: 140px;
+  min-width: 140px;
+  min-height: 140px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius, 20px);
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  /* Fondu d'apparition : opaque seulement une fois "ready", pas tapable avant (voir :disabled). */
+  opacity: 0;
+  transform: scale(0.96);
+  transition:
+    opacity 500ms ease,
+    transform 500ms ease;
+}
+
+.rd-choice--ready {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.rd-choice:disabled {
+  cursor: default;
+}
+
+.rd-choice:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.rd-choice--wrong {
+  opacity: 0.35;
+}
+
+.rd-choice--shake {
+  animation: rd-shake 320ms ease;
+}
+
+.rd-choice--bounce {
+  animation: rd-bounce 500ms ease;
+}
+
+.rd-scene-frame {
+  width: 100%;
+  height: 100%;
+}
+
+.rd-scene-frame--split {
+  display: flex;
+  flex-direction: row;
+}
+
+.rd-scene-half {
+  flex: 1 1 50%;
+  position: relative;
+}
+
+/* Fin trait séparant les deux mini-scènes quand une manche a deux phrases. */
+.rd-scene-half + .rd-scene-half {
+  border-left: 1px solid rgba(61, 44, 30, 0.15);
+}
+
+.rd-scene {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.rd-ground {
+  stroke: rgba(61, 44, 30, 0.18);
+  stroke-width: 1;
+}
+
+.rd-emoji {
+  font-family: var(--emoji-font);
+}
+
+@keyframes rd-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes rd-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.12);
+  }
+  55% {
+    transform: scale(0.97);
+  }
+  80% {
+    transform: scale(1.04);
+  }
+}
+
+/* Réussite : la bonne carte grossit légèrement avec un halo. */
+.rd-choice--bounce {
+  box-shadow: 0 0 0 6px rgba(255, 179, 71, 0.55), 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Le délai avant apparition reste (lecture d'abord), mais le fondu lui-même devient immédiat. */
+  .rd-choice {
+    transition: none;
+  }
+  .rd-choice--shake,
+  .rd-choice--bounce {
+    animation: none;
+  }
+}

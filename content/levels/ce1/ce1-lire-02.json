@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-02",
+  "title": "Un ou plusieurs",
+  "skill": "reading",
+  "objective": "Lire les petits mots le / les et l'accord du verbe (est / sont) pour trouver l'image.",
+  "mechanic": "read",
+  "rounds": 6,
+  "params": {
+    "traps": [
+      "number",
+      "noun"
+    ],
+    "relations": [
+      "on",
+      "beside"
+    ],
+    "sentences": 1,
+    "choices": 3
+  }
+}

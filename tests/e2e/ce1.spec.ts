@@ -292,6 +292,27 @@ test('ce1-mots-02 (spelling, lettres manquantes) : une manche jusqu’aux étoil
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
 });
 
+test('ce1-lire-01 (Lis et montre) : les images arrivent après le texte, une manche jusqu’aux étoiles', async ({ page }) => {
+  await onboardWithCe1Child(page, 'Léa');
+  await page.getByTestId('back-to-game').click();
+  await chooseProfile(page, 'Léa');
+  await unlockLevel(page, 'Léa', 'ce1-lire-01');
+  await chooseProfile(page, 'Léa');
+  await openLevelHash(page, 'ce1-lire-01');
+
+  await expect(page.locator('.rd-text')).toBeVisible();
+  await expect(page.locator('[data-choice]').first()).toBeDisabled(); // on lit d'abord la phrase
+  await expect(page.locator('[data-choice]').first()).toBeEnabled();
+  await assertNoHorizontalOverflow(page);
+  await page.screenshot({ path: shot('ce1-read.png') });
+
+  for (let i = 0; i < 5; i += 1) {
+    await answerByDirectChoice(page);
+  }
+  await waitForLevelEndButtons(page);
+  await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
+});
+
 // ==================== 3. Pavé : une erreur n'avance pas la manche, la bonne réponse passe ====================
 
 test('ce1-add-03 (pavé) : un mauvais nombre validé ne fait pas avancer la manche, la bonne réponse passe', async ({ page }) => {

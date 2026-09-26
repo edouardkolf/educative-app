@@ -1,0 +1,27 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-07",
+  "title": "Deux phrases",
+  "skill": "reading",
+  "objective": "Lire deux phrases et garder les deux en tête pour trouver l'image qui respecte les deux.",
+  "mechanic": "read",
+  "rounds": 8,
+  "params": {
+    "traps": [
+      "noun",
+      "number",
+      "position"
+    ],
+    "relations": [
+      "on",
+      "under",
+      "beside"
+    ],
+    "sentences": 2,
+    "choices": 3
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

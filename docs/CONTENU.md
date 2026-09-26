@@ -18,9 +18,9 @@ Un niveau = un fichier JSON. Un parcours = l'ordre des niveaux sur la carte de l
 | `$schema` | Chemin vers le schéma (à copier tel quel) | `"../../level.schema.json"` |
 | `id` | Identifiant unique (lettres, chiffres, tirets) | `"ms-suite-01"` |
 | `title` | Titre lisible par le parent | `"Suite de 2 couleurs"` |
-| `skill` | Compétence cible | MS : `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"`, `"shapes"` — CE1 : `"comparison"`, `"addition"`, `"subtraction"`, `"multiplication"`, `"spelling"` |
+| `skill` | Compétence cible | MS : `"patterns"`, `"counting"`, `"visual-discrimination"`, `"categorization"`, `"color-mixing"`, `"shapes"` — CE1 : `"comparison"`, `"addition"`, `"subtraction"`, `"multiplication"`, `"spelling"`, `"reading"` |
 | `objective` | Objectif pédagogique en une phrase | `"Continuer une suite AB…"` |
-| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"`, `"builder"`, `"compare"`, `"calc"`, `"spelling"` |
+| `mechanic` | Type de mécanique | `"sequence"`, `"count"`, `"odd-one-out"`, `"color-mix"`, `"sort"`, `"builder"`, `"compare"`, `"calc"`, `"spelling"`, `"read"` |
 | `rounds` | Nombre de manches | 4 (avec tutoriel) ou 5+ |
 | `tutorial` | Affiche la main animée (optionnel) | `true` ou absent |
 | `stars` | Seuils d'étoiles (optionnel) | Défaut : 0 raté → 3 ⭐, 1 raté → 2 ⭐ |
@@ -270,6 +270,26 @@ s'il en a une. Exemple (extrait de ce1-mots-05.json) :
 - `choices` (pick, gap) : 2 à 4 propositions ; `extraTiles` (tiles) : 0 à 4 étiquettes pièges
 - `closeness` (pick, optionnel) : proximité des variantes fautives — 1 grossières (otant), 2 moyennes (autent),
   3 subtiles, à un accent ou une lettre près (aprés). Absent : tous niveaux mélangés
+
+### Read (Lis et montre — CE1)
+
+Lire une ou deux phrases (« Les lapins ne sont pas sur la chaise. ») et taper l'image qui correspond parmi 3 ou 4.
+Chaque image fausse ne change qu'un seul trait. Les phrases sont générées à partir de `src/mechanics/read/catalog.ts`
+(sujets, paires de mots qui se ressemblent, supports). Exemple (extrait de ce1-lire-05.json) :
+
+```json
+{
+  "mechanic": "read",
+  "params": { "traps": ["negation", "position"], "relations": ["on", "under", "beside"], "sentences": 1, "choices": 3 }
+}
+```
+
+**Champs** :
+- `traps` : ce que changent les images fausses — `"noun"` (un mot qui ressemble : lapin / sapin), `"number"` (le lapin / les lapins),
+  `"position"` (sur / sous…), `"negation"` (environ une phrase sur deux est négative, une image montre l'affirmation)
+- `relations` : positions utilisées — `"on"` sur, `"under"` sous, `"beside"` à côté de, `"in-front"` devant (selon le support : table sur/sous/à côté, chaise et lit sur/à côté,
+  boîte sur/à côté/devant, arbre à côté/devant — voir `ANCHOR_RELATIONS`)
+- `sentences` : 1 ou 2 phrases ; `choices` : 3 ou 4 images
 
 ## Valeurs autorisées
 

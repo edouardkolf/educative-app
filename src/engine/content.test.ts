@@ -9,6 +9,7 @@ import { OBJECTS } from '../ui/objects';
 import { getMechanic } from '../mechanics';
 import { validateParams as validateCalc } from '../mechanics/calc/validate';
 import { validateParams as validateCompare } from '../mechanics/compare/validate';
+import { validateParams as validateRead } from '../mechanics/read/validate';
 import { validateParams as validateSpelling } from '../mechanics/spelling/validate';
 import { createRng } from './rng';
 import type { CountParams, Level, OddOneOutParams, SequenceParams, Track } from './types';
@@ -113,6 +114,9 @@ function semanticErrors(level: Level): string[] {
       break;
     case 'spelling':
       errors.push(...validateSpelling(level.params).map((e) => `spelling : ${e}`));
+      break;
+    case 'read':
+      errors.push(...validateRead(level.params).map((e) => `read : ${e}`));
       break;
     default:
       break;

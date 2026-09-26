@@ -5,7 +5,7 @@ sans compte et sans serveur. Les données restent sur le téléphone.
 
 - **Pour l'enfant** : une carte à étoiles par classe.
   - Moyenne section : six mécaniques (compléter une suite, compter, trouver l'intrus, mélanger des couleurs, trier par famille, construire une figure géométrique), aucun texte à lire.
-  - CE1 : comparer des nombres (<, =, >), additions, soustractions, tables de multiplication (jusqu'à 4 × 4), orthographe des mots invariables.
+  - CE1 : comparer des nombres (<, =, >), additions, soustractions, tables de multiplication (jusqu'à 4 × 4), orthographe des mots invariables, lecture attentive (Lis et montre).
 - **Pour le parent** : espace protégé par code, statistiques par enfant et par niveau, minuteur et quota quotidien, export et import JSON.
 
 ## Documentation

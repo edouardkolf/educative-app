@@ -6,6 +6,7 @@ import { compare } from './compare';
 import { colorMix } from './color-mix';
 import { count } from './count';
 import { oddOneOut } from './odd-one-out';
+import { read } from './read';
 import { sequence } from './sequence';
 import { sort } from './sort';
 import { spelling } from './spelling';
@@ -23,6 +24,7 @@ const registry: Partial<Record<MechanicId, AnyMechanic>> = {
   compare,
   calc,
   spelling,
+  read,
 };
 
 export function getMechanic(id: MechanicId): AnyMechanic | undefined {

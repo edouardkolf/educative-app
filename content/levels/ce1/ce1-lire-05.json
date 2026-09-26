@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-05",
+  "title": "La phrase qui dit non",
+  "skill": "reading",
+  "objective": "Repérer la négation (n'est pas, ne sont pas) qui change tout le sens de la phrase, sans oublier le/les.",
+  "mechanic": "read",
+  "rounds": 6,
+  "params": {
+    "traps": [
+      "negation",
+      "position",
+      "number"
+    ],
+    "relations": [
+      "on",
+      "under",
+      "beside"
+    ],
+    "sentences": 1,
+    "choices": 3
+  }
+}

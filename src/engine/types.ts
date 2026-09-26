@@ -228,7 +228,7 @@ export interface SpellingParams {
 }
 
 /** Positions décrites par les phrases de « Lis et montre ». */
-export const RELATIONS = ['on', 'under', 'beside', 'in-front', 'behind'] as const;
+export const RELATIONS = ['on', 'under', 'beside', 'in-front'] as const;
 export type Relation = (typeof RELATIONS)[number];
 
 /**
@@ -236,11 +236,12 @@ export type Relation = (typeof RELATIONS)[number];
  * (le dessin est dans src/mechanics/read/, chaque position doit s'y distinguer de toutes les autres).
  */
 export const ANCHOR_RELATIONS = {
-  table: ['on', 'under', 'beside', 'in-front', 'behind'],
-  chair: ['on', 'under', 'beside'],
-  box: ['on', 'beside', 'in-front', 'behind'],
+  // « derrière » n'est pas proposé : en 2D, un sujet à moitié caché se lit « à côté » ou « sur ».
+  table: ['on', 'under', 'beside'],
+  chair: ['on', 'beside'],
+  box: ['on', 'beside', 'in-front'],
   bed: ['on', 'beside'],
-  tree: ['beside', 'in-front', 'behind'],
+  tree: ['beside', 'in-front'],
 } as const satisfies Record<string, readonly Relation[]>;
 export type AnchorId = keyof typeof ANCHOR_RELATIONS;
 

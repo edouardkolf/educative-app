@@ -1,0 +1,29 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-06",
+  "title": "Tous les pièges",
+  "skill": "reading",
+  "objective": "Lire attentivement une phrase où n'importe quel mot peut compter : nom, nombre, position, négation.",
+  "mechanic": "read",
+  "rounds": 8,
+  "params": {
+    "traps": [
+      "noun",
+      "number",
+      "position",
+      "negation"
+    ],
+    "relations": [
+      "on",
+      "under",
+      "beside",
+      "in-front"
+    ],
+    "sentences": 1,
+    "choices": 4
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

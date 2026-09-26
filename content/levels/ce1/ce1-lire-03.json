@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-03",
+  "title": "Sur, sous, à côté",
+  "skill": "reading",
+  "objective": "Lire le mot qui indique la position (sur, sous, à côté de) au lieu de le deviner.",
+  "mechanic": "read",
+  "rounds": 6,
+  "params": {
+    "traps": [
+      "position"
+    ],
+    "relations": [
+      "on",
+      "under",
+      "beside"
+    ],
+    "sentences": 1,
+    "choices": 3
+  }
+}

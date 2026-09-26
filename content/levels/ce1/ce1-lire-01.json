@@ -1,0 +1,20 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-01",
+  "title": "Lire le bon mot",
+  "skill": "reading",
+  "objective": "Lire une phrase courte jusqu'au bout pour distinguer des mots qui se ressemblent (lapin / sapin).",
+  "mechanic": "read",
+  "rounds": 5,
+  "tutorial": true,
+  "params": {
+    "traps": [
+      "noun"
+    ],
+    "relations": [
+      "on"
+    ],
+    "sentences": 1,
+    "choices": 3
+  }
+}

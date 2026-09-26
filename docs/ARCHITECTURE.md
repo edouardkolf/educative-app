@@ -124,7 +124,7 @@ Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persis
 ## 9. Règles UX pour l'enfant non lectrice
 
 - Aucun texte nécessaire dans les écrans enfant : pictos, couleurs, animations. Les textes de l'espace parent sont en français.
-  Exception CE1 : les mécaniques `compare`, `calc` et `spelling` affichent des nombres, des signes et des mots courts
+  Exception CE1 : les mécaniques `compare`, `calc`, `spelling` et `read` affichent des nombres, des signes et des mots courts
   (l'enfant apprend à lire) ; les écrans communs (profils, carte, fin de niveau) restent sans texte.
   `calc` (pavé numérique) et `spelling` (étiquettes) répondent en composant puis en validant ✓ : c'est la valeur
   composée qui est envoyée au moteur comme choix.

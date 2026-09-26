@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-lire-04",
+  "title": "Sur, devant, à côté",
+  "skill": "reading",
+  "objective": "Distinguer sur, devant et à côté de en lisant le mot de position au lieu de le deviner.",
+  "mechanic": "read",
+  "rounds": 6,
+  "params": {
+    "traps": [
+      "position"
+    ],
+    "relations": [
+      "on",
+      "beside",
+      "in-front"
+    ],
+    "sentences": 1,
+    "choices": 3
+  }
+}

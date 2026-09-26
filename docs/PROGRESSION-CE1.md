@@ -2,7 +2,7 @@
 
 Repères : programme de CP-CE1, cycle 2. En CE1, on vise la maîtrise de l'addition et soustraction (entiers naturels jusqu'à 100, avec et sans retenue/emprunt), le début des tables de multiplication (2, 3, 4), la comparaison de nombres, et l'orthographe de mots invariables fréquents.
 
-**Principe de la carte** : cinq jeux sont entrelacés (addition, comparaison, orthographe, soustraction, tables), montant en difficulté par petites marches. Chaque jeu suit une progression : **reconnaissance (choix parmi) → production (pavé numérique)** pour le calcul ; en orthographe, reconnaissance seulement, de plus en plus fine (l'écriture se travaille en dictée à la maison). Chaque jeu commence par un niveau avec tutoriel. Les niveaux de 8 manches assouplissent les seuils d'étoiles pour tenir compte de la complexité accrue.
+**Principe de la carte** : six jeux sont entrelacés (addition, comparaison, orthographe, lecture, soustraction, tables), montant en difficulté par petites marches. Chaque jeu suit une progression : **reconnaissance (choix parmi) → production (pavé numérique)** pour le calcul ; en orthographe, reconnaissance seulement, de plus en plus fine (l'écriture se travaille en dictée à la maison). Chaque jeu commence par un niveau avec tutoriel. Les niveaux de 8 manches assouplissent les seuils d'étoiles pour tenir compte de la complexité accrue.
 
 ## Addition
 
@@ -82,3 +82,22 @@ L'app entraîne la **reconnaissance** de l'orthographe (mémoriser la forme exac
 à la maison, en dictée. La difficulté monte par la **proximité** des variantes fautives (`closeness` : 1 grossières
 « otant », 2 moyennes « autent », 3 subtiles « aprés »), pas par leur nombre : on reste à 4 propositions au plus,
 pour limiter la lecture et l'exposition à des formes fautives. Après une réussite, seul le mot juste reste affiché.
+
+## Lecture : Lis et montre
+
+Pour une lectrice qui lit vite et **devine** les mots au lieu de les lire. Elle lit une ou deux phrases, puis tape
+l'image qui correspond. Chaque image fausse ne change qu'**un seul trait** : exactement ce qu'on « lirait » en devinant.
+Les images n'apparaissent qu'un instant après le texte (sans compte à rebours visible), pour qu'elle lise d'abord.
+Pas de bouton 🔊 : c'est la lecture qu'on entraîne.
+
+| # | Niveau | Pièges | Pourquoi |
+|---|---|---|---|
+| 1 | ce1-lire-01 | Nom qui ressemble (lapin / sapin), **tutoriel** | Lire le mot entier, pas ses premières lettres |
+| 2 | ce1-lire-02 | Un / plusieurs (le lapin est / les lapins sont) + nom | Les petits mots et l'accord du verbe |
+| 3 | ce1-lire-03 | Sur / sous / à côté | Le mot de position, souvent sauté |
+| 4 | ce1-lire-04 | Sur / devant / à côté | Positions plus fines (« derrière » n'est pas proposé : impossible à dessiner sans ambiguïté) |
+| 5 | ce1-lire-05 | Négation (n'est pas) + position + un/plusieurs | Le « ne… pas » qui inverse le sens |
+| 6 | ce1-lire-06 | Tous les pièges, 4 images, **8 manches** | Tout mot peut compter |
+| 7 | ce1-lire-07 | Deux phrases, **8 manches** | Garder deux informations en tête |
+
+Les phrases et les paires de mots qui se ressemblent sont dans `src/mechanics/read/catalog.ts`.
