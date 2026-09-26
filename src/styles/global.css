@@ -236,8 +236,11 @@ svg {
   justify-content: center;
 }
 
-.lock-button {
-  position: absolute;
+/* Accès parent : toujours ancré en haut à droite de l'écran. Spécificité renforcée
+   pour l'emporter sur `.long-press-button { position: relative }`, déclarée plus bas. */
+.long-press-button.lock-button,
+.long-press-button.lock-screen__unlock {
+  position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 12px);
   right: calc(env(safe-area-inset-right, 0px) + 12px);
   z-index: 10;
@@ -730,13 +733,6 @@ svg {
   background: linear-gradient(180deg, #0b1633 0%, #1b2a55 55%, #2c3d72 100%);
   overflow: hidden;
   justify-content: center;
-}
-
-.lock-screen__unlock {
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
-  right: calc(env(safe-area-inset-right, 0px) + 12px);
-  z-index: 10;
 }
 
 .lock-screen__sky {

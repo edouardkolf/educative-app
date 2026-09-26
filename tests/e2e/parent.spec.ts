@@ -345,3 +345,24 @@ test('le cadenas de la carte ouvre l’espace parent (appui long + code)', async
   await openParentDashboard(page);
   await expect(page.getByText('Lina')).toBeVisible();
 });
+
+// ==================== 8. Position du cadenas ====================
+
+async function expectTopRight(page: Page, locator: Locator): Promise<void> {
+  const box = await locator.boundingBox();
+  const viewport = page.viewportSize();
+  if (!box || !viewport) throw new Error('Cadenas ou viewport introuvable.');
+  expect(box.y).toBeLessThan(40);
+  expect(viewport.width - (box.x + box.width)).toBeLessThan(40);
+}
+
+test('le cadenas parent est ancré en haut à droite (profils et carte)', async ({ page }) => {
+  await createParentCode(page);
+  await addChild(page, 'Lina');
+  await page.getByTestId('back-to-game').click();
+  await expectTopRight(page, page.getByTestId('parent-access'));
+
+  await chooseProfile(page, 'Lina');
+  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
+  await expectTopRight(page, page.getByTestId('parent-access'));
+});
