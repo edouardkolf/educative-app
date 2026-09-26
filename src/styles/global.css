@@ -824,3 +824,174 @@ svg {
   font-size: 80px;
   line-height: 1;
 }
+
+/* ---------- Carte : arrivée dans un nouveau monde ---------- */
+
+/* Pendant le trajet de l'avatar : bloque les taps sur les niveaux (un tap saute le trajet). */
+.map-travel-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+}
+
+.map-traveller {
+  position: absolute;
+  z-index: 5;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--emoji-font);
+  font-size: 34px;
+  pointer-events: none;
+}
+
+.world-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(61, 44, 30, 0.35);
+  animation: world-banner-fade 300ms ease-out;
+}
+
+.world-banner--forest {
+  background: radial-gradient(circle at 50% 45%, rgba(181, 217, 138, 0.55), rgba(47, 90, 40, 0.55));
+}
+
+.world-banner--sea {
+  background: radial-gradient(circle at 50% 45%, rgba(142, 207, 232, 0.55), rgba(20, 80, 130, 0.55));
+}
+
+.world-banner--mountain {
+  background: radial-gradient(circle at 50% 45%, rgba(230, 238, 245, 0.6), rgba(80, 100, 120, 0.55));
+}
+
+.world-banner__sign {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: world-banner-pop 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.world-banner__rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 420px;
+  height: 420px;
+  margin: -280px 0 0 -210px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 247, 214, 0.55) 0deg 12deg, transparent 12deg 30deg);
+  mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: world-banner-spin 12s linear infinite;
+}
+
+.world-banner__board {
+  position: relative;
+  width: 180px;
+  height: 130px;
+  border-radius: 28px;
+  background: #c68a4e;
+  border: 8px solid #8b5a2b;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.world-banner__icon {
+  font-family: var(--emoji-font);
+  font-size: 84px;
+  line-height: 1;
+  animation: wiggle 1.2s ease-in-out 700ms infinite;
+}
+
+.world-banner__post {
+  position: relative;
+  width: 20px;
+  height: 90px;
+  border-radius: 0 0 6px 6px;
+  background: #8b5a2b;
+}
+
+.world-banner__particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.world-banner__particle {
+  position: absolute;
+  top: -40px;
+  font-family: var(--emoji-font);
+  line-height: 1;
+  animation-name: world-banner-fall;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+}
+
+/* Dans la mer, les particules remontent comme des bulles. */
+.world-banner--sea .world-banner__particle {
+  top: auto;
+  bottom: -40px;
+  animation-name: world-banner-rise;
+  animation-timing-function: ease-out;
+}
+
+@keyframes world-banner-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes world-banner-pop {
+  0% {
+    transform: scale(0.2) translateY(120px);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes world-banner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes world-banner-fall {
+  from {
+    transform: translateY(0) rotate(0deg);
+  }
+  to {
+    transform: translateY(110vh) rotate(300deg);
+  }
+}
+
+@keyframes world-banner-rise {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-110vh);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-banner__particles,
+  .world-banner__rays {
+    display: none;
+  }
+}

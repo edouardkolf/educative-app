@@ -18,6 +18,11 @@ export interface Profile {
   trackId: string;
   limits: ProfileLimits;
   createdAt: number;
+  /**
+   * Dernier monde de la carte (0 = forêt…) dont l'enfant a vu l'animation d'arrivée.
+   * Absent : jamais mesuré (profil créé avant les mondes) ; fixé sans animation à la première visite.
+   */
+  seenWorld?: number;
 }
 
 /** Résultat d'une manche dans une partie. */

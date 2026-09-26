@@ -16,6 +16,7 @@ import type { RoundRecord } from '../storage/types';
 import { abandonRun, completeRun, listOverrides, listRuns, recordRound, startRun } from '../storage';
 import { getMechanic } from '../mechanics';
 import { navigate } from '../app/routes';
+import { worldIndexForLevel } from './map/layout';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
 import { playError, playSuccess } from '../ui/sound';
@@ -39,6 +40,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   const [hasTapped, setHasTapped] = useState(false);
   const [stars, setStars] = useState<1 | 2 | 3>(1);
   const [nextLevelId, setNextLevelId] = useState<string | null>(null);
+  /** Le niveau suivant ouvre un nouveau monde : « Suivant » passe par la carte, qui fête l'arrivée. */
+  const [nextInNewWorld, setNextInNewWorld] = useState(false);
   const [runToken, setRunToken] = useState(0);
 
   const runIdRef = useRef<string | null>(null);
@@ -181,6 +184,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
     setStars(finalStars);
 
     let next: string | null = null;
+    let newWorld = false;
     try {
       const track = getTrackOrDefault(profile.trackId); // F11
       const candidate = track ? getNextLevelId(track, levelId) : undefined;
@@ -188,11 +192,14 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
         const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
         const nextState = computeLevelStates(track, runs, overrides).find((s) => s.levelId === candidate);
         if (nextState && nextState.status !== 'locked') next = candidate;
+        newWorld =
+          worldIndexForLevel(track.levels.indexOf(candidate)) !== worldIndexForLevel(track.levels.indexOf(levelId));
       }
     } catch (err) {
       console.error('next level lookup failed', err);
     }
     setNextLevelId(next);
+    setNextInNewWorld(newWorld);
     setPhase('end');
   };
 
@@ -345,7 +352,9 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       <LevelEnd
         stars={stars}
         hasNext={nextLevelId !== null}
-        onNext={() => nextLevelId && navigate({ name: 'play', levelId: nextLevelId })}
+        onNext={() =>
+          nextLevelId && navigate(nextInNewWorld ? { name: 'map' } : { name: 'play', levelId: nextLevelId })
+        }
         onReplay={() => setRunToken((t) => t + 1)}
         onToMap={() => navigate({ name: 'map' })}
         // F4 : temps déjà écoulé pendant l'écran des étoiles → ni Suivant ni Rejouer (seulement les

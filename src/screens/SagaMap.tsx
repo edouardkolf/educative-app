@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { computeLevelStates, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelState, MechanicId } from '../engine/types';
-import { listOverrides, listRuns } from '../storage';
+import { listOverrides, listRuns, saveProfile } from '../storage';
 import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
@@ -11,10 +11,33 @@ import { Shape } from '../ui/Shape';
 import { StarRow } from '../ui/StarRow';
 import { LongPressButton } from '../ui/LongPressButton';
 import { MapScenery } from './map/MapScenery';
-import { NODE_SIZE, nodePosition, trackHeightFor, worldIdAt, worldIndexForLevel } from './map/layout';
+import {
+  NODE_SIZE,
+  nodePosition,
+  pathWaypoints,
+  pointOnSegment,
+  trackHeightFor,
+  worldIdAt,
+  worldIndexForLevel,
+  type Point,
+} from './map/layout';
+import { pendingWorldEntry, reachedWorldIndex, type WorldEntry } from './map/worlds';
+import { WorldBanner } from './map/WorldBanner';
 
 /** Largeur de repli avant la première mesure (viewport Pixel 7). */
 const FALLBACK_WIDTH = 412;
+/** Arrivée dans un nouveau monde : pause, puis l'avatar sautille d'un niveau à l'autre. */
+const TRAVEL_DELAY_MS = 600;
+const TRAVEL_MS = 1800;
+
+interface WorldArrival {
+  entry: WorldEntry;
+  phase: 'travel' | 'banner';
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}
 
 function MechanicIcon({ mechanic }: { mechanic: MechanicId | undefined }) {
   if (mechanic === 'sequence') {
@@ -76,6 +99,9 @@ export function SagaMap() {
   const [shakeId, setShakeId] = useState<string | null>(null);
   const scrolledRef = useRef(false);
   const trackRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [arrival, setArrival] = useState<WorldArrival | null>(null);
+  const [traveller, setTraveller] = useState<Point | null>(null);
   const [width, setWidth] = useState(() =>
     typeof window === 'undefined' ? FALLBACK_WIDTH : window.innerWidth || FALLBACK_WIDTH,
   );
@@ -107,7 +133,22 @@ export function SagaMap() {
         }
         const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
         if (cancelled) return;
-        setStates(computeLevelStates(track, runs, overrides));
+        const next = computeLevelStates(track, runs, overrides);
+        const entry = pendingWorldEntry(next, profile.seenWorld);
+        setArrival(
+          entry ? { entry, phase: entry.fromIndex === null || prefersReducedMotion() ? 'banner' : 'travel' } : null,
+        );
+        setStates(next);
+        // Mémorise tout de suite le monde atteint : la fête ne se rejoue pas, même si l'enfant quitte
+        // la carte en plein trajet. Premier passage (seenWorld absent) : calibrage silencieux.
+        const reached = reachedWorldIndex(next);
+        if (profile.seenWorld === undefined || reached > profile.seenWorld) {
+          saveProfile({ ...profile, seenWorld: reached })
+            .then((saved) => {
+              if (!cancelled) setProfile((cur) => (cur?.id === saved.id ? saved : cur));
+            })
+            .catch((err) => console.error('SagaMap seenWorld save failed', err));
+        }
       } catch (err) {
         console.error('SagaMap load failed', err);
         if (!cancelled) setStates([]);
@@ -120,7 +161,9 @@ export function SagaMap() {
 
   useEffect(() => {
     if (!states || states.length === 0 || scrolledRef.current) return;
+    const from = arrival?.phase === 'travel' ? arrival.entry.fromIndex : null;
     const target =
+      (from !== null ? states[from] : undefined) ??
       states.find((s) => s.current) ?? [...states].reverse().find((s) => s.status === 'completed') ?? states[0];
     if (!target) return;
     const el = document.querySelector(`[data-level="${CSS.escape(target.levelId)}"]`);
@@ -128,7 +171,44 @@ export function SagaMap() {
     scrolledRef.current = true;
   }, [states]);
 
+  // Trajet de l'avatar vers le premier niveau du nouveau monde ; la carte le suit en défilant.
+  useEffect(() => {
+    if (arrival?.phase !== 'travel' || arrival.entry.fromIndex === null || !states) return undefined;
+    const from = arrival.entry.fromIndex;
+    const count = states.length;
+    const waypoints = pathWaypoints(count, width);
+    let frame = 0;
+    let start = 0;
+    const step = (now: number) => {
+      if (!start) start = now;
+      const t = Math.min(1, (now - start) / TRAVEL_MS);
+      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      const point = pointOnSegment(waypoints, from + 1, eased); // nœud k = waypoints[k + 1]
+      const hop = Math.abs(Math.sin(eased * Math.PI * 4)) * 16;
+      setTraveller({ x: point.x, y: point.y - hop });
+      const scroller = scrollRef.current;
+      if (scroller) scroller.scrollTop = point.y - scroller.clientHeight / 2;
+      if (t < 1) frame = requestAnimationFrame(step);
+      else setArrival((cur) => (cur ? { ...cur, phase: 'banner' } : cur));
+    };
+    setTraveller(nodePosition(from, count, width));
+    const timer = window.setTimeout(() => {
+      frame = requestAnimationFrame(step);
+    }, TRAVEL_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      cancelAnimationFrame(frame);
+      setTraveller(null);
+    };
+  }, [arrival?.phase, states, width]);
+
   if (!profile) return null;
+
+  const skipTravel = () => {
+    const target = arrival && states?.[arrival.entry.toIndex];
+    if (target) document.querySelector(`[data-level="${CSS.escape(target.levelId)}"]`)?.scrollIntoView({ block: 'center' });
+    setArrival((cur) => (cur ? { ...cur, phase: 'banner' } : cur));
+  };
 
   const backToProfiles = () => {
     setProfile(null);
@@ -172,9 +252,22 @@ export function SagaMap() {
         🔒
       </LongPressButton>
       {remainingRatio !== null && <TimeRing ratio={remainingRatio} />}
-      <div class="map-scroll">
+      {arrival?.phase === 'travel' && <div class="map-travel-shield" onClick={skipTravel} aria-hidden="true" />}
+      {arrival?.phase === 'banner' && (
+        <WorldBanner world={worldIdAt(arrival.entry.worldIndex)} onDone={() => setArrival(null)} />
+      )}
+      <div class="map-scroll" ref={scrollRef}>
         <div class="map-track" style={{ height }} ref={trackRef}>
           <MapScenery count={count} width={width} />
+          {traveller && (
+            <span
+              class="map-traveller"
+              style={{ left: `${traveller.x}px`, top: `${traveller.y}px` }}
+              aria-hidden="true"
+            >
+              {profile.avatar}
+            </span>
+          )}
           {states?.map((state, i) => {
             const pos = nodePosition(i, count, width);
             const level = getLevel(state.levelId);
@@ -190,7 +283,7 @@ export function SagaMap() {
                 data-status={state.status}
                 onClick={() => openLevel(state)}
               >
-                {state.current && (
+                {state.current && arrival?.phase !== 'travel' && (
                   <span class="map-node__avatar" aria-hidden="true">
                     {profile.avatar}
                   </span>

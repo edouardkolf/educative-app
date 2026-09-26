@@ -80,19 +80,21 @@ export function smoothPathD(points: Point[]): string {
   return d;
 }
 
+/** Point à la fraction `t` (0…1) du segment `i` de la courbe lisse (entre `points[i]` et `points[i + 1]`). */
+export function pointOnSegment(points: Point[], i: number, t: number): Point {
+  const [a, b, c, d] = segmentAt(points, i);
+  const u = 1 - t;
+  return {
+    x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
+    y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
+  };
+}
+
 /** Échantillonne la courbe lisse (pour tenir le décor à distance du chemin). */
 export function samplePath(points: Point[], stepsPerSegment = 12): Point[] {
   const out: Point[] = [];
   for (let i = 0; i < points.length - 1; i += 1) {
-    const [a, b, c, d] = segmentAt(points, i);
-    for (let s = 0; s < stepsPerSegment; s += 1) {
-      const t = s / stepsPerSegment;
-      const u = 1 - t;
-      out.push({
-        x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
-        y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
-      });
-    }
+    for (let s = 0; s < stepsPerSegment; s += 1) out.push(pointOnSegment(points, i, s / stepsPerSegment));
   }
   if (points.length > 0) out.push(points[points.length - 1] as Point);
   return out;

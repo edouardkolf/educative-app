@@ -121,6 +121,7 @@ export function ChildForm(props: ChildFormProps) {
           avatar,
           trackId,
           limits,
+          ...(existing.seenWorld !== undefined ? { seenWorld: existing.seenWorld } : {}),
         });
       } else {
         await saveProfile({ name: trimmed, avatar, trackId, limits });

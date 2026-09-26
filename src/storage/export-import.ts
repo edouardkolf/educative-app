@@ -105,6 +105,9 @@ function isProfile(value: unknown): value is Profile {
   const { sessionMinutes, dailyMinutes } = value.limits;
   if (!isLimitMinutes(sessionMinutes)) return false;
   if (!isLimitMinutes(dailyMinutes)) return false;
+  if (value.seenWorld !== undefined && !(Number.isInteger(value.seenWorld) && (value.seenWorld as number) >= 0)) {
+    return false;
+  }
   return true;
 }
 

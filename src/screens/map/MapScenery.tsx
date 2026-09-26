@@ -16,28 +16,25 @@ import {
   type WorldBand,
   type WorldId,
 } from './layout';
+import { WORLD_META } from './worlds';
 
 interface WorldTheme {
   ground: string;
   patch: string;
-  sign: string;
 }
 
 const THEMES: Record<WorldId, WorldTheme> = {
   forest: {
     ground: '#b5d98a',
     patch: '#c4e39c',
-    sign: '🌳',
   },
   sea: {
     ground: '#8ecfe8',
     patch: '#a3daee',
-    sign: '🐠',
   },
   mountain: {
     ground: '#cbdcae',
     patch: '#dbe7c4',
-    sign: '🏔️',
   },
 };
 
@@ -292,7 +289,7 @@ export function MapScenery({ count, width }: Props) {
               <Sprite kind={item.kind} seed={i} />
             </g>
           ))}
-          <WorldSign x={sign.x} y={sign.y} icon={THEMES[band.world].sign} />
+          <WorldSign x={sign.x} y={sign.y} icon={WORLD_META[band.world].icon} />
         </g>
       ))}
     </svg>
