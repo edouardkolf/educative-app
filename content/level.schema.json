@@ -15,11 +15,11 @@
     },
     "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
     "skill": {
-      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling"],
-      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables."
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling", "reading"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables, reading = lire une phrase et montrer l'image."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling", "read"], "description": "Mécanique de jeu. Détermine la forme de params." },
     "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
@@ -78,6 +78,10 @@
     {
       "if": { "type": "object", "properties": { "mechanic": { "const": "spelling" } } },
       "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/spellingParams" } } }
+    },
+    {
+      "if": { "type": "object", "properties": { "mechanic": { "const": "read" } } },
+      "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/readParams" } } }
     }
   ],
   "definitions": {
@@ -250,6 +254,18 @@
         "choices": {"type": "integer", "minimum": 2, "maximum": 4},
         "extraTiles": {"type": "integer", "minimum": 0, "maximum": 4},
         "closeness": {"enum": [1, 2, 3], "description": "pick : proximité des variantes fautives — 1 grossières, 2 moyennes, 3 subtiles (un accent, une lettre)."}
+      }
+    },
+    "readParams": {
+      "type": "object",
+      "description": "Lis et montre : lire une ou deux phrases, taper l'image qui correspond.",
+      "required": ["traps", "relations", "sentences", "choices"],
+      "additionalProperties": false,
+      "properties": {
+        "traps": {"type": "array", "items": {"enum": ["noun", "number", "position", "negation"]}, "minItems": 1, "uniqueItems": true, "description": "Ce que les images fausses changent : noun = nom qui ressemble (lapin/sapin), number = un/plusieurs, position = sur/sous…, negation = phrases négatives."},
+        "relations": {"type": "array", "items": {"enum": ["on", "under", "beside", "in-front", "behind"]}, "minItems": 1, "uniqueItems": true, "description": "on = sur, under = sous, beside = à côté de, in-front = devant, behind = derrière."},
+        "sentences": {"type": "integer", "minimum": 1, "maximum": 2},
+        "choices": {"type": "integer", "minimum": 3, "maximum": 4}
       }
     }
   }

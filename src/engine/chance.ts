@@ -32,6 +32,8 @@ export function chanceOfFirstTry(level: Level): number {
       return level.params.answer === 'choices' ? 1 / (level.params.choices ?? 4) : 0;
     case 'spelling':
       return level.params.mode === 'tiles' ? 0 : 1 / (level.params.choices ?? 3);
+    case 'read':
+      return 1 / level.params.choices;
     case 'builder':
       // Poser toutes les pièces d'une figure sans une erreur, au hasard : quasi impossible.
       return 0;

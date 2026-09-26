@@ -36,6 +36,7 @@ export const MECHANICS = [
   'compare',
   'calc',
   'spelling',
+  'read',
 ] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
@@ -51,6 +52,7 @@ export const SKILLS = [
   'subtraction',
   'multiplication',
   'spelling',
+  'reading',
 ] as const;
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
@@ -225,6 +227,46 @@ export interface SpellingParams {
   closeness?: 1 | 2 | 3;
 }
 
+/** Positions décrites par les phrases de « Lis et montre ». */
+export const RELATIONS = ['on', 'under', 'beside', 'in-front', 'behind'] as const;
+export type Relation = (typeof RELATIONS)[number];
+
+/**
+ * Supports des scènes et positions qu'ils savent montrer sans ambiguïté
+ * (le dessin est dans src/mechanics/read/, chaque position doit s'y distinguer de toutes les autres).
+ */
+export const ANCHOR_RELATIONS = {
+  table: ['on', 'under', 'beside', 'in-front', 'behind'],
+  chair: ['on', 'under', 'beside'],
+  box: ['on', 'beside', 'in-front', 'behind'],
+  bed: ['on', 'beside'],
+  tree: ['beside', 'in-front', 'behind'],
+} as const satisfies Record<string, readonly Relation[]>;
+export type AnchorId = keyof typeof ANCHOR_RELATIONS;
+
+/** Ce qu'une image fausse change par rapport à la phrase, un seul trait à la fois. */
+export const READING_TRAPS = ['noun', 'number', 'position', 'negation'] as const;
+export type ReadingTrap = (typeof READING_TRAPS)[number];
+
+/**
+ * Lis et montre : lire une ou deux phrases, taper l'image qui correspond.
+ * Les images fausses ne diffèrent de la bonne que d'un seul trait : ce qu'on lirait en devinant.
+ */
+export interface ReadParams {
+  /**
+   * Pièges utilisés : "noun" = un nom qui ressemble à l'œil (lapin/sapin) ; "number" = un / plusieurs
+   * (le lapin / les lapins) ; "position" = une autre position (sur/sous) ; "negation" = environ une phrase
+   * sur deux est négative (« n'est pas sur ») et une image montre l'affirmation.
+   */
+  traps: ReadingTrap[];
+  /** Positions utilisables dans les phrases (au moins 1 ; 2 si traps contient "position"). */
+  relations: Relation[];
+  /** 1 phrase, ou 2 phrases (deux sujets, chacun sur son support) : l'image fausse change un seul des deux. */
+  sentences: number;
+  /** Nombre d'images proposées (3 ou 4). */
+  choices: number;
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
@@ -235,6 +277,7 @@ export interface MechanicParamsMap {
   compare: CompareParams;
   calc: CalcParams;
   spelling: SpellingParams;
+  read: ReadParams;
 }
 
 interface LevelBase {

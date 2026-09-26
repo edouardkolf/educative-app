@@ -31,6 +31,7 @@ const SKILL_LABELS: Record<SkillId, string> = {
   subtraction: 'Soustraction',
   multiplication: 'Tables de multiplication',
   spelling: 'Orthographe',
+  reading: 'Lecture',
 };
 
 const MECHANIC_LABELS: Record<MechanicId, string> = {
@@ -43,6 +44,7 @@ const MECHANIC_LABELS: Record<MechanicId, string> = {
   compare: 'Plus grand, plus petit',
   calc: 'Calcul',
   spelling: 'Mots invariables',
+  read: 'Lis et montre',
 };
 
 type GroupBy = 'skill' | 'mechanic';
