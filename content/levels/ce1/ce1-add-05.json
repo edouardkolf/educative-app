@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-add-05",
+  "title": "Additions sans retenue (10–60 + 10–30)",
+  "skill": "addition",
+  "objective": "Additionner deux nombres de deux chiffres sans retenue.",
+  "mechanic": "calc",
+  "rounds": 6,
+  "params": {
+    "operation": "add",
+    "a": {"min": 10, "max": 60},
+    "b": {"min": 10, "max": 30},
+    "carry": "without",
+    "unknown": "result",
+    "answer": "keypad"
+  }
+}

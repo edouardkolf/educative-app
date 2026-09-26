@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-sous-04",
+  "title": "Soustractions de nombres plus grands (20–99 - 1–9)",
+  "skill": "subtraction",
+  "objective": "Soustraire avec emprunt quelconque sur des nombres de deux chiffres.",
+  "mechanic": "calc",
+  "rounds": 6,
+  "params": {
+    "operation": "sub",
+    "a": {"min": 20, "max": 99},
+    "b": {"min": 1, "max": 9},
+    "carry": "any",
+    "unknown": "result",
+    "answer": "keypad"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-tables-04",
+  "title": "Toutes les tables (1–4) sans quadrillage",
+  "skill": "multiplication",
+  "objective": "Maîtriser les tables de 1 à 4 sans aide visuelle : défi pour consolidation.",
+  "mechanic": "calc",
+  "rounds": 8,
+  "params": {
+    "operation": "mul",
+    "a": {"min": 1, "max": 4},
+    "b": {"min": 1, "max": 4},
+    "unknown": "result",
+    "answer": "choices",
+    "choices": 4
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

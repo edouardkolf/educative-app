@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-tables-02",
+  "title": "Table de 3 avec quadrillage",
+  "skill": "multiplication",
+  "objective": "Apprendre la table de 3 avec l'aide d'un quadrillage de points.",
+  "mechanic": "calc",
+  "rounds": 6,
+  "params": {
+    "operation": "mul",
+    "a": {"min": 3, "max": 3},
+    "b": {"min": 1, "max": 4},
+    "unknown": "result",
+    "answer": "choices",
+    "choices": 3,
+    "showArray": true
+  }
+}

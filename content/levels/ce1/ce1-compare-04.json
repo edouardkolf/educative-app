@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-compare-04",
+  "title": "Comparer un calcul et un nombre (5 à 20)",
+  "skill": "comparison",
+  "objective": "Comparer une addition et un nombre pour vérifier l'égalité.",
+  "mechanic": "compare",
+  "rounds": 6,
+  "params": {
+    "min": 5,
+    "max": 20,
+    "form": "sum-vs-number",
+    "equalRate": 0.2,
+    "maxGap": 3
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-add-04",
+  "title": "Additions de nombres plus grands (20–89 + 1–9)",
+  "skill": "addition",
+  "objective": "Additionner des nombres de deux chiffres avec retenue quelconque.",
+  "mechanic": "calc",
+  "rounds": 6,
+  "params": {
+    "operation": "add",
+    "a": {"min": 20, "max": 89},
+    "b": {"min": 1, "max": 9},
+    "carry": "any",
+    "unknown": "result",
+    "answer": "keypad"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-05",
+  "title": "Mots invariables groupe A (avec étiquettes)",
+  "skill": "spelling",
+  "objective": "Reconstituer les mots du groupe A en assemblant les lettres proposées.",
+  "mechanic": "spelling",
+  "rounds": 5,
+  "params": {
+    "words": ["apres", "aupres", "aussi", "aussitot", "assez"],
+    "mode": "tiles",
+    "sentence": true,
+    "extraTiles": 2
+  }
+}

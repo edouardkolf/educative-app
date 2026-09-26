@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-02",
+  "title": "Mots invariables groupe A (avec trous)",
+  "skill": "spelling",
+  "objective": "Compléter les lettres manquantes des mots du groupe A dans une phrase.",
+  "mechanic": "spelling",
+  "rounds": 5,
+  "params": {
+    "words": ["apres", "aupres", "aussi", "aussitot", "assez"],
+    "mode": "gap",
+    "sentence": true,
+    "choices": 3
+  }
+}

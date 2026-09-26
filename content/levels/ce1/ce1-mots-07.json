@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-07",
+  "title": "Tous les mots invariables (reconnaissance, sans phrase)",
+  "skill": "spelling",
+  "objective": "Reconnaître les 10 mots invariables hors contexte de phrase : défi pour consolidation.",
+  "mechanic": "spelling",
+  "rounds": 8,
+  "params": {
+    "words": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois"],
+    "mode": "pick",
+    "sentence": false,
+    "choices": 4
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-add-06",
+  "title": "Additions complexes avec retenue (15–69 + 15–29)",
+  "skill": "addition",
+  "objective": "Additionner des nombres de deux chiffres avec retenue : défi pour consolidation.",
+  "mechanic": "calc",
+  "rounds": 8,
+  "params": {
+    "operation": "add",
+    "a": {"min": 15, "max": 69},
+    "b": {"min": 15, "max": 29},
+    "carry": "with",
+    "unknown": "result",
+    "answer": "keypad"
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-08",
+  "title": "Tous les mots invariables (avec étiquettes, sans phrase)",
+  "skill": "spelling",
+  "objective": "Reconstituer les 10 mots invariables en assemblant les lettres : défi pour consolidation.",
+  "mechanic": "spelling",
+  "rounds": 8,
+  "params": {
+    "words": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois"],
+    "mode": "tiles",
+    "sentence": false,
+    "extraTiles": 3
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

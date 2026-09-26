@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-sous-06",
+  "title": "Trouver l'opérande manquant (? - ... = ...)",
+  "skill": "subtraction",
+  "objective": "Trouver le nombre manquant dans une soustraction pour développer la réversibilité.",
+  "mechanic": "calc",
+  "rounds": 6,
+  "params": {
+    "operation": "sub",
+    "a": {"min": 5, "max": 15},
+    "b": {"min": 1, "max": 9},
+    "unknown": "operand",
+    "answer": "keypad"
+  }
+}

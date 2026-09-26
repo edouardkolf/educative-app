@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-03",
+  "title": "Mots invariables groupe B (reconnaissance)",
+  "skill": "spelling",
+  "objective": "Reconnaître l'orthographe correcte des mots invariables : afin, aujourd'hui, autour, autant, autrefois.",
+  "mechanic": "spelling",
+  "rounds": 5,
+  "params": {
+    "words": ["afin", "aujourdhui", "autour", "autant", "autrefois"],
+    "mode": "pick",
+    "sentence": true,
+    "choices": 3
+  }
+}

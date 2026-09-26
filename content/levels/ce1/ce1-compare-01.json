@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-compare-01",
+  "title": "Comparer deux nombres (0 à 20)",
+  "skill": "comparison",
+  "objective": "Comparer deux nombres entre 0 et 20 et utiliser les symboles <, = ou >.",
+  "mechanic": "compare",
+  "rounds": 5,
+  "tutorial": true,
+  "params": {
+    "min": 0,
+    "max": 20,
+    "form": "numbers",
+    "equalRate": 0.2
+  }
+}

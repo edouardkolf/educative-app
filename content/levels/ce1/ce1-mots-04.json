@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-04",
+  "title": "Mots invariables groupe B (avec trous)",
+  "skill": "spelling",
+  "objective": "Compléter les lettres manquantes des mots du groupe B dans une phrase.",
+  "mechanic": "spelling",
+  "rounds": 5,
+  "params": {
+    "words": ["afin", "aujourdhui", "autour", "autant", "autrefois"],
+    "mode": "gap",
+    "sentence": true,
+    "choices": 3
+  }
+}

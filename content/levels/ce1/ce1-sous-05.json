@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-sous-05",
+  "title": "Soustractions sans emprunt (30–99 - 10–40)",
+  "skill": "subtraction",
+  "objective": "Soustraire deux nombres de deux chiffres sans emprunt : défi pour consolidation.",
+  "mechanic": "calc",
+  "rounds": 8,
+  "params": {
+    "operation": "sub",
+    "a": {"min": 30, "max": 99},
+    "b": {"min": 10, "max": 40},
+    "carry": "without",
+    "unknown": "result",
+    "answer": "keypad"
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

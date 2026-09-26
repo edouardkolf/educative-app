@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-01",
+  "title": "Mots invariables groupe A (reconnaissance)",
+  "skill": "spelling",
+  "objective": "Reconnaître l'orthographe correcte des mots invariables : après, auprès, aussi, aussitôt, assez.",
+  "mechanic": "spelling",
+  "rounds": 5,
+  "tutorial": true,
+  "params": {
+    "words": ["apres", "aupres", "aussi", "aussitot", "assez"],
+    "mode": "pick",
+    "sentence": true,
+    "choices": 3
+  }
+}

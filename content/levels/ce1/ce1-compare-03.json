@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-compare-03",
+  "title": "Comparer des nombres proches (10 à 99)",
+  "skill": "comparison",
+  "objective": "Comparer des nombres proches entre 10 et 99 avec des écarts jusqu'à 3.",
+  "mechanic": "compare",
+  "rounds": 6,
+  "params": {
+    "min": 10,
+    "max": 99,
+    "form": "numbers",
+    "equalRate": 0.15,
+    "maxGap": 3
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-compare-06",
+  "title": "Comparer deux additions (5 à 20)",
+  "skill": "comparison",
+  "objective": "Comparer deux additions pour déterminer si les résultats sont égaux ou différents.",
+  "mechanic": "compare",
+  "rounds": 6,
+  "params": {
+    "min": 5,
+    "max": 20,
+    "form": "sums",
+    "equalRate": 0.25,
+    "maxGap": 2
+  }
+}

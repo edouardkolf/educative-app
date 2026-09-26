@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-sous-03",
+  "title": "Soustractions avec emprunt (11–18 - 2–9)",
+  "skill": "subtraction",
+  "objective": "Soustraire avec emprunt et taper le résultat.",
+  "mechanic": "calc",
+  "rounds": 6,
+  "params": {
+    "operation": "sub",
+    "a": {"min": 11, "max": 18},
+    "b": {"min": 2, "max": 9},
+    "carry": "with",
+    "unknown": "result",
+    "answer": "keypad"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-tables-01",
+  "title": "Table de 2 avec quadrillage",
+  "skill": "multiplication",
+  "objective": "Apprendre la table de 2 avec l'aide d'un quadrillage de points.",
+  "mechanic": "calc",
+  "rounds": 5,
+  "tutorial": true,
+  "params": {
+    "operation": "mul",
+    "a": {"min": 2, "max": 2},
+    "b": {"min": 1, "max": 4},
+    "unknown": "result",
+    "answer": "choices",
+    "choices": 3,
+    "showArray": true
+  }
+}
