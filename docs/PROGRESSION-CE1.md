@@ -34,14 +34,15 @@ Groupe B : afin, aujourd'hui, autour, autant, autrefois
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-mots-01 | Groupe A, reconnaissance (choix), avec phrase, **tutoriel** | Première orthographe parmi variantes |
+| 1 | ce1-mots-01 | Groupe A, reconnaissance (choix), avec phrase, variantes grossières, **tutoriel** | Première orthographe parmi variantes faciles à écarter |
 | 2 | ce1-mots-02 | Groupe A, trous, avec phrase | Compléter les lettres manquantes |
-| 3 | ce1-mots-03 | Groupe B, reconnaissance (choix), avec phrase | Deuxième groupe, reconnaissance parmi variantes |
+| 3 | ce1-mots-03 | Groupe B, reconnaissance (choix), avec phrase, variantes grossières | Deuxième groupe, reconnaissance parmi variantes faciles à écarter |
 | 4 | ce1-mots-04 | Groupe B, trous, avec phrase | Deuxième groupe, compléter les trous |
 | 5 | ce1-mots-05 | Groupe A, étiquettes, avec phrase | Groupe A, production complète (assemblage) |
 | 6 | ce1-mots-06 | Groupe B, étiquettes, avec phrase | Groupe B, production complète (assemblage) |
-| 7 | ce1-mots-07 | 10 mots, reconnaissance (choix), sans phrase, **8 manches** | Tous les mots hors contexte : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 7 | ce1-mots-07 | 10 mots, reconnaissance (4 choix), sans phrase, variantes moyennes, **8 manches** | Tous les mots hors contexte, fautes plus proches : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 | 8 | ce1-mots-08 | 10 mots, étiquettes, sans phrase, **8 manches** | Tous les mots, production sans aide : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 9 | ce1-mots-09 | 10 mots, reconnaissance (4 choix), sans phrase, variantes subtiles, **8 manches** | L'orthographe exacte, à un accent ou une lettre près (aprés / après) : dernier niveau du parcours |
 
 ## Soustraction
 
@@ -71,6 +72,13 @@ Facteurs jamais > 4 ; chaque niveau commence par un tutoriel ou une mécanique c
 
 **Paramètres communs** : 5 ou 6 manches pour les niveaux réguliers (5 pour les tutoriels ; 4 pour les tables 01 à 03, qui n'ont que 4 faits chacune), 8 manches pour les défis de consolidation. Seuils d'étoiles par défaut : 0 raté du premier coup = 3 étoiles, 1 raté = 2 étoiles, sinon 1.
 
-**Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-tables-04, ce1-tables-05, ce1-mots-07, ce1-mots-08 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
+**Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-tables-04, ce1-tables-05, ce1-mots-07, ce1-mots-08, ce1-mots-09 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
 
 **À observer dans les statistiques** : un taux de réussite au premier coup sous 50 % sur deux parties signale une marche trop haute. Possible : ajouter un niveau intermédiaire ou assouplir temporairement depuis l'espace parent.
+
+## Orthographe : reconnaître, pas écrire
+
+L'app entraîne la **reconnaissance** de l'orthographe (mémoriser la forme exacte du mot). L'écriture se travaille
+à la maison, en dictée. La difficulté monte par la **proximité** des variantes fautives (`closeness` : 1 grossières
+« otant », 2 moyennes « autent », 3 subtiles « aprés »), pas par leur nombre : on reste à 4 propositions au plus,
+pour limiter la lecture et l'exposition à des formes fautives. Après une réussite, seul le mot juste reste affiché.

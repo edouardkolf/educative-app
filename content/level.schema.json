@@ -248,7 +248,8 @@
         "mode": {"enum": ["pick", "gap", "tiles"], "description": "pick : bonne orthographe parmi des variantes ; gap : lettres manquantes ; tiles : reconstituer le mot."},
         "sentence": {"type": "boolean", "description": "Affiche une phrase d'exemple avec le mot en trou."},
         "choices": {"type": "integer", "minimum": 2, "maximum": 4},
-        "extraTiles": {"type": "integer", "minimum": 0, "maximum": 4}
+        "extraTiles": {"type": "integer", "minimum": 0, "maximum": 4},
+        "closeness": {"enum": [1, 2, 3], "description": "pick : proximité des variantes fautives — 1 grossières, 2 moyennes, 3 subtiles (un accent, une lettre)."}
       }
     }
   }

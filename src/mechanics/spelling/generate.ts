@@ -1,6 +1,6 @@
 // Génération pure des manches de la mécanique « orthographe ». Aucun DOM, aucun stockage.
 import type { ChoiceId, Rng, Round, SpellingParams, WordId } from '../../engine/types';
-import type { GapRoundData, PickRoundData, SpellingRoundData, TilesRoundData } from './types';
+import type { Closeness, GapRoundData, PickRoundData, SpellingRoundData, TilesRoundData } from './types';
 import { WORDS } from './words';
 
 const MIN_CHOICES = 2;
@@ -30,12 +30,25 @@ function makeWordPicker(words: readonly WordId[], rng: Rng): () => WordId {
 
 // ---------- Mode "pick" ----------
 
+/** Ordre de pioche des niveaux de proximité : le niveau demandé d'abord, puis les plus proches de lui. */
+const CLOSENESS_ORDER: Record<Closeness, Closeness[]> = { 1: [1, 2, 3], 2: [2, 3, 1], 3: [3, 2, 1] };
+
+/** `count` variantes fautives distinctes, du niveau de proximité demandé en priorité (tous mélangés si absent). */
+export function pickMisspellings(
+  byCloseness: Record<Closeness, string[]>,
+  count: number,
+  closeness: Closeness | undefined,
+  rng: Rng,
+): string[] {
+  if (closeness === undefined) return rng.shuffle([1, 2, 3].flatMap((c) => byCloseness[c as Closeness])).slice(0, count);
+  return CLOSENESS_ORDER[closeness].flatMap((c) => rng.shuffle(byCloseness[c])).slice(0, count);
+}
+
 function buildPickRound(wordId: WordId, params: SpellingParams, rng: Rng): PickRoundData {
   const entry = WORDS[wordId];
   const sentence = params.sentence ? rng.pick(entry.sentences) : undefined;
   const wanted = clamp(params.choices ?? 3, MIN_CHOICES, MAX_CHOICES);
-  const wrongCount = Math.min(wanted - 1, entry.misspellings.length);
-  const wrongs = rng.shuffle(entry.misspellings).slice(0, wrongCount);
+  const wrongs = pickMisspellings(entry.misspellings, wanted - 1, params.closeness, rng);
   const choices = rng.shuffle([entry.text, ...wrongs]).map((text) => ({ id: text as ChoiceId, text }));
   return { mode: 'pick', wordId, word: entry.text, sentence, choices };
 }

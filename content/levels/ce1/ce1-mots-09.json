@@ -1,9 +1,9 @@
 {
   "$schema": "../../level.schema.json",
-  "id": "ce1-mots-07",
-  "title": "Les 10 mots : variantes proches",
+  "id": "ce1-mots-09",
+  "title": "Les 10 mots : à un accent près",
   "skill": "spelling",
-  "objective": "Reconnaître l'orthographe des 10 mots invariables parmi 4 propositions dont les fautes sont assez proches du bon mot.",
+  "objective": "Reconnaître l'orthographe exacte des 10 mots invariables parmi 4 propositions qui ne diffèrent que d'un accent ou d'une lettre.",
   "mechanic": "spelling",
   "rounds": 8,
   "params": {
@@ -22,7 +22,7 @@
     "mode": "pick",
     "sentence": false,
     "choices": 4,
-    "closeness": 2
+    "closeness": 3
   },
   "stars": {
     "maxMissesFor3": 1,

@@ -151,3 +151,24 @@ describe("tiles : aujourd'hui", () => {
     }
   });
 });
+
+describe('pick : proximité des variantes (closeness)', () => {
+  it('pioche dans le niveau demandé, puis dans les niveaux voisins seulement s’il en manque', () => {
+    for (let seed = 0; seed < 100; seed += 1) {
+      for (const closeness of [1, 2, 3] as const) {
+        const rounds = generateRounds({ words: [...WORD_IDS], mode: 'pick', sentence: false, choices: 3, closeness }, 10, createRng(seed));
+        for (const round of rounds) {
+          const data = round.data as Extract<typeof round.data, { mode: 'pick' }>;
+          const wrongs = data.choices.map((c) => c.text).filter((t) => t !== round.answer);
+          expect(wrongs.every((w) => WORDS[data.wordId].misspellings[closeness].includes(w))).toBe(true);
+        }
+        const [four] = generateRounds({ words: ['apres'], mode: 'pick', sentence: false, choices: 4, closeness }, 1, createRng(seed));
+        if (!four) throw new Error('aucune manche générée');
+        const data = four.data as Extract<typeof four.data, { mode: 'pick' }>;
+        const wrongs = data.choices.map((c) => c.text).filter((t) => t !== four.answer);
+        const main = wrongs.filter((w) => WORDS.apres.misspellings[closeness].includes(w));
+        expect(main.length).toBe(2); // les 2 du niveau demandé, puis 1 d'un niveau voisin
+      }
+    }
+  });
+});

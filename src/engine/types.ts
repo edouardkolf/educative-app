@@ -217,6 +217,12 @@ export interface SpellingParams {
   choices?: number;
   /** tiles : étiquettes pièges en plus des lettres du mot (0 à 4). */
   extraTiles?: number;
+  /**
+   * pick : proximité des variantes fautives avec le bon mot. 1 = grossières (otant), 2 = moyennes (autent),
+   * 3 = subtiles, à une lettre ou un accent près (aprés). Complété par les niveaux voisins s'il en manque.
+   * Absent : variantes de tous niveaux mélangées.
+   */
+  closeness?: 1 | 2 | 3;
 }
 
 export interface MechanicParamsMap {

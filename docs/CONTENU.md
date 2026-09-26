@@ -251,7 +251,7 @@ Le hasard : 1 chance sur `choices` en mode choix, quasi nulle au pavé — les s
 
 ### Spelling (mots invariables — CE1)
 
-Les 10 mots invariables sont décrits dans `src/mechanics/spelling/words.ts` (orthographe, variantes fautives,
+Les 10 mots invariables sont décrits dans `src/mechanics/spelling/words.ts` (orthographe, variantes fautives classées par proximité,
 lettres à trou, phrases d'exemple). Un bouton 🔊 lit le mot (et la phrase) avec la synthèse vocale du téléphone,
 s'il en a une. Exemple (extrait de ce1-mots-05.json) :
 
@@ -268,6 +268,8 @@ s'il en a une. Exemple (extrait de ce1-mots-05.json) :
   `"tiles"` (reconstituer le mot avec des étiquettes-lettres, puis valider)
 - `sentence` : affiche une phrase d'exemple avec le mot en trou
 - `choices` (pick, gap) : 2 à 4 propositions ; `extraTiles` (tiles) : 0 à 4 étiquettes pièges
+- `closeness` (pick, optionnel) : proximité des variantes fautives — 1 grossières (otant), 2 moyennes (autent),
+  3 subtiles, à un accent ou une lettre près (aprés). Absent : tous niveaux mélangés
 
 ## Valeurs autorisées
 

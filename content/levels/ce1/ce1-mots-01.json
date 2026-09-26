@@ -8,9 +8,16 @@
   "rounds": 5,
   "tutorial": true,
   "params": {
-    "words": ["apres", "aupres", "aussi", "aussitot", "assez"],
+    "words": [
+      "apres",
+      "aupres",
+      "aussi",
+      "aussitot",
+      "assez"
+    ],
     "mode": "pick",
     "sentence": true,
-    "choices": 3
+    "choices": 3,
+    "closeness": 1
   }
 }

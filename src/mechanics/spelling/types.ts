@@ -10,12 +10,18 @@ export interface GapSpec {
   distractors: string[];
 }
 
+/** Proximité d'une variante fautive avec le bon mot (voir SpellingParams.closeness). */
+export type Closeness = 1 | 2 | 3;
+
 /** Une entrée du catalogue (src/mechanics/spelling/words.ts). */
 export interface WordEntry {
   /** Orthographe exacte du mot (apostrophe droite '). */
   text: string;
-  /** Variantes fautives plausibles pour un CE1, jamais égales à `text` (≥ 3). */
-  misspellings: string[];
+  /**
+   * Variantes fautives plausibles pour un CE1, jamais égales à `text`, classées par proximité avec le bon mot :
+   * 1 = grossières, 2 = moyennes, 3 = subtiles (un accent, une lettre). Au moins 2 par niveau.
+   */
+  misspellings: Record<Closeness, string[]>;
   /** Découpages possibles pour le mode « gap » (1 à 2). */
   gaps: GapSpec[];
   /** Phrases d'exemple, le mot remplacé par « ___ » exactement une fois (≥ 3). */

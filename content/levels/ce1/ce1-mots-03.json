@@ -7,9 +7,16 @@
   "mechanic": "spelling",
   "rounds": 5,
   "params": {
-    "words": ["afin", "aujourdhui", "autour", "autant", "autrefois"],
+    "words": [
+      "afin",
+      "aujourdhui",
+      "autour",
+      "autant",
+      "autrefois"
+    ],
     "mode": "pick",
     "sentence": true,
-    "choices": 3
+    "choices": 3,
+    "closeness": 1
   }
 }

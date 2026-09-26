@@ -12,9 +12,10 @@ describe('WORDS (catalogue)', () => {
     const entry = WORDS[wordId];
 
     it(`${wordId} : au moins 3 variantes fautives, toutes différentes du mot et entre elles`, () => {
-      expect(entry.misspellings.length).toBeGreaterThanOrEqual(3);
-      for (const wrong of entry.misspellings) expect(wrong).not.toBe(entry.text);
-      expect(new Set(entry.misspellings).size).toBe(entry.misspellings.length);
+      for (const level of [1, 2, 3] as const) expect(entry.misspellings[level].length).toBeGreaterThanOrEqual(2);
+      const all = Object.values(entry.misspellings).flat();
+      for (const wrong of all) expect(wrong).not.toBe(entry.text);
+      expect(new Set(all).size).toBe(all.length);
     });
 
     it(`${wordId} : au moins une phrase, chacune avec un unique "___"`, () => {

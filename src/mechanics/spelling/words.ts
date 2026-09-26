@@ -5,7 +5,7 @@ import type { WordEntry } from './types';
 export const WORDS: Record<WordId, WordEntry> = {
   apres: {
     text: 'après',
-    misspellings: ['apres', 'aprés', 'aprais'],
+    misspellings: { 1: ['aprai', 'aprait'], 2: ['apprès', 'aprè'], 3: ['aprés', 'apres'] },
     gaps: [{ before: 'apr', missing: 'è', after: 's', distractors: ['é', 'ê', 'e'] }],
     sentences: [
       'Le dessert arrive ___ le repas.',
@@ -15,7 +15,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   aupres: {
     text: 'auprès',
-    misspellings: ['auprés', 'aupré', 'oprès'],
+    misspellings: { 1: ['opré', 'aupray'], 2: ['oprès', 'aupré'], 3: ['auprés', 'aupres'] },
     gaps: [
       { before: 'aupr', missing: 'è', after: 's', distractors: ['é', 'ê', 'e'] },
       { before: '', missing: 'au', after: 'près', distractors: ['o', 'eau', 'ô'] },
@@ -28,7 +28,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   aussi: {
     text: 'aussi',
-    misspellings: ['ausi', 'ossi', 'auci'],
+    misspellings: { 1: ['ossi', 'ocie'], 2: ['auci', 'ausi'], 3: ['aussis', 'aussie'] },
     gaps: [{ before: 'au', missing: 'ss', after: 'i', distractors: ['s', 'c', 'sc'] }],
     sentences: [
       "Moi ___, j'aime les fraises.",
@@ -38,7 +38,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   aussitot: {
     text: 'aussitôt',
-    misspellings: ['ausitôt', 'aussitot', 'aussitôts'],
+    misspellings: { 1: ['ossito', 'aucitô'], 2: ['ausitôt', 'aussitau'], 3: ['aussitot', 'aussitôts'] },
     gaps: [
       { before: 'au', missing: 'ss', after: 'itôt', distractors: ['s', 'c', 'sc'] },
       { before: 'aussit', missing: 'ô', after: 't', distractors: ['o', 'ê', 'eau'] },
@@ -51,7 +51,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   assez: {
     text: 'assez',
-    misspellings: ['asser', 'assé', 'asez'],
+    misspellings: { 1: ['acer', 'asé'], 2: ['assé', 'asser'], 3: ['asez', 'assés'] },
     gaps: [{ before: 'asse', missing: 'z', after: '', distractors: ['s', 'r', 't'] }],
     sentences: [
       "J'ai ___ mangé, merci.",
@@ -61,7 +61,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   afin: {
     text: 'afin',
-    misspellings: ['affin', 'afain', 'afint'],
+    misspellings: { 1: ['afain', 'afein'], 2: ['aphin', 'afint'], 3: ['affin', 'afins'] },
     gaps: [{ before: 'a', missing: 'f', after: 'in', distractors: ['ff', 'ph', 'v'] }],
     sentences: [
       'Je mets mon manteau ___ de ne pas avoir froid.',
@@ -71,7 +71,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   aujourdhui: {
     text: "aujourd'hui",
-    misspellings: ['aujourdhui', "aujourd'huit", "ojourd'hui"],
+    misspellings: { 1: ['ojourdhui', "oujourd'ui"], 2: ["aujourd'ui", "ojourd'hui"], 3: ['aujourdhui', "aujourd'huit"] },
     gaps: [
       { before: '', missing: 'au', after: "jourd'hui", distractors: ['o', 'eau', 'ô'] },
       { before: "aujour", missing: "d'h", after: 'ui', distractors: ['d', 'dh', 'th'] },
@@ -84,7 +84,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   autour: {
     text: 'autour',
-    misspellings: ['otour', 'autours', 'autoure'],
+    misspellings: { 1: ['otoure', 'ohtour'], 2: ['otour', 'autoure'], 3: ['autours', 'hautour'] },
     gaps: [
       { before: '', missing: 'au', after: 'tour', distractors: ['o', 'eau', 'ô'] },
       { before: 'au', missing: 't', after: 'our', distractors: ['tt', 'd', 'th'] },
@@ -97,7 +97,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   autant: {
     text: 'autant',
-    misspellings: ['otant', 'autent', 'autand'],
+    misspellings: { 1: ['otan', 'ottent'], 2: ['otant', 'autent'], 3: ['autand', 'autans'] },
     gaps: [
       { before: '', missing: 'au', after: 'tant', distractors: ['o', 'eau', 'ô'] },
       { before: 'autan', missing: 't', after: '', distractors: ['d', 's', 'x'] },
@@ -110,7 +110,7 @@ export const WORDS: Record<WordId, WordEntry> = {
   },
   autrefois: {
     text: 'autrefois',
-    misspellings: ['autrfois', 'autrefoit', 'otrefois'],
+    misspellings: { 1: ['otrefoi', 'autrfoa'], 2: ['otrefois', 'autrefoit'], 3: ['autrefoie', 'autrfois'] },
     gaps: [
       { before: 'au', missing: 'tre', after: 'fois', distractors: ['tr', 'ter', 'der'] },
       { before: 'autre', missing: 'f', after: 'ois', distractors: ['ph', 'v', 'ff'] },

@@ -27,7 +27,7 @@ export function validateParams(p: SpellingParams): string[] {
         const entry = WORDS[wordId];
         if (!entry) continue;
         if (p.mode === 'pick') {
-          const available = entry.misspellings.length;
+          const available = Object.values(entry.misspellings).flat().length;
           if (available < p.choices - 1) {
             errors.push(
               `Le mot "${entry.text}" n'a que ${available} variante(s) fautive(s) ` +
