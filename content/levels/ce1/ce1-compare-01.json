@@ -1,16 +1,19 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-compare-01",
-  "title": "Comparer deux nombres (0 à 20)",
+  "title": "Comparer jusqu'à 20, avec des additions",
   "skill": "comparison",
-  "objective": "Comparer deux nombres entre 0 et 20 et utiliser les symboles <, = ou >.",
+  "objective": "Comparer des nombres jusqu'à 20, une manche sur deux un nombre et une addition (11 < 7 + 5).",
   "mechanic": "compare",
   "rounds": 5,
   "tutorial": true,
   "params": {
-    "min": 0,
+    "min": 2,
     "max": 20,
-    "form": "numbers",
+    "form": [
+      "numbers",
+      "sum-vs-number"
+    ],
     "equalRate": 0.2
   }
 }

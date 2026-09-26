@@ -1,5 +1,6 @@
 // Validation des paramètres du niveau « comparer », pour un parent non développeur.
 import type { CompareParams } from '../../engine/types';
+import { formsOf } from './generate';
 
 export function validateParams(p: CompareParams): string[] {
   const errors: string[] = [];
@@ -8,7 +9,12 @@ export function validateParams(p: CompareParams): string[] {
     errors.push('Le minimum doit être inférieur ou égal au maximum.');
   }
 
-  if (p.form !== 'numbers' && p.min < 2) {
+  const forms = formsOf(p);
+  if (forms.length === 0) {
+    errors.push('Il faut au moins une forme de comparaison (form).');
+  }
+
+  if (forms.some((f) => f !== 'numbers') && p.min < 2) {
     errors.push("Avec une somme de deux nombres (chacun d'au moins 1), le minimum doit être au moins 2.");
   }
 

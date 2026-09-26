@@ -1,5 +1,5 @@
 // Génération pure des manches de « comparer » (CE1). Aucun DOM, aucun stockage.
-import type { CompareChoice, CompareParams, Rng, Round } from '../../engine/types';
+import type { CompareChoice, CompareForm, CompareParams, Rng, Round } from '../../engine/types';
 import type { CompareRoundData, Side } from './types';
 
 const MAX_RETRIES = 30;
@@ -158,9 +158,14 @@ function buildSums(min: number, max: number, maxGap: number | undefined, wanted:
   return { left: sideFromSplit(la, lb), right: sideFromSplit(ra, rb) };
 }
 
-function buildRoundData(params: CompareParams, wanted: CompareChoice, rng: Rng): CompareRoundData {
-  if (params.form === 'sum-vs-number') return buildSumVsNumber(params.min, params.max, params.maxGap, wanted, rng);
-  if (params.form === 'sums') return buildSums(params.min, params.max, params.maxGap, wanted, rng);
+/** Les formes du niveau, dans l'ordre d'alternance (une seule forme : toujours la même). */
+export function formsOf(params: CompareParams): CompareForm[] {
+  return Array.isArray(params.form) ? params.form : [params.form];
+}
+
+function buildRoundData(params: CompareParams, form: CompareForm, wanted: CompareChoice, rng: Rng): CompareRoundData {
+  if (form === 'sum-vs-number') return buildSumVsNumber(params.min, params.max, params.maxGap, wanted, rng);
+  if (form === 'sums') return buildSums(params.min, params.max, params.maxGap, wanted, rng);
   return buildNumbers(params.min, params.max, params.maxGap, wanted, rng);
 }
 
@@ -205,14 +210,16 @@ export function generateRounds(params: CompareParams, count: number, rng: Rng): 
   let streak = 0;
   let previousData: CompareRoundData | null = null;
 
+  const forms = formsOf(params);
   for (let i = 0; i < count; i += 1) {
+    const form = forms[i % forms.length] as CompareForm;
     const banned = streak >= 3 ? last : null;
     const wanted = pickNextAnswer(rng, ltCount, gtCount, banned, params.equalRate);
 
-    let data = buildRoundData(params, wanted, rng);
+    let data = buildRoundData(params, form, wanted, rng);
     let attempts = 0;
     while (previousData !== null && sameData(data, previousData) && attempts < MAX_RETRIES) {
-      data = buildRoundData(params, wanted, rng);
+      data = buildRoundData(params, form, wanted, rng);
       attempts += 1;
     }
 

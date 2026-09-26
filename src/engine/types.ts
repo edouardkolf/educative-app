@@ -147,13 +147,19 @@ export interface BuilderParams {
 export const COMPARE_CHOICES = ['lt', 'eq', 'gt'] as const;
 export type CompareChoice = (typeof COMPARE_CHOICES)[number];
 
+/** Forme d'une manche « comparer » : 47 ? 52 ; 8 + 5 ? 12 ; 8 + 5 ? 6 + 7. */
+export type CompareForm = 'numbers' | 'sum-vs-number' | 'sums';
+
 /** Comparer deux quantités écrites et taper <, = ou > (les trois boutons sont toujours affichés). */
 export interface CompareParams {
   /** Plage des nombres affichés, ou des résultats des sommes si form ≠ "numbers" (0 à 999). */
   min: number;
   max: number;
-  /** "numbers" : 47 ? 52 ; "sum-vs-number" : 8 + 5 ? 12 ; "sums" : 8 + 5 ? 6 + 7 (termes ≥ 1). */
-  form: 'numbers' | 'sum-vs-number' | 'sums';
+  /**
+   * "numbers" : 47 ? 52 ; "sum-vs-number" : 8 + 5 ? 12 ; "sums" : 8 + 5 ? 6 + 7 (termes ≥ 1).
+   * Une liste (ex. ["numbers", "sum-vs-number"]) : les formes alternent d'une manche à l'autre, dans l'ordre.
+   */
+  form: CompareForm | CompareForm[];
   /** Part approximative de manches où les deux côtés sont égaux (0 à 0,5). */
   equalRate: number;
   /** Écart maximal entre les deux côtés quand ils diffèrent (≥ 1). Petit écart = plus difficile. Absent : aucune limite. */

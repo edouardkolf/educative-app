@@ -1,16 +1,22 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-add-02",
-  "title": "Additions sans retenue (10–15 + 1–4)",
+  "title": "Deux chiffres + un chiffre, avec retenue",
   "skill": "addition",
-  "objective": "Additionner un nombre de deux chiffres sans retenue.",
+  "objective": "Ajouter un nombre à un chiffre à un nombre à deux chiffres en passant la dizaine (27 + 5).",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
     "operation": "add",
-    "a": {"min": 10, "max": 15},
-    "b": {"min": 1, "max": 4},
-    "carry": "without",
+    "a": {
+      "min": 12,
+      "max": 88
+    },
+    "b": {
+      "min": 2,
+      "max": 9
+    },
+    "carry": "with",
     "unknown": "result",
     "answer": "choices",
     "choices": 4

@@ -8,24 +8,24 @@ Repères : programme de CP-CE1, cycle 2. En CE1, on vise la maîtrise de l'addit
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-add-01 | 1–5 + 1–5, réponse parmi choix, **tutoriel** | Premiers calculs, reconnaissance du résultat |
-| 2 | ce1-add-02 | 10–15 + 1–4, sans retenue, choix | Premiers deux chiffres, sans retenue |
-| 3 | ce1-add-03 | 2–9 + 2–9, avec retenue, clavier | Passage en retenue, production (clavier) |
-| 4 | ce1-add-04 | 20–89 + 1–9, retenue quelconque, clavier | Nombres plus grands, retenue mixte |
-| 5 | ce1-add-05 | 10–60 + 10–30, sans retenue, clavier | Deux chiffres sans retenue, défi consolidation |
-| 6 | ce1-add-06 | 15–69 + 15–29, avec retenue, clavier, **8 manches** | Sommets de complexité : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 7 | ce1-add-07 | 1–9 + ? = ..., opérande manquant, choix | Réversibilité : trouver le nombre manquant |
+| 1 | ce1-add-01 | 11–85 + 1–8, sans retenue, choix, **tutoriel** | Deux chiffres dès le départ (23 + 4) |
+| 2 | ce1-add-02 | 12–88 + 2–9, avec retenue, choix | Passer la dizaine (27 + 5) |
+| 3 | ce1-add-03 | 12–89 + 2–9, retenue quelconque, clavier | Production du résultat au pavé |
+| 4 | ce1-add-04 | 11–65 + 11–33, sans retenue, choix | Deux chiffres + deux chiffres : dizaines avec dizaines |
+| 5 | ce1-add-05 | 11–65 + 11–33, sans retenue, clavier | Même calcul, en production |
+| 6 | ce1-add-06 | 15–69 + 15–29, avec retenue, clavier, **8 manches** | Sommet : deux chiffres avec retenue (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 7 | ce1-add-07 | 12–88 + ? = …, nombre manquant, clavier | Réversibilité : 34 + ? = 41 |
 
 ## Comparaison
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-compare-01 | 0–20, nombres, **tutoriel** | Premiers nombres, reconnaissance <, =, > |
-| 2 | ce1-compare-02 | 10–99, nombres, écart max 30 | Deux chiffres, écarts larges |
-| 3 | ce1-compare-03 | 10–99, nombres, écart max 3 | Nombres proches : exige plus de rigueur |
-| 4 | ce1-compare-04 | 5–20, addition ? nombre, écart max 3 | Introduire le calcul dans la comparaison |
-| 5 | ce1-compare-05 | 100–999, nombres, écart max 20 | Trois chiffres : défi reconnaissance ordre |
-| 6 | ce1-compare-06 | 5–20, deux additions, écart max 2 | Comparer deux calculs : ordre de grandeur |
+| 1 | ce1-compare-01 | 2–20, alterne nombre ? nombre et nombre ? addition, **tutoriel** | 11 < 7 + 5 : le calcul entre dans la comparaison dès le départ |
+| 2 | ce1-compare-02 | 10–99, alterne nombres et nombre ? addition, écart max 30 | Deux chiffres, écarts larges |
+| 3 | ce1-compare-03 | 10–99, alterne nombres et nombre ? addition, écart max 5 | Valeurs proches : regarder les unités, calculer juste |
+| 4 | ce1-compare-04 | 20–80, nombre ? addition à deux chiffres, écart max 3 | 47 < 23 + 26 |
+| 5 | ce1-compare-05 | 100–999, nombres, écart max 20 | Trois chiffres : ordre des centaines |
+| 6 | ce1-compare-06 | 10–40, alterne nombre ? addition et deux additions, écart max 3 | Comparer deux calculs |
 
 ## Orthographe des mots invariables
 

@@ -1,17 +1,24 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-add-04",
-  "title": "Additions de nombres plus grands (20–89 + 1–9)",
+  "title": "Deux chiffres + deux chiffres, sans retenue (choix)",
   "skill": "addition",
-  "objective": "Additionner des nombres de deux chiffres avec retenue quelconque.",
+  "objective": "Ajouter deux nombres à deux chiffres sans retenue, dizaines avec dizaines et unités avec unités (32 + 25).",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
     "operation": "add",
-    "a": {"min": 20, "max": 89},
-    "b": {"min": 1, "max": 9},
-    "carry": "any",
+    "a": {
+      "min": 11,
+      "max": 65
+    },
+    "b": {
+      "min": 11,
+      "max": 33
+    },
+    "carry": "without",
     "unknown": "result",
-    "answer": "keypad"
+    "answer": "choices",
+    "choices": 4
   }
 }

@@ -69,9 +69,11 @@ function profileCard(page: Page, name: string): Locator {
 
 async function chooseProfile(page: Page, name: string): Promise<void> {
   await profileCard(page, name).click();
+  await expect(page.locator('[data-level]').first()).toBeVisible(); // la carte a remplacé l'écran des profils
 }
 
 async function longPress(page: Page, locator: Locator, ms: number): Promise<void> {
+  await expect(locator).toBeVisible(); // boundingBox() n'attend pas : sans ça, course avec le rendu de l'écran
   const box = await locator.boundingBox();
   if (!box) throw new Error('Élément introuvable pour simuler un appui long.');
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

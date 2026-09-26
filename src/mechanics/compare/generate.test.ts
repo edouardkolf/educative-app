@@ -157,4 +157,17 @@ describe('compare.generateRounds', () => {
     expect(sumLeft).toBeGreaterThan(0);
     expect(sumRight).toBeGreaterThan(0);
   });
+
+  it('alterne les formes listées, dans l’ordre : comparaison simple puis nombre contre addition', () => {
+    for (let seed = 0; seed < 200; seed += 1) {
+      const params = compareParams({ min: 2, max: 20, form: ['numbers', 'sum-vs-number'], equalRate: 0.2 });
+      const rounds = generateRounds(params, 6, createRng(seed));
+      rounds.forEach((round, i) => {
+        const terms = [round.data.left.terms.length, round.data.right.terms.length].sort();
+        expect(terms, `graine ${seed}, manche ${i}`).toEqual(i % 2 === 0 ? [1, 1] : [1, 2]);
+        const sign = Math.sign(round.data.left.value - round.data.right.value);
+        expect(sign).toBe({ lt: -1, eq: 0, gt: 1 }[round.answer as 'lt' | 'eq' | 'gt']);
+      });
+    }
+  });
 });

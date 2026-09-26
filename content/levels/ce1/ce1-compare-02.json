@@ -1,15 +1,18 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-compare-02",
-  "title": "Comparer des nombres plus grands (10 à 99)",
+  "title": "Comparer jusqu'à 99, avec des additions",
   "skill": "comparison",
-  "objective": "Comparer des nombres de deux chiffres de 10 à 99 avec des écarts jusqu'à 30.",
+  "objective": "Comparer des nombres à deux chiffres, une manche sur deux un nombre et une addition (60 > 34 + 25).",
   "mechanic": "compare",
   "rounds": 6,
   "params": {
     "min": 10,
     "max": 99,
-    "form": "numbers",
+    "form": [
+      "numbers",
+      "sum-vs-number"
+    ],
     "equalRate": 0.15,
     "maxGap": 30
   }

@@ -1,17 +1,23 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-add-07",
-  "title": "Trouver l'opérande manquant (1–9 + ? = ...)",
+  "title": "Le nombre manquant",
   "skill": "addition",
-  "objective": "Trouver le nombre manquant dans une addition pour développer la réversibilité.",
+  "objective": "Trouver le nombre à ajouter pour passer d'un nombre à deux chiffres à un autre (34 + ? = 41).",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
     "operation": "add",
-    "a": {"min": 1, "max": 9},
-    "b": {"min": 1, "max": 9},
+    "a": {
+      "min": 12,
+      "max": 88
+    },
+    "b": {
+      "min": 2,
+      "max": 9
+    },
+    "carry": "any",
     "unknown": "operand",
-    "answer": "choices",
-    "choices": 4
+    "answer": "keypad"
   }
 }

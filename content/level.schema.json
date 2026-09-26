@@ -211,6 +211,7 @@
         "distractors": { "type": "integer", "minimum": 0, "maximum": 2, "description": "Pièces en trop, qui ne correspondent à aucun emplacement." }
       }
     },
+    "compareForm": {"enum": ["numbers", "sum-vs-number", "sums"]},
     "intRange": {"type": "object", "required": ["min", "max"], "additionalProperties": false, "properties": {"min": {"type": "integer", "minimum": 0, "maximum": 999}, "max": {"type": "integer", "minimum": 0, "maximum": 999}}},
     "wordId": {"enum": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois"]},
     "compareParams": {
@@ -221,7 +222,7 @@
       "properties": {
         "min": {"type": "integer", "minimum": 0, "maximum": 999},
         "max": {"type": "integer", "minimum": 0, "maximum": 999},
-        "form": {"enum": ["numbers", "sum-vs-number", "sums"], "description": "numbers : 47 ? 52 ; sum-vs-number : 8 + 5 ? 12 ; sums : 8 + 5 ? 6 + 7."},
+        "form": {"oneOf": [{"$ref": "#/definitions/compareForm"}, {"type": "array", "items": {"$ref": "#/definitions/compareForm"}, "minItems": 1}], "description": "numbers : 47 ? 52 ; sum-vs-number : 8 + 5 ? 12 ; sums : 8 + 5 ? 6 + 7. Une liste : les formes alternent d'une manche à l'autre."},
         "equalRate": {"type": "number", "minimum": 0, "maximum": 0.5, "description": "Part approximative de manches à égalité."},
         "maxGap": {"type": "integer", "minimum": 1, "description": "Écart maximal entre les deux côtés quand ils diffèrent."}
       }
