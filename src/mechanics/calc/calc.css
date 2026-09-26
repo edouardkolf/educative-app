@@ -1,0 +1,223 @@
+/* Vue « calcul » — classes préfixées calc-, aucun texte. */
+
+.calc-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  gap: clamp(12px, 3vh, 32px);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.calc-op-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calc-op {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 16px);
+  flex-wrap: wrap;
+}
+
+.calc-op__num {
+  font-size: clamp(48px, 14vw, 88px);
+  font-weight: 800;
+  color: var(--ink, #3d2c1e);
+  line-height: 1;
+  min-width: 1.1em;
+  text-align: center;
+}
+
+.calc-op__sign {
+  font-size: clamp(36px, 10vw, 64px);
+  font-weight: 800;
+  color: var(--ink, #3d2c1e);
+  line-height: 1;
+}
+
+/* La case à compléter pulse : elle attire l'œil (§9). */
+.calc-op__num--blank {
+  color: #ff8a3d;
+  background: #fff3e6;
+  border-radius: 16px;
+  padding: 0 0.12em;
+  animation: calc-pulse 1200ms ease-in-out infinite;
+}
+
+.calc-op-wrap--shake .calc-op__num--blank {
+  animation: calc-shake 320ms ease;
+}
+
+.calc-array {
+  display: grid;
+  gap: 6px;
+  max-width: min(70vw, 220px);
+}
+
+.calc-array__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink, #3d2c1e);
+  justify-self: center;
+}
+
+.calc-choices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.calc-choices--grid-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  justify-items: center;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.calc-choice {
+  width: 96px;
+  height: 96px;
+  min-width: 88px;
+  min-height: 88px;
+  padding: 0;
+  border-radius: var(--radius, 20px);
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--ink, #3d2c1e);
+  cursor: pointer;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.calc-choice:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.calc-choice:disabled {
+  cursor: default;
+}
+
+.calc-choice--wrong {
+  opacity: 0.35;
+}
+
+.calc-choice--shake {
+  animation: calc-shake 320ms ease;
+}
+
+.calc-choice--bounce {
+  animation: calc-bounce 500ms ease;
+}
+
+/* Pavé numérique enfant : tient sous l'opération sur un écran de téléphone en portrait. */
+.calc-keypad {
+  width: 100%;
+  max-width: 320px;
+}
+
+.calc-keypad__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.calc-key {
+  min-width: 64px;
+  min-height: 64px;
+  border-radius: var(--radius, 16px);
+  background: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink, #3d2c1e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.calc-key:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.calc-key:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.calc-key--ok {
+  background: #b8e6b0;
+}
+
+@keyframes calc-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes calc-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes calc-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.18);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+  80% {
+    transform: scale(1.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calc-op__num--blank,
+  .calc-choice--shake,
+  .calc-choice--bounce,
+  .calc-op-wrap--shake .calc-op__num--blank {
+    animation: none;
+  }
+}
