@@ -1,4 +1,5 @@
-// Statistiques d'un enfant : résumé global puis une carte par niveau du parcours (ARCHITECTURE §7).
+// Statistiques d'un enfant : résumé global, bilan par compétence, puis une carte par niveau du parcours (ARCHITECTURE §7).
+import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
 import { computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
@@ -6,8 +7,8 @@ import type { LevelStats, LevelStatus, SkillId } from '../engine';
 import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
 import type { LevelOverride, Profile } from '../storage';
 import { formatDateTime, formatDuration, formatPercentage } from './format';
-import { summarizeRuns } from './stats';
-import type { RunsSummary } from './stats';
+import { MIN_ROUNDS_FOR_VERDICT, STRONG_RATE, WEAK_RATE, summarizeBySkill, summarizeRuns } from './stats';
+import type { RunsSummary, SkillSummary, SkillVerdict } from './stats';
 import { describeError } from './util';
 
 type OverrideState = LevelOverride['state'] | null;
@@ -25,6 +26,14 @@ const SKILL_LABELS: Record<SkillId, string> = {
   categorization: 'Catégoriser',
   'color-mixing': 'Couleurs',
   shapes: 'Formes',
+};
+
+const VERDICT_LABELS: Record<SkillVerdict, string> = {
+  strong: 'Point fort',
+  ok: 'En cours',
+  weak: 'À consolider',
+  'too-few': 'Pas assez joué',
+  'not-played': 'Pas encore joué',
 };
 
 const STATUS_LABELS: Record<LevelStatus, string> = {
@@ -47,6 +56,7 @@ interface StatsData {
   trackTitle: string;
   levels: LevelRow[];
   summary: RunsSummary;
+  skills: SkillSummary[];
 }
 
 async function loadStats(profileId: string): Promise<StatsData> {
@@ -74,7 +84,11 @@ async function loadStats(profileId: string): Promise<StatsData> {
     };
   });
 
-  return { profile, trackTitle, levels, summary: summarizeRuns(runs) };
+  const skillLevels = levels.flatMap((l) =>
+    l.skill ? [{ levelId: l.levelId, skill: l.skill, completed: l.status === 'completed' }] : [],
+  );
+
+  return { profile, trackTitle, levels, summary: summarizeRuns(runs), skills: summarizeBySkill(runs, skillLevels) };
 }
 
 export function ChildStats(props: { profileId: string }) {
@@ -130,7 +144,7 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
-  const { profile, trackTitle, levels, summary } = data;
+  const { profile, trackTitle, levels, summary, skills } = data;
 
   return (
     <div className="pa-space">
@@ -157,6 +171,16 @@ export function ChildStats(props: { profileId: string }) {
           <span className="pa-stat__value">{formatDuration(summary.playTimeMs)}</span>
           <span className="pa-stat__label">Temps de jeu total</span>
         </div>
+      </section>
+
+      <section className="pa-section" data-testid="skill-stats">
+        <h2 className="pa-section__title">Compétences</h2>
+        <p className="pa-muted">De la mieux réussie à la moins bien réussie, au premier coup.</p>
+        <ul className="pa-skill-list">
+          {skills.map((s) => (
+            <SkillRow key={s.skill} summary={s} />
+          ))}
+        </ul>
       </section>
 
       <section className="pa-section">
@@ -243,6 +267,20 @@ export function ChildStats(props: { profileId: string }) {
         <h2 className="pa-section__title">Comment lire ces chiffres</h2>
         <ul>
           <li>
+            <strong>Compétences</strong> : les manches de tous les niveaux qui travaillent la même compétence, mises
+            ensemble. <strong>Point fort</strong> à partir de {Math.round(STRONG_RATE * 100)} % de réussite au premier
+            coup, <strong>à consolider</strong> sous {Math.round(WEAK_RATE * 100)} %. En dessous de{' '}
+            {MIN_ROUNDS_FOR_VERDICT} manches, on ne conclut pas.
+          </li>
+          <li>
+            Les niveaux d'une compétence deviennent plus difficiles au fil du parcours : un taux qui baisse alors que
+            les niveaux réussis augmentent, c'est souvent le signe qu'elle avance, pas qu'elle recule.
+          </li>
+          <li>
+            <strong>Temps médian</strong> : le temps typique pour trouver la bonne réponse. La médiane ne tient pas
+            compte des manches où l'enfant a été distrait.
+          </li>
+          <li>
             <strong>Essais</strong> : le nombre de fois où ce niveau a été lancé.
           </li>
           <li>
@@ -273,6 +311,48 @@ export function ChildStats(props: { profileId: string }) {
 
       <BackButton />
     </div>
+  );
+}
+
+function SkillRow(props: { summary: SkillSummary }) {
+  const { skill, verdict, firstTryRate, roundsPlayed, levels, levelsCompleted, medianRoundMs } = props.summary;
+  const readable = verdict !== 'too-few' && verdict !== 'not-played';
+  const percent = firstTryRate === null ? 0 : Math.round(firstTryRate * 100);
+  // Chaque fragment reste sur une ligne (« 6 s » ne se coupe pas) ; le retour à la ligne se fait entre eux.
+  const details = [
+    `${levelsCompleted} niveau${levelsCompleted > 1 ? 'x' : ''} réussi${levelsCompleted > 1 ? 's' : ''} sur ${levels}`,
+    `${roundsPlayed} manche${roundsPlayed > 1 ? 's' : ''}`,
+    ...(medianRoundMs !== null ? [`${formatDuration(medianRoundMs)} par manche`] : []),
+    ...(verdict === 'too-few' ? [`${formatPercentage(firstTryRate)} pour l'instant`] : []),
+  ];
+  return (
+    <li className={`pa-skill pa-skill--${verdict}`} data-testid={`skill-${skill}`}>
+      <div className="pa-skill__header">
+        <h3 className="pa-skill__name">{SKILL_LABELS[skill]}</h3>
+        <span className={`pa-badge pa-badge--${verdict}`}>{VERDICT_LABELS[verdict]}</span>
+      </div>
+      <div className="pa-skill__rate">
+        <div
+          className="pa-meter"
+          role="meter"
+          aria-label={`Réussite au premier coup en ${SKILL_LABELS[skill]}`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+        >
+          <span className="pa-meter__fill" style={{ width: `${percent}%` }} />
+        </div>
+        <span className="pa-skill__percent">{readable ? formatPercentage(firstTryRate) : formatPercentage(null)}</span>
+      </div>
+      <p className="pa-skill__details">
+        {details.map((part, i) => (
+          <Fragment key={part}>
+            {i > 0 && ' · '}
+            <span>{part}</span>
+          </Fragment>
+        ))}
+      </p>
+    </li>
   );
 }
 

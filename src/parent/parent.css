@@ -718,3 +718,116 @@
   border-radius: 12px;
   padding: 14px;
 }
+
+/* ---------- Bilan par compétence ---------- */
+
+.pa-skill-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pa-skill {
+  border: 1px solid var(--pa-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--pa-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pa-skill--too-few,
+.pa-skill--not-played {
+  background: var(--pa-surface);
+  border-style: dashed;
+}
+
+.pa-skill__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pa-skill__name {
+  font-size: 17px;
+}
+
+.pa-skill__rate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pa-skill__percent {
+  flex: none;
+  min-width: 3.5em;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pa-skill__details {
+  color: var(--pa-muted);
+}
+
+.pa-meter {
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--pa-border);
+  overflow: hidden;
+}
+
+.pa-meter__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pa-muted);
+}
+
+.pa-skill--strong .pa-meter__fill {
+  background: var(--pa-success);
+}
+
+.pa-skill--ok .pa-meter__fill {
+  background: var(--pa-primary);
+}
+
+.pa-skill--weak .pa-meter__fill {
+  background: #c2571a;
+}
+
+.pa-skill--too-few .pa-meter__fill,
+.pa-skill--not-played .pa-meter__fill {
+  width: 0 !important;
+}
+
+.pa-badge--strong {
+  background: var(--pa-success-bg);
+  color: var(--pa-success);
+}
+
+.pa-badge--ok {
+  background: #fff1db;
+  color: #7a4a00;
+}
+
+.pa-badge--weak {
+  background: #fdeadf;
+  color: #9a3f0c;
+}
+
+.pa-badge--too-few,
+.pa-badge--not-played {
+  background: var(--pa-border);
+  color: var(--pa-muted);
+}
+
+.pa-skill__details span {
+  white-space: nowrap;
+}

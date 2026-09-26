@@ -21,6 +21,7 @@ interface TrackJson {
 }
 interface LevelJson {
   rounds: number;
+  skill: string;
 }
 
 function readContentJson<T>(relativePath: string): T {
@@ -31,6 +32,7 @@ const TRACK = readContentJson<TrackJson>('content/tracks/ms.json');
 const SECOND_LEVEL_ID = TRACK.levels[1];
 if (!SECOND_LEVEL_ID) throw new Error('content/tracks/ms.json : le parcours doit avoir au moins 2 niveaux.');
 const SECOND_LEVEL_ROUNDS = readContentJson<LevelJson>(`content/levels/ms/${SECOND_LEVEL_ID}.json`).rounds;
+const SECOND_LEVEL_SKILL = readContentJson<LevelJson>(`content/levels/ms/${SECOND_LEVEL_ID}.json`).skill;
 
 // ---------- Garde-fou qualité : aucune erreur JS, aucun console.error pendant un test ----------
 
@@ -293,6 +295,11 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   // 1 manche ratée au 1er coup sur le total de manches du niveau (ex. 1 sur 4 → 75 %).
   const secondLevelFirstTryRate = Math.round(((SECOND_LEVEL_ROUNDS - 1) / SECOND_LEVEL_ROUNDS) * 100);
   await expect(statValue(card02, 'Taux de réussite')).toHaveText(`${secondLevelFirstTryRate} %`);
+
+  // Bilan par compétence : quelques manches seulement, donc pas de verdict ; les compétences non jouées suivent.
+  await expect(page.getByTestId('skill-patterns').locator('.pa-badge')).toHaveText('Pas assez joué');
+  await expect(page.getByTestId(`skill-${SECOND_LEVEL_SKILL}`).locator('.pa-badge')).toHaveText('Pas assez joué');
+  await expect(page.getByTestId('skill-shapes').locator('.pa-badge')).toHaveText('Pas encore joué');
 
   await page.screenshot({ path: shot('06-stats.png'), fullPage: true });
 
