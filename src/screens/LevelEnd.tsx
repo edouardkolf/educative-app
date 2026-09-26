@@ -3,10 +3,14 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { StarRow } from '../ui/StarRow';
 import { IconButton } from '../ui/IconButton';
 import { playFanfare, playStar } from '../ui/sound';
+import { WorldBackdrop } from './map/WorldBackdrop';
+import type { WorldId } from './map/layout';
 
 interface LevelEndProps {
   stars: 1 | 2 | 3;
   hasNext: boolean;
+  /** Monde du niveau terminé, en fond (voile plus léger que pendant la partie). */
+  world?: WorldId | null;
   onNext: () => void;
   onReplay: () => void;
   onToMap: () => void;
@@ -46,7 +50,7 @@ function makeConfetti(): ConfettiPiece[] {
   }));
 }
 
-export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap, onDone, timeUp = false }: LevelEndProps) {
+export function LevelEnd({ stars, world, hasNext, onNext, onReplay, onToMap, onDone, timeUp = false }: LevelEndProps) {
   const [shown, setShown] = useState(0);
   const [celebrate, setCelebrate] = useState(false);
   const confetti = useMemo(makeConfetti, []);
@@ -90,6 +94,7 @@ export function LevelEnd({ stars, hasNext, onNext, onReplay, onToMap, onDone, ti
 
   return (
     <div class="screen screen--level-end" data-testid="level-end" data-stars={shown}>
+      {world && <WorldBackdrop world={world} veil="soft" />}
       {celebrate && (
         <div class="level-end__confetti" aria-hidden="true">
           {confetti.map((piece, i) => (

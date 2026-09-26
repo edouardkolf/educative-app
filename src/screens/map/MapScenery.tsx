@@ -29,7 +29,7 @@ interface WorldTheme {
   bank: string;
 }
 
-const THEMES: Record<WorldId, WorldTheme> = {
+export const THEMES: Record<WorldId, WorldTheme> = {
   forest: {
     ground: '#b5d98a',
     patch: '#c4e39c',
@@ -62,7 +62,7 @@ const PATH_SHINE = '#fbf4e0';
 const FLOWER_COLORS = ['#ff8fab', '#ffd23f', '#ffffff', '#b48cf2'];
 
 /** Chaque sprite est dessiné avec son point d'appui au sol en (0, 0). */
-function Sprite({ kind, seed }: { kind: string; seed: number }): JSX.Element | null {
+export function Sprite({ kind, seed }: { kind: string; seed: number }): JSX.Element | null {
   switch (kind) {
     case 'tree':
       return (

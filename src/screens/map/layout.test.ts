@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BACKDROP_HEIGHT,
   BORDER_HALF,
   BORDER_SPACING,
+  DECOR_KINDS,
   LEVELS_PER_WORLD,
   NODE_SIZE,
   PATH_WIDTH,
@@ -14,6 +16,7 @@ import {
   pointBetweenNodes,
   pointOnSegment,
   pathWaypoints,
+  backdropDecor,
   placeDecor,
   samplePath,
   smoothPathD,
@@ -21,6 +24,7 @@ import {
   worldBands,
   worldIdAt,
   worldIndexForLevel,
+  WORLD_ORDER,
 } from './layout';
 
 const WIDTH = 412;
@@ -188,5 +192,24 @@ describe('décor', () => {
   it('est stable : même carte à chaque visite', () => {
     const band = bands[0]!;
     expect(placeDecor(band, WIDTH, samples, nodes)).toEqual(placeDecor(band, WIDTH, samples, nodes));
+  });
+});
+
+describe('backdropDecor', () => {
+  it('donne un fond garni, stable et propre à chaque monde', () => {
+    for (const world of WORLD_ORDER) {
+      const decor = backdropDecor(world);
+      expect(decor.length).toBeGreaterThan(12);
+      expect(backdropDecor(world)).toEqual(decor);
+      const allowed = new Set(DECOR_KINDS[world].map((k) => k.kind));
+      expect(decor.every((d) => allowed.has(d.kind))).toBe(true);
+    }
+    expect(backdropDecor('forest')).not.toEqual(backdropDecor('sea'));
+  });
+
+  it('couvre toute la hauteur du fond', () => {
+    const ys = backdropDecor('forest').map((d) => d.y);
+    expect(Math.min(...ys)).toBeLessThan(BACKDROP_HEIGHT * 0.2);
+    expect(Math.max(...ys)).toBeGreaterThan(BACKDROP_HEIGHT * 0.8);
   });
 });

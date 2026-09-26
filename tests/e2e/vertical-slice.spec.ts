@@ -326,6 +326,27 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
 
 // ==================== 3. Retour Android pendant une partie ====================
 
+test('« Suivant » : l’avatar avance sur la carte puis le niveau suivant s’ouvre', async ({ page }) => {
+  await onboardWithChild(page, 'Lina');
+  await chooseProfile(page, 'Lina');
+  await openLevel(page, 'ms-suite-01');
+  await expect(page.getByTestId('world-backdrop')).toHaveAttribute('data-world', 'forest');
+  await playPerfectly(page, 4);
+  await waitForLevelEndButtons(page);
+  await page.getByTestId('next').click();
+
+  // Carte : l'avatar voyage (un tap le sauterait), puis la partie du niveau suivant démarre seule.
+  await expect(page.getByTestId('map-traveller')).toBeVisible();
+  await expect(mapNode(page, SECOND_LEVEL_ID)).toHaveClass(/is-arrived/);
+  await expect(page).toHaveURL(new RegExp(`#/play/${SECOND_LEVEL_ID}$`));
+  await expect(currentRound(page)).toBeVisible();
+
+  // Retour arrière : la carte, pas la partie déjà terminée.
+  await page.goBack();
+  await expect(page).toHaveURL(/#\/map$/);
+  await expect(mapNode(page, SECOND_LEVEL_ID)).toHaveClass(/is-current/);
+});
+
 test('le bouton retour Android pendant une partie compte comme abandon', async ({ page }) => {
   await onboardWithChild(page, 'Lina');
   await chooseProfile(page, 'Lina');

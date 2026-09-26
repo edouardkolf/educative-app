@@ -415,3 +415,29 @@ export function signPosition(band: WorldBand, width: number, count: number): Poi
     y: band.bottom - BORDER_HALF - 12,
   };
 }
+
+/** Décor de fond d'une partie : une vue rapprochée du monde en cours (même dessins que la carte). */
+export const BACKDROP_WIDTH = 400;
+export const BACKDROP_HEIGHT = 800;
+const BACKDROP_CELL = 72;
+const BACKDROP_SCALE = 1.5;
+
+/** Même hasard déterministe à chaque partie d'un monde : le fond ne « saute » pas d'un niveau à l'autre. */
+export function backdropDecor(world: WorldId): Decor[] {
+  const rng = createRng(0xbacd + WORLD_ORDER.indexOf(world) * 104729);
+  const kinds = DECOR_KINDS[world];
+  const placed: Array<Decor & { radius: number }> = [];
+  for (let y = BACKDROP_CELL; y < BACKDROP_HEIGHT + BACKDROP_CELL / 2; y += BACKDROP_CELL) {
+    for (let x = BACKDROP_CELL / 2; x < BACKDROP_WIDTH; x += BACKDROP_CELL) {
+      if (rng.next() > 0.7) continue;
+      const kind = pickWeighted(kinds, rng.next());
+      const scale = BACKDROP_SCALE * (0.85 + rng.next() * 0.35);
+      const radius = kind.radius * scale;
+      const px = x + (rng.next() - 0.5) * BACKDROP_CELL * 0.8;
+      const py = y + (rng.next() - 0.5) * BACKDROP_CELL * 0.8;
+      if (!placed.every((d) => (d.x - px) ** 2 + (d.y - py) ** 2 >= (d.radius + radius) ** 2 * 0.7)) continue;
+      placed.push({ kind: kind.kind, x: px, y: py, scale, flip: rng.next() < 0.5, radius });
+    }
+  }
+  return placed.sort((a, b) => a.y - b.y).map(({ radius: _r, ...d }) => d);
+}

@@ -16,7 +16,9 @@ import type { RoundRecord } from '../storage/types';
 import { abandonRun, completeRun, listOverrides, listRuns, recordRound, startRun } from '../storage';
 import { getMechanic } from '../mechanics';
 import { navigate } from '../app/routes';
-import { worldIndexForLevel } from './map/layout';
+import { worldIdAt, worldIndexForLevel, type WorldId } from './map/layout';
+import { WorldBackdrop } from './map/WorldBackdrop';
+import { requestHop } from './map/hop';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
 import { playError, playSuccess } from '../ui/sound';
@@ -43,6 +45,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   /** Le niveau suivant ouvre un nouveau monde : « Suivant » passe par la carte, qui fête l'arrivée. */
   const [nextInNewWorld, setNextInNewWorld] = useState(false);
   const [runToken, setRunToken] = useState(0);
+  /** Monde du niveau, dessiné en fond (voilé) pour rappeler où l'on est sur la carte. */
+  const [world, setWorld] = useState<WorldId | null>(null);
 
   const runIdRef = useRef<string | null>(null);
   const endedRef = useRef(false);
@@ -81,6 +85,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       }
       const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
       if (cancelled) return;
+      const index = track.levels.indexOf(levelId);
+      setWorld(index >= 0 ? worldIdAt(worldIndexForLevel(index)) : null);
       const state = computeLevelStates(track, runs, overrides).find((s) => s.levelId === levelId);
       if (!state || state.status === 'locked') {
         setPhase('not-found');
@@ -351,10 +357,16 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
     return (
       <LevelEnd
         stars={stars}
+        world={world}
         hasNext={nextLevelId !== null}
-        onNext={() =>
-          nextLevelId && navigate(nextInNewWorld ? { name: 'map' } : { name: 'play', levelId: nextLevelId })
-        }
+        onNext={() => {
+          if (!nextLevelId) return;
+          // Toujours par la carte : l'avatar y avance jusqu'au niveau suivant (sensation de progression),
+          // ou y fête l'arrivée dans un nouveau monde. `replace` : le retour arrière depuis le niveau
+          // suivant ramène à la carte, pas à la partie terminée.
+          if (!nextInNewWorld) requestHop({ fromLevelId: levelId, toLevelId: nextLevelId });
+          navigate({ name: 'map' }, { replace: true });
+        }}
         onReplay={() => setRunToken((t) => t + 1)}
         onToMap={() => navigate({ name: 'map' })}
         // F4 : temps déjà écoulé pendant l'écran des étoiles → ni Suivant ni Rejouer (seulement les
@@ -378,6 +390,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
 
   return (
     <div class="screen screen--play">
+      {world && <WorldBackdrop world={world} />}
       <div class="play-topbar">
         <IconButton size={56} onClick={quit} aria-label="Quitter" data-testid="quit">
           🏠
