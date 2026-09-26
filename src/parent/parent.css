@@ -831,3 +831,19 @@
 .pa-skill__details span {
   white-space: nowrap;
 }
+
+/* Part que donnerait le hasard : hachurée par-dessus le début de la barre. */
+.pa-meter {
+  position: relative;
+}
+
+.pa-meter__chance {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px 0 0 999px;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 3px, transparent 3px 7px);
+}
+
+.pa-skill__warning {
+  color: #9a3f0c;
+}

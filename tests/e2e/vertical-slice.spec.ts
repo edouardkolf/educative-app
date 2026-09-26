@@ -300,6 +300,11 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   await expect(page.getByTestId('skill-patterns').locator('.pa-badge')).toHaveText('Pas assez joué');
   await expect(page.getByTestId(`skill-${SECOND_LEVEL_SKILL}`).locator('.pa-badge')).toHaveText('Pas assez joué');
   await expect(page.getByTestId('skill-shapes').locator('.pa-badge')).toHaveText('Pas encore joué');
+  // Même bilan, regroupé par jeu.
+  await page.getByTestId('group-by-mechanic').click();
+  await expect(page.getByTestId('game-sequence').locator('.pa-badge')).toHaveText('Pas assez joué');
+  await expect(page.getByTestId('game-builder').locator('.pa-badge')).toHaveText('Pas encore joué');
+  await page.getByTestId('group-by-skill').click();
 
   await page.screenshot({ path: shot('06-stats.png'), fullPage: true });
 

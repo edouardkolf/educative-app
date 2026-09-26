@@ -8,3 +8,4 @@ export { createRng } from './rng';
 export { countMisses, computeStars } from './scoring';
 export { computeLevelStates, hasCompleted } from './progress';
 export { computeLevelStats } from './stats';
+export { chanceOfFirstTry, aboveChance } from './chance';

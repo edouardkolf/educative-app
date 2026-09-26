@@ -1,14 +1,14 @@
-// Statistiques d'un enfant : résumé global, bilan par compétence, puis une carte par niveau du parcours (ARCHITECTURE §7).
+// Statistiques d'un enfant : résumé global, bilan par compétence ou par jeu, puis une carte par niveau du parcours (ARCHITECTURE §7).
 import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
-import { computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
-import type { LevelStats, LevelStatus, SkillId } from '../engine';
+import { chanceOfFirstTry, computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
+import type { LevelStats, LevelStatus, MechanicId, SkillId } from '../engine';
 import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
 import type { LevelOverride, Profile } from '../storage';
 import { formatDateTime, formatDuration, formatPercentage } from './format';
-import { MIN_ROUNDS_FOR_VERDICT, STRONG_RATE, WEAK_RATE, summarizeBySkill, summarizeRuns } from './stats';
-import type { RunsSummary, SkillSummary, SkillVerdict } from './stats';
+import { CHANCE_SCORE, MIN_ROUNDS_FOR_VERDICT, summarizeByGroup, summarizeRuns } from './stats';
+import type { GroupLevel, GroupSummary, RunsSummary, SkillVerdict } from './stats';
 import { describeError } from './util';
 
 type OverrideState = LevelOverride['state'] | null;
@@ -26,6 +26,22 @@ const SKILL_LABELS: Record<SkillId, string> = {
   categorization: 'Catégoriser',
   'color-mixing': 'Couleurs',
   shapes: 'Formes',
+};
+
+const MECHANIC_LABELS: Record<MechanicId, string> = {
+  sequence: 'Suites',
+  count: 'Compter',
+  'odd-one-out': "Trouver l'intrus",
+  'color-mix': 'Labo des couleurs',
+  sort: 'Trieur magique',
+  builder: 'Constructeur',
+};
+
+type GroupBy = 'skill' | 'mechanic';
+
+const GROUP_BY_LABELS: Record<GroupBy, string> = {
+  skill: 'Par compétence',
+  mechanic: 'Par jeu',
 };
 
 const VERDICT_LABELS: Record<SkillVerdict, string> = {
@@ -46,6 +62,8 @@ interface LevelRow {
   levelId: string;
   title: string;
   skill: SkillId | null;
+  mechanic: MechanicId | null;
+  chance: number;
   status: LevelStatus;
   stats: LevelStats;
   override: OverrideState;
@@ -56,7 +74,8 @@ interface StatsData {
   trackTitle: string;
   levels: LevelRow[];
   summary: RunsSummary;
-  skills: SkillSummary[];
+  skills: GroupSummary<SkillId>[];
+  games: GroupSummary<MechanicId>[];
 }
 
 async function loadStats(profileId: string): Promise<StatsData> {
@@ -78,17 +97,28 @@ async function loadStats(profileId: string): Promise<StatsData> {
       levelId,
       title: level?.title ?? levelId,
       skill: level?.skill ?? null,
+      mechanic: level?.mechanic ?? null,
+      chance: level ? chanceOfFirstTry(level) : 0,
       status,
       stats: computeLevelStats(levelId, runs),
       override: overrideByLevel.get(levelId) ?? null,
     };
   });
 
-  const skillLevels = levels.flatMap((l) =>
-    l.skill ? [{ levelId: l.levelId, skill: l.skill, completed: l.status === 'completed' }] : [],
-  );
+  const groupLevels = <G extends string>(key: (l: LevelRow) => G | null): Array<GroupLevel & { group: G }> =>
+    levels.flatMap((l) => {
+      const group = key(l);
+      return group ? [{ levelId: l.levelId, group, completed: l.status === 'completed', chance: l.chance }] : [];
+    });
 
-  return { profile, trackTitle, levels, summary: summarizeRuns(runs), skills: summarizeBySkill(runs, skillLevels) };
+  return {
+    profile,
+    trackTitle,
+    levels,
+    summary: summarizeRuns(runs),
+    skills: summarizeByGroup(runs, groupLevels((l) => l.skill)),
+    games: summarizeByGroup(runs, groupLevels((l) => l.mechanic)),
+  };
 }
 
 export function ChildStats(props: { profileId: string }) {
@@ -96,6 +126,7 @@ export function ChildStats(props: { profileId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [overridePending, setOverridePending] = useState<string | null>(null);
   const [overrideError, setOverrideError] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<GroupBy>('skill');
 
   useEffect(() => {
     let cancelled = false;
@@ -144,7 +175,11 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
-  const { profile, trackTitle, levels, summary, skills } = data;
+  const { profile, trackTitle, levels, summary, skills, games } = data;
+  const groups: Array<{ key: string; label: string; testId: string; summary: GroupSummary }> =
+    groupBy === 'skill'
+      ? skills.map((g) => ({ key: g.group, label: SKILL_LABELS[g.group], testId: `skill-${g.group}`, summary: g }))
+      : games.map((g) => ({ key: g.group, label: MECHANIC_LABELS[g.group], testId: `game-${g.group}`, summary: g }));
 
   return (
     <div className="pa-space">
@@ -174,11 +209,27 @@ export function ChildStats(props: { profileId: string }) {
       </section>
 
       <section className="pa-section" data-testid="skill-stats">
-        <h2 className="pa-section__title">Compétences</h2>
-        <p className="pa-muted">De la mieux réussie à la moins bien réussie, au premier coup.</p>
+        <h2 className="pa-section__title">Points forts et points à travailler</h2>
+        <div className="pa-segmented" role="group" aria-label="Regrouper">
+          {(['skill', 'mechanic'] as const).map((choice) => (
+            <button
+              key={choice}
+              type="button"
+              className="pa-segmented__option"
+              data-testid={`group-by-${choice}`}
+              aria-pressed={groupBy === choice}
+              onClick={() => setGroupBy(choice)}
+            >
+              {GROUP_BY_LABELS[choice]}
+            </button>
+          ))}
+        </div>
+        <p className="pa-muted">
+          Du mieux au moins bien réussi du premier coup, une fois retirée la part que donnerait le hasard.
+        </p>
         <ul className="pa-skill-list">
-          {skills.map((s) => (
-            <SkillRow key={s.skill} summary={s} />
+          {groups.map((g) => (
+            <GroupRow key={g.key} label={g.label} testId={g.testId} summary={g.summary} />
           ))}
         </ul>
       </section>
@@ -267,10 +318,14 @@ export function ChildStats(props: { profileId: string }) {
         <h2 className="pa-section__title">Comment lire ces chiffres</h2>
         <ul>
           <li>
-            <strong>Compétences</strong> : les manches de tous les niveaux qui travaillent la même compétence, mises
-            ensemble. <strong>Point fort</strong> à partir de {Math.round(STRONG_RATE * 100)} % de réussite au premier
-            coup, <strong>à consolider</strong> sous {Math.round(WEAK_RATE * 100)} %. En dessous de{' '}
-            {MIN_ROUNDS_FOR_VERDICT} manches, on ne conclut pas.
+            <strong>Points forts et points à travailler</strong> : les manches de tous les niveaux d'une même compétence
+            (ou d'un même jeu), mises ensemble. En dessous de {MIN_ROUNDS_FOR_VERDICT} manches, on ne conclut pas.
+          </li>
+          <li>
+            <strong>Part du hasard</strong> (zone hachurée) : en tapant au hasard, on trouve déjà parfois la bonne
+            réponse, une fois sur deux s'il n'y a que 2 choix, une fois sur quatre s'il y en a 4. Seule la partie de la
+            barre au-delà de cette zone montre ce que l'enfant sait vraiment : c'est elle qui décide du classement. Sur
+            un jeu à 3 choix, « point fort » correspond à environ 80 % de réussite, « à consolider » à moins de 60 %.
           </li>
           <li>
             Les niveaux d'une compétence deviennent plus difficiles au fil du parcours : un taux qui baisse alors que
@@ -314,33 +369,40 @@ export function ChildStats(props: { profileId: string }) {
   );
 }
 
-function SkillRow(props: { summary: SkillSummary }) {
-  const { skill, verdict, firstTryRate, roundsPlayed, levels, levelsCompleted, medianRoundMs } = props.summary;
+function GroupRow(props: { label: string; testId: string; summary: GroupSummary }) {
+  const { label, testId } = props;
+  const { verdict, firstTryRate, chanceRate, score, roundsPlayed, levels, levelsCompleted, medianRoundMs } =
+    props.summary;
   const readable = verdict !== 'too-few' && verdict !== 'not-played';
   const percent = firstTryRate === null ? 0 : Math.round(firstTryRate * 100);
+  const chancePercent = chanceRate === null ? 0 : Math.round(chanceRate * 100);
   // Chaque fragment reste sur une ligne (« 6 s » ne se coupe pas) ; le retour à la ligne se fait entre eux.
   const details = [
     `${levelsCompleted} niveau${levelsCompleted > 1 ? 'x' : ''} réussi${levelsCompleted > 1 ? 's' : ''} sur ${levels}`,
     `${roundsPlayed} manche${roundsPlayed > 1 ? 's' : ''}`,
     ...(medianRoundMs !== null ? [`${formatDuration(medianRoundMs)} par manche`] : []),
+    ...(readable && chanceRate !== null ? [`hasard : ${formatPercentage(chanceRate)}`] : []),
     ...(verdict === 'too-few' ? [`${formatPercentage(firstTryRate)} pour l'instant`] : []),
   ];
   return (
-    <li className={`pa-skill pa-skill--${verdict}`} data-testid={`skill-${skill}`}>
+    <li className={`pa-skill pa-skill--${verdict}`} data-testid={testId}>
       <div className="pa-skill__header">
-        <h3 className="pa-skill__name">{SKILL_LABELS[skill]}</h3>
+        <h3 className="pa-skill__name">{label}</h3>
         <span className={`pa-badge pa-badge--${verdict}`}>{VERDICT_LABELS[verdict]}</span>
       </div>
       <div className="pa-skill__rate">
         <div
           className="pa-meter"
           role="meter"
-          aria-label={`Réussite au premier coup en ${SKILL_LABELS[skill]}`}
+          aria-label={`Réussite au premier coup en ${label}, dont ${chancePercent} % que donnerait le hasard`}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
         >
           <span className="pa-meter__fill" style={{ width: `${percent}%` }} />
+          {readable && chancePercent > 0 && (
+            <span className="pa-meter__chance" style={{ width: `${Math.min(percent, chancePercent)}%` }} />
+          )}
         </div>
         <span className="pa-skill__percent">{readable ? formatPercentage(firstTryRate) : formatPercentage(null)}</span>
       </div>
@@ -352,6 +414,11 @@ function SkillRow(props: { summary: SkillSummary }) {
           </Fragment>
         ))}
       </p>
+      {readable && score !== null && score < CHANCE_SCORE && (
+        <p className="pa-skill__warning">
+          Pour l'instant, pas mieux que des réponses données au hasard.
+        </p>
+      )}
     </li>
   );
 }
