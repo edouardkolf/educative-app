@@ -42,7 +42,7 @@ function SentenceWithHole({ sentence }: { sentence: string }) {
   return (
     <p class="spl-sentence">
       {before}
-      <span class="spl-hole">▢</span>
+      <span class="spl-hole" aria-label="mot manquant" />
       {after}
     </p>
   );
@@ -193,8 +193,11 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
   };
 
   const validate = () => {
-    if (solved || !allFilled) return;
-    const composed = placed.map((i) => tiles[i as number]).join('');
+    if (solved || shake || !allFilled) return;
+    // L'apostrophe d'aujourd'hui est déjà posée à l'affichage : on la réinsère pour comparer au mot exact.
+    const composed = placed
+      .map((i, k) => tiles[i as number] + (k === apostropheAfterIndex ? "'" : ''))
+      .join('');
     const isCorrect = composed === round.answer;
     onChoose(composed);
     if (!isCorrect) {
@@ -223,7 +226,7 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
                 onClick={() => clearBox(boxIndex)}
                 disabled={placed[boxIndex] === null}
               >
-                {placed[boxIndex] !== null ? tiles[placed[boxIndex] as number] : '▢'}
+                {placed[boxIndex] !== null ? tiles[placed[boxIndex] as number] : '\u00a0'}
               </button>
               {apostropheAfterIndex === boxIndex && <span class="spl-apostrophe">’</span>}
             </span>
@@ -239,7 +242,7 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
               type="button"
               class="spl-tile"
               data-choice={`tile-${i}`}
-              disabled={usedIndices.has(i)}
+              disabled={shake || usedIndices.has(i)}
               onClick={() => placeInFirstEmpty(i)}
             >
               {letter}
@@ -252,7 +255,7 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
         type="button"
         class="spl-validate"
         data-choice="tiles-ok"
-        disabled={solved || !allFilled}
+        disabled={solved || shake || !allFilled}
         onClick={validate}
       >
         ✓

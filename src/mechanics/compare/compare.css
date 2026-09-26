@@ -22,6 +22,7 @@
 
 .cmp-card {
   flex: 1 1 0;
+  min-width: 0;
   max-width: 140px;
   min-height: 96px;
   display: flex;
@@ -49,7 +50,7 @@
 }
 
 .cmp-card__value--sum {
-  font-size: 30px;
+  font-size: clamp(20px, 7vw, 30px);
 }
 
 .cmp-slot {

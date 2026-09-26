@@ -5,11 +5,17 @@
   "skill": "multiplication",
   "objective": "Apprendre la table de 4 avec l'aide d'un quadrillage de points.",
   "mechanic": "calc",
-  "rounds": 6,
+  "rounds": 4,
   "params": {
     "operation": "mul",
-    "a": {"min": 4, "max": 4},
-    "b": {"min": 1, "max": 4},
+    "a": {
+      "min": 4,
+      "max": 4
+    },
+    "b": {
+      "min": 1,
+      "max": 4
+    },
     "unknown": "result",
     "answer": "choices",
     "choices": 4,

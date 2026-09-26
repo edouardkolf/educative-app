@@ -69,7 +69,7 @@ Facteurs jamais > 4 ; chaque niveau commence par un tutoriel ou une mécanique c
 
 ## Notes
 
-**Paramètres communs** : 5 ou 6 manches pour les niveaux réguliers (5 pour les tutoriels), 8 manches pour les défis de consolidation. Seuils d'étoiles par défaut : 0 raté du premier coup = 3 étoiles, 1 raté = 2 étoiles, sinon 1.
+**Paramètres communs** : 5 ou 6 manches pour les niveaux réguliers (5 pour les tutoriels ; 4 pour les tables 01 à 03, qui n'ont que 4 faits chacune), 8 manches pour les défis de consolidation. Seuils d'étoiles par défaut : 0 raté du premier coup = 3 étoiles, 1 raté = 2 étoiles, sinon 1.
 
 **Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-tables-04, ce1-tables-05, ce1-mots-07, ce1-mots-08 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
 

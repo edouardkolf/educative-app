@@ -116,21 +116,21 @@ function Keypad({
   );
 
   const appendDigit = (digit: string) => {
-    if (solved) return;
+    if (solved || shaking) return;
     setTyped((current) => {
       if (current.length >= MAX_KEYPAD_DIGITS) return current;
-      if (current === '' && digit === '0') return current; // pas de zéro en tête
+      if (current === '0') return current; // pas de zéro en tête (mais « 0 » seul est une réponse possible)
       return current + digit;
     });
   };
 
   const removeDigit = () => {
-    if (solved) return;
+    if (solved || shaking) return;
     setTyped((current) => current.slice(0, -1));
   };
 
   const submit = () => {
-    if (solved || typed === '') return;
+    if (solved || shaking || typed === '') return;
     const value = typed;
     // Faux même resoumis à l'identique : l'animation est locale, indépendante de wrongChoices
     // (le Set ne change pas de contenu quand on retape le même nombre faux).
@@ -172,7 +172,7 @@ function Keypad({
           type="button"
           class="calc-key calc-key--ok"
           data-choice="key-ok"
-          disabled={solved || typed === ''}
+          disabled={solved || shaking || typed === ''}
           onClick={submit}
         >
           ✓

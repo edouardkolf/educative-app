@@ -94,6 +94,7 @@ function buildTrapPool(letters: readonly string[]): string[] {
   for (const letter of letters) {
     const base = stripAccent(letter);
     for (const variant of ACCENT_VARIANTS[base] ?? []) if (variant !== letter) pool.add(variant);
+    if (base !== letter) pool.add(base); // l'oubli d'accent : l'erreur la plus fréquente au CE1
     for (const variant of CONSONANT_CONFUSIONS[base] ?? []) if (variant !== letter) pool.add(variant);
     if (counts.get(letter) === 1 && /[bcdfgjklmnpqrstvwxz]/.test(letter)) pool.add(letter);
   }

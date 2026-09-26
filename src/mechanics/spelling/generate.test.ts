@@ -138,3 +138,16 @@ describe('spelling.generateRounds — mode tiles', () => {
     }
   });
 });
+
+describe("tiles : aujourd'hui", () => {
+  it("les lettres dans l'ordre, apostrophe réinsérée à sa place, redonnent exactement la réponse", () => {
+    for (let seed = 0; seed < 50; seed += 1) {
+      const rounds = generateRounds({ words: ['aujourdhui'], mode: 'tiles', sentence: false, extraTiles: 2 }, 3, createRng(seed));
+      for (const round of rounds) {
+        const data = round.data as Extract<typeof round.data, { mode: 'tiles' }>;
+        const composed = data.letters.map((l, k) => l + (k === data.apostropheAfterIndex ? "'" : '')).join('');
+        expect(composed).toBe(round.answer);
+      }
+    }
+  });
+});

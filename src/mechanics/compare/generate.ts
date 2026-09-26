@@ -138,11 +138,13 @@ function buildSums(min: number, max: number, maxGap: number | undefined, wanted:
   }
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
-    const candidates = candidatesForRelation(min, max, first.value, wanted, true, maxGap);
+    // Nouvelle première somme à chaque essai : une somme au bord de la plage n'a parfois aucun partenaire valide.
+    const anchor = attempt === 0 ? first : randomSum(min, max, rng);
+    const candidates = candidatesForRelation(min, max, anchor.value, wanted, true, maxGap);
     if (candidates.length > 0) {
       const targetValue = rng.pick(candidates);
       const [a, b] = forceSplit(targetValue, rng);
-      return { left: sideFromSplit(first.a, first.b), right: sideFromSplit(a, b) };
+      return { left: sideFromSplit(anchor.a, anchor.b), right: sideFromSplit(a, b) };
     }
   }
   // Repli déterministe : reconstruit les deux sommes aux extrémités sûres de la plage plutôt que

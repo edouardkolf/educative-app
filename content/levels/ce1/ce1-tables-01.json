@@ -5,12 +5,18 @@
   "skill": "multiplication",
   "objective": "Apprendre la table de 2 avec l'aide d'un quadrillage de points.",
   "mechanic": "calc",
-  "rounds": 5,
+  "rounds": 4,
   "tutorial": true,
   "params": {
     "operation": "mul",
-    "a": {"min": 2, "max": 2},
-    "b": {"min": 1, "max": 4},
+    "a": {
+      "min": 2,
+      "max": 2
+    },
+    "b": {
+      "min": 1,
+      "max": 4
+    },
     "unknown": "result",
     "answer": "choices",
     "choices": 3,
