@@ -3,7 +3,7 @@
   "id": "ce1-tables-02",
   "title": "Table de 3 avec quadrillage",
   "skill": "multiplication",
-  "objective": "Apprendre la table de 3 avec l'aide d'un quadrillage de points.",
+  "objective": "Apprendre 3 × 2 à 3 × 5 avec l'aide d'un quadrillage de points.",
   "mechanic": "calc",
   "rounds": 4,
   "params": {
@@ -13,8 +13,8 @@
       "max": 3
     },
     "b": {
-      "min": 1,
-      "max": 4
+      "min": 2,
+      "max": 5
     },
     "unknown": "result",
     "answer": "choices",

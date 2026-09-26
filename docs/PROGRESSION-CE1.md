@@ -48,31 +48,35 @@ Groupe B : afin, aujourd'hui, autour, autant, autrefois
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-sous-01 | 2–10 - 1–5, réponse parmi choix, **tutoriel** | Premiers calculs, reconnaissance du résultat |
-| 2 | ce1-sous-02 | 11–19 - 1–5, sans emprunt, choix | Premiers deux chiffres, sans emprunt |
-| 3 | ce1-sous-03 | 11–18 - 2–9, avec emprunt, clavier | Passage en emprunt, production (clavier) |
-| 4 | ce1-sous-04 | 20–99 - 1–9, emprunt quelconque, clavier | Nombres plus grands, emprunt mixte |
-| 5 | ce1-sous-05 | 30–99 - 10–40, sans emprunt, clavier, **8 manches** | Deux chiffres sans emprunt : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 6 | ce1-sous-06 | 5–15 - 1–9, opérande manquant, clavier | Réversibilité : trouver le nombre manquant |
+| 1 | ce1-sous-01 | 15–89 − 1–8, sans retenue, choix, **tutoriel** | Deux chiffres dès le départ (37 − 4) |
+| 2 | ce1-sous-02 | 21–91 − 2–9, avec retenue, choix | Passer la dizaine inférieure (43 − 7) |
+| 3 | ce1-sous-03 | 21–95 − 2–9, retenue quelconque, clavier | Production du résultat au pavé |
+| 4 | ce1-sous-04 | 35–99 − 11–33, sans retenue, choix | Deux chiffres − deux chiffres : dizaines avec dizaines |
+| 5 | ce1-sous-05 | 35–99 − 11–33, sans retenue, clavier, **8 manches** | Même calcul, en production (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 6 | ce1-sous-06 | 20–60 − ? = …, nombre manquant, clavier | Réversibilité : 41 − ? = 36 |
+| 7 | ce1-sous-07 | 40–95 − 12–38, avec retenue, clavier, **8 manches** | Sommet : deux chiffres avec retenue (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 
 ## Tables de multiplication
+
+Sans × 1, jusqu'à 4 × 4 et 3 × 5 (`maxProduct: 16` exclut 4 × 5). Les propositions fausses sont les voisins
+dans les tables (3 × 4 → 9, 15, 8, 16) et la confusion × / +, jamais une erreur de dizaine.
 
 Facteurs jamais > 4 ; chaque niveau commence par un tutoriel ou une mécanique claire.
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-tables-01 | Table de 2, quadrillage, choix, **tutoriel** | Découverte des groupes de 2 avec aide visuelle |
-| 2 | ce1-tables-02 | Table de 3, quadrillage, choix | Table de 3 avec quadrillage |
-| 3 | ce1-tables-03 | Table de 4, quadrillage, choix | Table de 4 avec quadrillage |
-| 4 | ce1-tables-04 | Tables 1–4 mélangées, sans quadrillage, choix, **8 manches** | Toutes les tables sans aide visuelle : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 5 | ce1-tables-05 | Tables 2–4, clavier, **8 manches** | Production sans choix : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 6 | ce1-tables-06 | Tables 2–4, facteur manquant, choix | Réversibilité : trouver le facteur manquant |
+| 1 | ce1-tables-01 | 2 × 2 à 2 × 5, quadrillage, choix, **tutoriel**, 4 manches | Table de 2 avec aide visuelle |
+| 2 | ce1-tables-02 | 3 × 2 à 3 × 5, quadrillage, choix, 4 manches | Table de 3 avec aide visuelle |
+| 3 | ce1-tables-03 | Tables de 2 à 4 mélangées, quadrillage, 4 choix | Mélange avec appui |
+| 4 | ce1-tables-04 | Les 8 résultats jusqu'à 4 × 4 et 3 × 5, sans quadrillage, **8 manches** | Mémorisation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 5 | ce1-tables-05 | Mêmes tables, au pavé, **8 manches** | Production de mémoire (seuils : ≤1 raté = 3★, ≤2 = 2★) |
+| 6 | ce1-tables-06 | Facteur manquant (3 × ? = 12), 4 choix | Réversibilité |
 
 ## Notes
 
 **Paramètres communs** : 5 ou 6 manches pour les niveaux réguliers (5 pour les tutoriels ; 4 pour les tables 01 à 03, qui n'ont que 4 faits chacune), 8 manches pour les défis de consolidation. Seuils d'étoiles par défaut : 0 raté du premier coup = 3 étoiles, 1 raté = 2 étoiles, sinon 1.
 
-**Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-tables-04, ce1-tables-05, ce1-mots-07, ce1-mots-08, ce1-mots-09 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
+**Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-sous-07, ce1-tables-04, ce1-tables-05, ce1-mots-07, ce1-mots-08, ce1-mots-09 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
 
 **À observer dans les statistiques** : un taux de réussite au premier coup sous 50 % sur deux parties signale une marche trop haute. Possible : ajouter un niveau intermédiaire ou assouplir temporairement depuis l'espace parent.
 

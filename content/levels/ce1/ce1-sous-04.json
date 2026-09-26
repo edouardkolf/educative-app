@@ -1,17 +1,24 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-sous-04",
-  "title": "Soustractions de nombres plus grands (20–99 - 1–9)",
+  "title": "Deux chiffres − deux chiffres, sans retenue (choix)",
   "skill": "subtraction",
-  "objective": "Soustraire avec emprunt quelconque sur des nombres de deux chiffres.",
+  "objective": "Soustraire deux nombres à deux chiffres sans retenue, dizaines avec dizaines et unités avec unités (58 − 23).",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
     "operation": "sub",
-    "a": {"min": 20, "max": 99},
-    "b": {"min": 1, "max": 9},
-    "carry": "any",
+    "a": {
+      "min": 35,
+      "max": 99
+    },
+    "b": {
+      "min": 11,
+      "max": 33
+    },
+    "carry": "without",
     "unknown": "result",
-    "answer": "keypad"
+    "answer": "choices",
+    "choices": 4
   }
 }

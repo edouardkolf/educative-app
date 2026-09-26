@@ -1,24 +1,25 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-tables-03",
-  "title": "Table de 4 avec quadrillage",
+  "title": "Tables de 2, 3 et 4 avec quadrillage",
   "skill": "multiplication",
-  "objective": "Apprendre la table de 4 avec l'aide d'un quadrillage de points.",
+  "objective": "Mélanger les tables de 2, 3 et 4 (jusqu'à 4 × 4 et 3 × 5), avec le quadrillage en appui.",
   "mechanic": "calc",
-  "rounds": 4,
+  "rounds": 6,
   "params": {
     "operation": "mul",
     "a": {
-      "min": 4,
+      "min": 2,
       "max": 4
     },
     "b": {
-      "min": 1,
-      "max": 4
+      "min": 2,
+      "max": 5
     },
     "unknown": "result",
     "answer": "choices",
     "choices": 4,
-    "showArray": true
+    "showArray": true,
+    "maxProduct": 16
   }
 }

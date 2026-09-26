@@ -1,17 +1,24 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-tables-06",
-  "title": "Trouver le facteur manquant (2–4 × ? = ...)",
+  "title": "Le facteur manquant",
   "skill": "multiplication",
-  "objective": "Trouver le facteur manquant dans une multiplication pour développer la réversibilité.",
+  "objective": "Trouver le facteur manquant (3 × ? = 12) dans les tables jusqu'à 4 × 4 et 3 × 5.",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
     "operation": "mul",
-    "a": {"min": 2, "max": 4},
-    "b": {"min": 1, "max": 4},
+    "a": {
+      "min": 2,
+      "max": 4
+    },
+    "b": {
+      "min": 2,
+      "max": 5
+    },
     "unknown": "operand",
     "answer": "choices",
-    "choices": 4
+    "choices": 4,
+    "maxProduct": 16
   }
 }

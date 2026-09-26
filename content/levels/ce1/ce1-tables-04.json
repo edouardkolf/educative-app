@@ -1,18 +1,25 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-tables-04",
-  "title": "Toutes les tables (1–4) sans quadrillage",
+  "title": "Tables mélangées, sans quadrillage",
   "skill": "multiplication",
-  "objective": "Maîtriser les tables de 1 à 4 sans aide visuelle : défi pour consolidation.",
+  "objective": "Retrouver les 8 résultats des tables jusqu'à 4 × 4 et 3 × 5, sans appui visuel.",
   "mechanic": "calc",
   "rounds": 8,
   "params": {
     "operation": "mul",
-    "a": {"min": 1, "max": 4},
-    "b": {"min": 1, "max": 4},
+    "a": {
+      "min": 2,
+      "max": 4
+    },
+    "b": {
+      "min": 2,
+      "max": 5
+    },
     "unknown": "result",
     "answer": "choices",
-    "choices": 4
+    "choices": 4,
+    "maxProduct": 16
   },
   "stars": {
     "maxMissesFor3": 1,

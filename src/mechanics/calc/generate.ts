@@ -63,6 +63,7 @@ export function buildPool(params: CalcParams): Array<[number, number]> {
     for (let b = params.b.min; b <= params.b.max; b += 1) {
       if (params.operation === 'sub' && a < b) continue;
       if (!carryOk(params, a, b)) continue;
+      if (params.operation === 'mul' && params.maxProduct !== undefined && a * b > params.maxProduct) continue;
       pool.push([a, b]);
     }
   }
@@ -84,9 +85,8 @@ function computeExtras(params: CalcParams, a: number, b: number, result: number,
     if (params.operation === 'add') extras.push(Math.abs(a - b));
     else if (params.operation === 'sub') extras.push(a + b);
     else {
-      if (b - 1 >= 0) extras.push(a * (b - 1));
-      extras.push(a * (b + 1));
-      extras.push(a + b);
+      // Les voisins dans les tables (3 × 4 → 3 × 3, 3 × 5, 2 × 4, 4 × 4) et la confusion × / +.
+      extras.push(a * (b - 1), a * (b + 1), (a - 1) * b, (a + 1) * b, a + b);
     }
   } else {
     // unknown = "operand" (b caché) : confusion plausible avec a, ou avec le résultat affiché.
@@ -106,15 +106,20 @@ function buildChoices(
 ): { id: string; value: number }[] {
   const count = params.choices ?? 3;
   const pool = new Set<number>();
+  // Facteur manquant : ni 0 ni 1 (hors des tables travaillées, jamais plausibles).
+  const floor = params.operation === 'mul' && params.unknown === 'operand' ? Math.min(2, params.b.min) : 0;
   const add = (v: number) => {
-    if (v >= 0 && v !== unknownValue) pool.add(v);
+    if (v >= floor && v !== unknownValue) pool.add(v);
   };
   add(unknownValue - 1);
   add(unknownValue + 1);
   add(unknownValue - 2);
   add(unknownValue + 2);
-  add(unknownValue - 10);
-  add(unknownValue + 10);
+  if (params.operation !== 'mul') {
+    // Erreur de dizaine (retenue oubliée ou comptée deux fois) : n'a de sens qu'en addition et soustraction.
+    add(unknownValue - 10);
+    add(unknownValue + 10);
+  }
   for (const extra of computeExtras(params, a, b, result, unknownValue)) add(extra);
 
   let delta = 3;

@@ -192,6 +192,8 @@ export interface CalcParams {
   choices?: number;
   /** mul uniquement : affiche le produit en quadrillage de points (a rangées de b), comme appui. */
   showArray?: boolean;
+  /** mul uniquement : produit maximal (ex. 16 : jusqu'à 4 × 4 et 3 × 5, sans 4 × 5). Absent : aucune limite. */
+  maxProduct?: number;
 }
 
 /** Mots invariables du CE1 (identifiants sans accent ; l'orthographe exacte est dans src/mechanics/spelling/words.ts). */

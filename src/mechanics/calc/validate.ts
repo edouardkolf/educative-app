@@ -35,6 +35,10 @@ export function validateParams(p: CalcParams): string[] {
     }
   }
 
+  if (p.maxProduct !== undefined && p.operation !== 'mul') {
+    errors.push('calc : "maxProduct" (produit maximal) n\'a de sens qu\'en multiplication.');
+  }
+
   if (p.showArray) {
     if (p.operation !== 'mul') {
       errors.push('calc : "showArray" (quadrillage de points) n\'a de sens qu\'en multiplication.');

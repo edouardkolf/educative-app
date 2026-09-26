@@ -1,16 +1,23 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-sous-01",
-  "title": "Premières soustractions (2–10 - 1–5)",
+  "title": "Deux chiffres − un chiffre, sans retenue",
   "skill": "subtraction",
-  "objective": "Ôter un petit nombre et reconnaître le résultat parmi des choix.",
+  "objective": "Retirer un nombre à un chiffre d'un nombre à deux chiffres, sans passer la dizaine (37 − 4).",
   "mechanic": "calc",
   "rounds": 5,
   "tutorial": true,
   "params": {
     "operation": "sub",
-    "a": {"min": 2, "max": 10},
-    "b": {"min": 1, "max": 5},
+    "a": {
+      "min": 15,
+      "max": 89
+    },
+    "b": {
+      "min": 1,
+      "max": 8
+    },
+    "carry": "without",
     "unknown": "result",
     "answer": "choices",
     "choices": 3

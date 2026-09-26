@@ -1,16 +1,22 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-sous-03",
-  "title": "Soustractions avec emprunt (11–18 - 2–9)",
+  "title": "Deux chiffres − un chiffre, au pavé",
   "skill": "subtraction",
-  "objective": "Soustraire avec emprunt et taper le résultat.",
+  "objective": "Calculer et taper le résultat d'un nombre à deux chiffres moins un nombre à un chiffre, avec ou sans retenue.",
   "mechanic": "calc",
   "rounds": 6,
   "params": {
     "operation": "sub",
-    "a": {"min": 11, "max": 18},
-    "b": {"min": 2, "max": 9},
-    "carry": "with",
+    "a": {
+      "min": 21,
+      "max": 95
+    },
+    "b": {
+      "min": 2,
+      "max": 9
+    },
+    "carry": "any",
     "unknown": "result",
     "answer": "keypad"
   }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from '../../engine/rng';
 import type { CalcParams } from '../../engine/types';
-import { addHasCarry, generateRounds, subHasBorrow } from './generate';
+import { addHasCarry, buildPool, generateRounds, subHasBorrow } from './generate';
 
 const SEEDS = Array.from({ length: 200 }, (_, i) => i + 1);
 
@@ -181,5 +181,18 @@ describe('calc.generateRounds', () => {
       choices: 3,
     };
     expect(() => generateRounds(params, 6, createRng(1))).not.toThrow();
+  });
+
+  it('mul avec maxProduct 16 : jusqu’à 4 × 4 et 3 × 5, jamais 4 × 5 ni × 1', () => {
+    const params: CalcParams = {
+      operation: 'mul', a: { min: 2, max: 4 }, b: { min: 2, max: 5 }, unknown: 'result', answer: 'keypad', maxProduct: 16,
+    };
+    const facts = new Set(buildPool(params).map(([a, b]) => [a, b].sort().join('×')));
+    expect([...facts].sort()).toEqual(['2×2', '2×3', '2×4', '2×5', '3×3', '3×4', '3×5', '4×4']);
+    for (let seed = 0; seed < 100; seed += 1) {
+      for (const round of generateRounds(params, 8, createRng(seed))) {
+        expect(Number(round.answer)).toBeLessThanOrEqual(16);
+      }
+    }
   });
 });

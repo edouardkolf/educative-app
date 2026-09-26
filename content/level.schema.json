@@ -240,7 +240,8 @@
         "unknown": {"enum": ["result", "operand"], "description": "result : 7 + 5 = ? ; operand : 7 + ? = 12."},
         "answer": {"enum": ["choices", "keypad"]},
         "choices": {"type": "integer", "minimum": 3, "maximum": 4},
-        "showArray": {"type": "boolean", "description": "mul : quadrillage de points en appui."}
+        "showArray": {"type": "boolean", "description": "mul : quadrillage de points en appui."},
+        "maxProduct": {"type": "integer", "minimum": 1, "description": "mul : produit maximal (16 = jusqu'à 4 × 4 et 3 × 5, sans 4 × 5)."}
       }
     },
     "spellingParams": {

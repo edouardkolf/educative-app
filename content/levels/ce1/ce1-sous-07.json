@@ -1,22 +1,22 @@
 {
   "$schema": "../../level.schema.json",
-  "id": "ce1-sous-05",
-  "title": "Deux chiffres − deux chiffres, sans retenue, au pavé",
+  "id": "ce1-sous-07",
+  "title": "Deux chiffres − deux chiffres, avec retenue",
   "skill": "subtraction",
-  "objective": "Calculer et taper la différence de deux nombres à deux chiffres, sans retenue.",
+  "objective": "Calculer et taper la différence de deux nombres à deux chiffres avec une retenue (62 − 27).",
   "mechanic": "calc",
   "rounds": 8,
   "params": {
     "operation": "sub",
     "a": {
-      "min": 35,
-      "max": 99
+      "min": 40,
+      "max": 95
     },
     "b": {
-      "min": 11,
-      "max": 33
+      "min": 12,
+      "max": 38
     },
-    "carry": "without",
+    "carry": "with",
     "unknown": "result",
     "answer": "keypad"
   },

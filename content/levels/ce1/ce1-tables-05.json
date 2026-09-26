@@ -1,17 +1,24 @@
 {
   "$schema": "../../level.schema.json",
   "id": "ce1-tables-05",
-  "title": "Tables 2–4 avec clavier numérique",
+  "title": "Tables mélangées, au pavé",
   "skill": "multiplication",
-  "objective": "Calculer les tables de 2 à 4 et taper le résultat : défi pour consolidation.",
+  "objective": "Taper de mémoire les résultats des tables jusqu'à 4 × 4 et 3 × 5.",
   "mechanic": "calc",
   "rounds": 8,
   "params": {
     "operation": "mul",
-    "a": {"min": 2, "max": 4},
-    "b": {"min": 1, "max": 4},
+    "a": {
+      "min": 2,
+      "max": 4
+    },
+    "b": {
+      "min": 2,
+      "max": 5
+    },
     "unknown": "result",
-    "answer": "keypad"
+    "answer": "keypad",
+    "maxProduct": 16
   },
   "stars": {
     "maxMissesFor3": 1,
