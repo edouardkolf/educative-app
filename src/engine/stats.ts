@@ -10,6 +10,7 @@ export function computeLevelStats(levelId: string, runs: Run[]): LevelStats {
     (run) => run.status === 'abandoned' && (run.endReason === 'quit' || run.endReason === 'closed'),
   ).length;
   const interrupted = levelRuns.filter((run) => run.endReason === 'time-up').length;
+  const outOfLives = levelRuns.filter((run) => run.endReason === 'out-of-lives').length;
   const replays = levelRuns.filter((run) => run.replay).length;
 
   let roundsPlayed = 0;
@@ -34,6 +35,7 @@ export function computeLevelStats(levelId: string, runs: Run[]): LevelStats {
     completed,
     abandoned,
     interrupted,
+    outOfLives,
     replays,
     roundsPlayed,
     firstTryRate: roundsPlayed === 0 ? null : firstTries / roundsPlayed,

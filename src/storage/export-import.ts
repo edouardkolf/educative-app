@@ -87,7 +87,7 @@ function isRunStatus(value: unknown): value is RunStatus {
 }
 
 function isEndReason(value: unknown): value is EndReason {
-  return value === 'quit' || value === 'closed' || value === 'time-up';
+  return value === 'quit' || value === 'closed' || value === 'time-up' || value === 'out-of-lives';
 }
 
 function isStars(value: unknown): value is Run['stars'] {

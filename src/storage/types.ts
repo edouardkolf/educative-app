@@ -42,9 +42,10 @@ export type RunStatus = 'in_progress' | 'completed' | 'abandoned';
  * Pourquoi une partie s'est arrêtée avant la fin :
  * - "quit" : l'enfant a tapé sur « retour à la carte » (abandon volontaire) ;
  * - "closed" : l'app a été fermée ou rechargée pendant la partie (détecté au lancement suivant) ;
- * - "time-up" : le minuteur ou le quota parent a interrompu la partie (ce n'est PAS un abandon).
+ * - "time-up" : le minuteur ou le quota parent a interrompu la partie (ce n'est PAS un abandon) ;
+ * - "out-of-lives" : l'enfant a perdu toutes ses vies (trop de manches ratées au premier coup).
  */
-export type EndReason = 'quit' | 'closed' | 'time-up';
+export type EndReason = 'quit' | 'closed' | 'time-up' | 'out-of-lives';
 
 /** Une partie = un lancement de niveau. C'est l'« essai » des statistiques. */
 export interface Run {

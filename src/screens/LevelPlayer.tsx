@@ -10,6 +10,7 @@ import {
   getNextLevelId,
   getTrackOrDefault,
   hasCompleted,
+  livesFor,
 } from '../engine';
 import type { ChoiceId, Level, Round } from '../engine/types';
 import type { RoundRecord } from '../storage/types';
@@ -25,10 +26,13 @@ import { playError, playSuccess } from '../ui/sound';
 import { IconButton } from '../ui/IconButton';
 import { TutorialHand } from '../ui/TutorialHand';
 import { LevelEnd } from './LevelEnd';
+import { LevelFailed } from './LevelFailed';
 
-type Phase = 'loading' | 'not-found' | 'unavailable' | 'playing' | 'end';
+type Phase = 'loading' | 'not-found' | 'unavailable' | 'playing' | 'end' | 'failed';
 
 const NO_ANSWER_TIMEOUT_MS = 60_000;
+/** Dernière vie perdue : le temps de voir le choix se griser et le cœur disparaître avant l'écran d'échec. */
+const OUT_OF_LIVES_DELAY_MS = 1200;
 
 export function LevelPlayer({ levelId }: { levelId: string }) {
   const { profile } = useProfile();
@@ -47,6 +51,9 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   const [runToken, setRunToken] = useState(0);
   /** Monde du niveau, dessiné en fond (voilé) pour rappeler où l'on est sur la carte. */
   const [world, setWorld] = useState<WorldId | null>(null);
+  /** Vies de la partie : une perdue par manche ratée au premier coup (§9). */
+  const [maxLives, setMaxLives] = useState(0);
+  const [lives, setLives] = useState(0);
 
   const runIdRef = useRef<string | null>(null);
   const endedRef = useRef(false);
@@ -65,6 +72,9 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   /** F10 : millisecondes de la manche en cours passées page cachée (écran éteint), à soustraire de `durationMs`. */
   const roundPausedMsRef = useRef(0);
   const roundHiddenSinceRef = useRef<number | null>(null);
+  /** Lu dans `onChoose` : deux taps rapprochés ne doivent pas lire la même valeur périmée. */
+  const livesRef = useRef(0);
+  const outOfLivesTimeoutRef = useRef<number | null>(null);
 
   // Charge le niveau et démarre une partie. Se relance au changement de niveau ou de `runToken`
   // (rejouer) ; le nettoyage abandonne toute partie encore en cours (bouton maison, retour Android,
@@ -122,6 +132,9 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       lockAfterStarsRef.current = false;
       levelRef.current = lvl;
       totalRoundsRef.current = generated.length;
+      livesRef.current = livesFor(lvl);
+      setMaxLives(livesRef.current);
+      setLives(livesRef.current);
       roundStartRef.current = performance.now();
       roundPausedMsRef.current = 0;
       roundHiddenSinceRef.current = document.visibilityState === 'hidden' ? performance.now() : null;
@@ -147,6 +160,10 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
         lockAfterStarsTimeoutRef.current = null;
       }
       lockAfterStarsRef.current = false;
+      if (outOfLivesTimeoutRef.current !== null) {
+        window.clearTimeout(outOfLivesTimeoutRef.current);
+        outOfLivesTimeoutRef.current = null;
+      }
       if (!endedRef.current && runIdRef.current) {
         endedRef.current = true;
         void endInterruptedRun(runIdRef.current);
@@ -162,7 +179,10 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
   async function endInterruptedRun(runId: string) {
     const allRoundsRecorded = totalRoundsRef.current > 0 && recordsRef.current.length >= totalRoundsRef.current;
     try {
-      if (allRoundsRecorded && levelRef.current) {
+      if (livesRef.current <= 0) {
+        // Dernière vie perdue puis maison/retour pendant le délai avant l'écran d'échec : c'est un échec, pas un abandon.
+        await abandonRun(runId, 'out-of-lives');
+      } else if (allRoundsRecorded && levelRef.current) {
         const finalStars = computeStars(levelRef.current, countMisses(recordsRef.current));
         await completeRun(runId, finalStars);
       } else {
@@ -226,6 +246,28 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
     }
     clearSoftEnd(); // F1 : la fin douce est traitée, la garde de route peut reprendre la main.
     navigate({ name: 'locked' }, { replace: true });
+  };
+
+  // Plus de vies : la partie s'arrête (jamais comptée en abandon). Minuteur déjà écoulé → écran de fin
+  // de session, comme une fin douce ; sinon écran d'échec, où l'enfant choisit rejouer ou la carte.
+  const outOfLives = async () => {
+    outOfLivesTimeoutRef.current = null;
+    if (endedRef.current) return;
+    endedRef.current = true;
+    const runId = runIdRef.current;
+    if (runId) {
+      try {
+        await abandonRun(runId, 'out-of-lives');
+      } catch (err) {
+        console.error('abandonRun (out-of-lives) failed', err);
+      }
+    }
+    if (timeUpRef.current) {
+      clearSoftEnd();
+      navigate({ name: 'locked' }, { replace: true });
+      return;
+    }
+    setPhase('failed');
   };
 
   const advance = () => {
@@ -319,9 +361,18 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       const delay = mechanicForDelay?.solvedDelayMs;
       window.setTimeout(advance, (typeof delay === 'function' ? delay(round) : delay) ?? 900);
     } else {
-      firstTryRef.current = false;
       playError();
       setWrongChoices((prev) => new Set(prev).add(choice));
+      // Une vie par manche ratée, pas par tap : les essais suivants de la même manche sont gratuits.
+      if (firstTryRef.current) {
+        firstTryRef.current = false;
+        livesRef.current -= 1;
+        setLives(livesRef.current);
+        if (livesRef.current <= 0) {
+          busyRef.current = true;
+          outOfLivesTimeoutRef.current = window.setTimeout(() => void outOfLives(), OUT_OF_LIVES_DELAY_MS);
+        }
+      }
     }
   };
 
@@ -351,6 +402,12 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
           🗺️
         </IconButton>
       </div>
+    );
+  }
+
+  if (phase === 'failed') {
+    return (
+      <LevelFailed world={world} onReplay={() => setRunToken((t) => t + 1)} onToMap={() => navigate({ name: 'map' })} />
     );
   }
 
@@ -402,6 +459,13 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
               key={i}
               class={`play-progress__dot${i < roundIndex ? ' is-done' : ''}${i === roundIndex ? ' is-current' : ''}`}
             />
+          ))}
+        </div>
+        <div class="play-lives" data-testid="lives" data-lives={lives} aria-label={`${lives} vies`}>
+          {Array.from({ length: maxLives }, (_, i) => (
+            <span key={i} class={`play-lives__heart${i < lives ? '' : ' is-lost'}`} aria-hidden="true">
+              ❤️
+            </span>
           ))}
         </div>
       </div>

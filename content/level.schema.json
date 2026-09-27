@@ -32,6 +32,12 @@
         "maxMissesFor2": { "type": "integer", "minimum": 0 }
       }
     },
+    "lives": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Vies de la partie : une perdue par manche ratée au premier coup, retour à l'écran d'échec à 0. Absent : calculé selon le nombre de choix et de manches (2 à 4)."
+    },
     "audio": {
       "type": "object",
       "description": "Réservé aux consignes audio (V2). Laisser absent ou vide en V1.",

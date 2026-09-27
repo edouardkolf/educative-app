@@ -48,6 +48,7 @@ Premier lancement → Espace parent : création du code → ajout des enfants
        ▲  appui long 2 s sur le cadenas                 │ bouton maison = abandon
        └── Espace parent (code) ◀                       ▼
                                         Fin de niveau : étoiles une par une ▶ suivant / rejouer / carte
+                                        Plus de vies : visage triste ▶ rejouer / carte (jamais de relance automatique)
 Minuteur ou quota atteint → Écran de fin (bloquant, même après rechargement) → code parent
 ```
 
@@ -55,7 +56,7 @@ Minuteur ou quota atteint → Écran de fin (bloquant, même après rechargement
 
 - Un niveau = un fichier JSON conforme à `content/level.schema.json`. Types TypeScript équivalents : `src/engine/types.ts`.
 - Champs communs : `id` (= nom du fichier), `title` et `objective` (lus par le parent), `skill` (compétence visée),
-  `mechanic`, `rounds`, `tutorial`, `stars`, `audio` (vide en V1), `params` (paramètres de difficulté propres à la mécanique).
+  `mechanic`, `rounds`, `tutorial`, `stars`, `lives`, `audio` (vide en V1), `params` (paramètres de difficulté propres à la mécanique).
 - Un parcours liste les niveaux dans l'ordre de la carte et fixe `minStarsToUnlockNext`.
 - Le contenu est **intégré au build** (`import.meta.glob`), donc disponible hors ligne. `npm run validate:content` vérifie :
   le schéma, id = nom de fichier, chaque niveau référencé une seule fois, les références existantes, `min ≤ max`,
@@ -71,7 +72,9 @@ Le **moteur** (écran Partie, `src/screens/LevelPlayer.tsx`) est générique :
 2. il ouvre une partie (`startRun`, avec `replay = hasCompleted(...)`) ;
 3. il affiche `mechanic.View` avec `{ round, wrongChoices, solved, onChoose }` ;
 4. sur `onChoose` : si c'est juste, il joue le son de réussite, passe `solved` à vrai et enregistre la manche, puis passe à la suivante après environ 900 ms.
-   Si c'est faux, il joue le son d'erreur douce et ajoute le choix à `wrongChoices` (grisé) ; l'enfant réessaie, sans limite ;
+   Si c'est faux, il joue le son d'erreur douce et ajoute le choix à `wrongChoices` (grisé) ; l'enfant réessaie.
+   La première erreur d'une manche coûte une vie (les suivantes, dans la même manche, sont gratuites). À 0 vie, la partie
+   s'arrête (`out-of-lives`) et l'écran d'échec propose rejouer ou la carte ;
 5. en fin de niveau, il calcule `computeStars`, appelle `completeRun` et affiche l'écran des étoiles.
 
 Une **mécanique** (`src/mechanics/<id>/`) ne connaît ni le stockage ni les sons :
@@ -102,6 +105,7 @@ Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persis
 | **Taux de réussite** | Manches réussies **du premier coup** / manches jouées. Mesure la compétence, pas la persévérance : comme l'enfant réessaie jusqu'à trouver, « terminer » ne dit rien. |
 | **Abandons** | Parties quittées avant la fin : bouton maison (`quit`) ou app fermée pendant la partie (`closed`, détecté au lancement suivant). |
 | **Interruptions** | Parties coupées par le minuteur ou le quota (`time-up`). Ce ne sont **pas** des abandons. |
+| **Vies perdues** | Parties arrêtées faute de vies (`out-of-lives`). Ce ne sont pas des abandons. |
 | **Rejeux volontaires** | Parties lancées sur un niveau déjà réussi (≥ 1 étoile) avant le lancement. |
 | **Meilleures étoiles** | Maximum d'étoiles sur les parties terminées. |
 | **Temps de jeu** | Somme des durées de manches (hors écrans de transition). |
@@ -133,7 +137,14 @@ Au démarrage, l'app appelle `navigator.storage.persist()`. Le résultat (persis
   (sélectionner puis taper la cible équivaut à y déposer l'objet/la pièce), pour rester jouables même sans geste de
   glissé maîtrisé. Dans `builder`, un emplacement peut être visuellement plus petit que 72 px (la silhouette doit
   rester fidèle à la figure) : sa zone tapable est alors agrandie en creux, en restant centrée sur lui.
-- Erreur jamais punitive : son doux, léger tremblement, le choix se grise, on réessaie. Aucune vie, aucun compte à rebours visible, aucune récompense aléatoire.
+- Erreur douce : son doux, léger tremblement, le choix se grise, on réessaie. Aucun compte à rebours visible, aucune récompense aléatoire.
+- **Vies** (cœurs en haut à droite) : taper au hasard finit toujours par trouver, les vies y mettent une limite.
+  Une vie en moins par manche ratée du premier coup (pas par tap : un enfant qui se trompe sur un jeu à 4 choix
+  n'est pas pénalisé trois fois). À 0 vie : écran d'échec (😢), rejouer ou carte, jamais de relance automatique —
+  un enfant fatigué qui tape au hasard est invité à s'arrêter plutôt qu'à avancer sur la carte sans le mériter.
+  Nombre de vies (`livesFor`, `src/engine/lives.ts`) : le plus généreux entre 2 et 4 qui laisse terminer au plus
+  1 partie sur 4 en tapant au hasard, d'après le nombre de choix et de manches. En pratique : 2 vies sur les jeux
+  à 2 choix et les niveaux courts à 3 choix, 3 à 4 vies ailleurs. Un niveau peut forcer la valeur avec `lives`.
 - Sons obligatoires : réussite, erreur douce, étoile gagnée.
 - Éléments interactifs qui attirent l'œil : la case à compléter pulse, les choix sont grands et contrastés.
 - Pas de zoom, pas de sélection de texte, pas de menu contextuel, pas de tirer-pour-rafraîchir.

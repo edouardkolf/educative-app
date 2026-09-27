@@ -282,6 +282,10 @@ export function ChildStats(props: { profileId: string }) {
                   <dd>{level.stats.interrupted}</dd>
                 </div>
                 <div className="pa-stat-grid__item">
+                  <dt>Vies perdues</dt>
+                  <dd>{level.stats.outOfLives}</dd>
+                </div>
+                <div className="pa-stat-grid__item">
                   <dt>Rejeux</dt>
                   <dd>{level.stats.replays}</dd>
                 </div>
@@ -353,7 +357,7 @@ export function ChildStats(props: { profileId: string }) {
           </li>
           <li>
             <strong>Taux de réussite</strong> : la part des manches réussies dès le premier essai — ça mesure la
-            maîtrise, pas la persévérance, puisque l'enfant réessaie toujours jusqu'à trouver.
+            maîtrise, pas la persévérance, puisque l'enfant peut réessayer jusqu'à trouver.
           </li>
           <li>
             <strong>Abandons</strong> : les parties quittées avant la fin (bouton maison ou application fermée).
@@ -361,6 +365,10 @@ export function ChildStats(props: { profileId: string }) {
           <li>
             <strong>Interruptions</strong> : les parties coupées par le minuteur ou le quota — ce n'est pas un
             abandon.
+          </li>
+          <li>
+            <strong>Vies perdues</strong> : les parties arrêtées parce que l'enfant a raté trop de manches (une vie
+            en moins par manche ratée du premier coup). Souvent de la fatigue : c'est le signal d'une pause.
           </li>
           <li>
             <strong>Rejeux</strong> : les parties relancées sur un niveau déjà réussi, par envie d'y rejouer.

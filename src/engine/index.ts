@@ -1,5 +1,5 @@
 // CONTRAT — API du moteur (logique pure, sans interface ni stockage).
-// Les signatures font foi ; les corps sont répartis dans content.ts, rng.ts, scoring.ts, progress.ts, stats.ts.
+// Les signatures font foi ; les corps sont répartis dans content.ts, rng.ts, scoring.ts, progress.ts, stats.ts, lives.ts.
 
 export * from './types';
 
@@ -9,3 +9,4 @@ export { countMisses, computeStars } from './scoring';
 export { computeLevelStates, hasCompleted } from './progress';
 export { computeLevelStats } from './stats';
 export { chanceOfFirstTry, aboveChance } from './chance';
+export { livesFor, randomPassRate } from './lives';

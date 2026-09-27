@@ -24,6 +24,7 @@ Un niveau = un fichier JSON. Un parcours = l'ordre des niveaux sur la carte de l
 | `rounds` | Nombre de manches | 4 (avec tutoriel) ou 5+ |
 | `tutorial` | Affiche la main animée (optionnel) | `true` ou absent |
 | `stars` | Seuils d'étoiles (optionnel) | Défaut : 0 raté → 3 ⭐, 1 raté → 2 ⭐ |
+| `lives` | Vies de la partie, 1 à 5 (optionnel) | Défaut : calculé selon choix et manches (2 à 4), voir ARCHITECTURE §9 |
 | `audio` | Réservé aux consignes audio V2 | Absent en V1 |
 | `params` | Paramètres de difficulté (méca-spécifiques) | Voir ci-dessous |
 

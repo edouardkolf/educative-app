@@ -308,6 +308,8 @@ interface LevelBase {
   tutorial?: boolean;
   /** Seuils d'étoiles, en nombre de manches ratées au premier essai. Défaut : { maxMissesFor3: 0, maxMissesFor2: 1 }. */
   stars?: { maxMissesFor3: number; maxMissesFor2: number };
+  /** Vies de la partie (1 à 5) : une perdue par manche ratée au premier coup. Absent : calculé par `livesFor`. */
+  lives?: number;
   /** Réservé aux consignes audio (V2). Vide en V1. */
   audio?: { instruction?: string };
 }
@@ -409,6 +411,8 @@ export interface LevelStats {
   abandoned: number;
   /** Parties interrompues par le minuteur ou le quota (endReason "time-up") : pas des abandons. */
   interrupted: number;
+  /** Parties arrêtées faute de vies (endReason "out-of-lives"). */
+  outOfLives: number;
   /** Rejeux volontaires : parties lancées alors que le niveau était déjà réussi. */
   replays: number;
   /** Manches jouées jusqu'à la bonne réponse, toutes parties confondues. */

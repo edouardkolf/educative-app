@@ -33,6 +33,7 @@ describe('computeLevelStats', () => {
       completed: 0,
       abandoned: 0,
       interrupted: 0,
+      outOfLives: 0,
       replays: 0,
       roundsPlayed: 0,
       firstTryRate: null,
@@ -61,10 +62,12 @@ describe('computeLevelStats', () => {
       makeRun({ status: 'abandoned', endReason: 'quit', stars: 0 }),
       makeRun({ status: 'abandoned', endReason: 'closed', stars: 0 }),
       makeRun({ status: 'abandoned', endReason: 'time-up', stars: 0 }),
+      makeRun({ status: 'abandoned', endReason: 'out-of-lives', stars: 0 }),
     ];
     const stats = computeLevelStats('l1', runs);
     expect(stats.abandoned).toBe(2);
     expect(stats.interrupted).toBe(1);
+    expect(stats.outOfLives).toBe(1);
   });
 
   it('replays = parties lancées alors que le niveau était déjà réussi', () => {
