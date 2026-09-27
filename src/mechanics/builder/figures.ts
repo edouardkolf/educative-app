@@ -22,7 +22,7 @@ export interface FigureSlot {
 }
 
 /** Animation de fin (quand tous les emplacements sont remplis), CSS pures — voir builder.css. */
-export type EndAnimation = 'pop' | 'slide-right' | 'slide-up' | 'hop';
+export type EndAnimation = 'pop' | 'slide-right' | 'slide-left' | 'slide-up' | 'hop';
 
 export interface Figure {
   id: FigureId;
@@ -82,7 +82,7 @@ const ROCKET: Figure = {
 
 const FISH: Figure = {
   id: 'fish',
-  endAnimation: 'slide-right', // s'échappe en nageant
+  endAnimation: 'slide-left', // s'échappe en nageant, tête la première (il regarde à gauche)
   slots: [
     { shape: 'circle', w: 50, h: 50, x: 45, y: 50, color: 'orange' },
     { shape: 'triangle', w: 26, h: 30, x: 80, y: 50, color: 'blue' },

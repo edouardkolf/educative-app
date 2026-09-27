@@ -7,6 +7,7 @@ import { COLOR_HEX } from '../../ui/palette';
 import { playBoing, playDing } from '../../ui/sound';
 import { resolvePlacement, shapesMatch, type SlotTarget } from './snap';
 import type { BuilderRoundData } from './types';
+import { FigureIllustration } from './Illustration';
 import './builder.css';
 
 /** Tolérance de la dépose en glisser-déposer : 15 % de la largeur de la figure. */
@@ -21,6 +22,16 @@ const MIN_HIT_PX = 72;
  * pièces de même forme mais de tailles différentes seraient indiscernables (seule la taille compte). */
 const TRAY_LARGEST_PCT = 78;
 
+/** Figure complète : la dernière pièce s'emboîte, puis l'objet « devient vrai » (illustration),
+ * vit un instant (fumée, flammes, clignotants…), puis part (décolle, prend le large…).
+ * Le total doit rester sous solvedDelayMs (index.ts). */
+const BECOME_REAL_MS = 450;
+const LEAVE_MS = BECOME_REAL_MS + 1800;
+/** Étincelles de la transformation (angles en degrés). */
+const SPARKLE_ANGLES = [0, 36, 72, 108, 144, 180, 216, 252, 288, 324];
+
+type Stage = 'building' | 'real' | 'leaving';
+
 /** Départ de l'animation de pose : là où la pièce a été lâchée (ou tapée), relatif à l'emplacement. */
 interface SnapFrom {
   x: number;
@@ -29,7 +40,7 @@ interface SnapFrom {
 }
 
 export function BuilderView({ round, solved, onChoose }: MechanicViewProps<BuilderRoundData>) {
-  const { slots, pieces, endAnimation } = round.data;
+  const { slots, pieces, endAnimation, figureId } = round.data;
 
   const [filled, setFilled] = useState<Record<string, string>>({}); // slotId -> pieceId
   const [snapFrom, setSnapFrom] = useState<Record<string, SnapFrom>>({}); // slotId -> départ de l'animation
@@ -40,6 +51,7 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
   const [animatedOffset, setAnimatedOffset] = useState<Record<string, boolean>>({});
   const [failing, setFailing] = useState<string | null>(null);
   const [ended, setEnded] = useState(false);
+  const [stage, setStage] = useState<Stage>('building');
   /** Largeur (px) du carré figure, mesurée : convertit le repère 100×100 des slots en pixels pour
    * séparer taille visuelle fidèle (la silhouette) et zone tapable agrandie (≥ 72 px, §9). */
   const [figurePx, setFigurePx] = useState(320);
@@ -109,6 +121,8 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
     const filledCount = Object.keys(filled).length + 1;
     if (filledCount >= slots.length) {
       setEnded(true);
+      schedule(() => setStage('real'), BECOME_REAL_MS);
+      schedule(() => setStage('leaving'), LEAVE_MS);
       if (!doneRef.current) {
         doneRef.current = true;
         onChoose('done'); // toutes les manches faites : le moteur passe `solved` à vrai
@@ -215,7 +229,12 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
 
   return (
     <div class="bld-view">
-      <div ref={figureRef} class={`bld-figure${ended ? ` bld-figure--${endAnimation}` : ''}`}>
+      <div
+        ref={figureRef}
+        class={`bld-figure${stage !== 'building' ? ' bld-figure--real' : ''}${
+          stage === 'leaving' ? ` bld-figure--${endAnimation}` : ''
+        }`}
+      >
         {slots.map((slot) => {
           const isFilled = Boolean(filled[slot.id]);
           const color = isFilled ? COLOR_HEX[slot.color] : undefined;
@@ -256,9 +275,19 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
             </button>
           );
         })}
+        {stage !== 'building' && (
+          <>
+            <FigureIllustration figureId={figureId} />
+            <div class="bld-magic" aria-hidden="true">
+              {SPARKLE_ANGLES.map((angle, i) => (
+                <span key={angle} class="bld-magic__spark" style={{ '--angle': `${angle}deg`, animationDelay: `${(i % 3) * 60}ms` }} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      <div class="bld-tray">
+      <div class={`bld-tray${stage !== 'building' ? ' bld-tray--done' : ''}`}>
         {trayPieces.map((piece) => {
           const offset = offsets[piece.id] ?? { x: 0, y: 0 };
           const scale = trayScale;

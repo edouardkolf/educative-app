@@ -9,8 +9,9 @@ export const builder: MechanicDefinition<'builder', BuilderRoundData> = {
   id: 'builder',
   generateRounds,
   View: BuilderView,
-  // L'animation de fin (maison qui s'allume, fusée qui décolle…) dure ~1,5 s (voir builder.css).
-  solvedDelayMs: 1600,
+  // Fin de figure (BuilderView) : l'objet devient vrai à 0,45 s, vit jusqu'à 2,25 s, puis part
+  // (décolle, prend le large…) en 1,1 s (builder.css).
+  solvedDelayMs: 3400,
   // La main du tutoriel mime une seule paire : une pièce qui correspond, puis son emplacement.
   tutorialTargets: (round) => {
     const { slots, pieces } = round.data;
