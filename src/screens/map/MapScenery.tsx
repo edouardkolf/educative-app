@@ -9,6 +9,12 @@ import {
   PATH_WIDTH,
   buildRoute,
   hash01,
+  MOUNTAIN_ROCK_FROM,
+  MOUNTAIN_SNOW_FROM,
+  altitude,
+  mountainKindsAt,
+  mountainShape,
+  type MountainShape,
   passages,
   pathStones,
   placeDecor,
@@ -49,7 +55,29 @@ export const THEMES: Record<WorldId, WorldTheme> = {
     patch: '#dbe7c4',
     bank: '#aab5a0',
   },
+  clouds: {
+    ground: '#bfe3fa',
+    patch: '#d3edfd',
+    bank: '#ffffff',
+  },
 };
+
+/** Étages de la montagne, du pied au sommet (voir MOUNTAIN_ZONES), et ciel autour des flancs. */
+const MOUNTAIN_STOPS: Array<[number, string]> = [
+  [0, '#cbdcae'],
+  [MOUNTAIN_ROCK_FROM - 0.06, '#c9d8ab'],
+  [MOUNTAIN_ROCK_FROM + 0.06, '#bfc2b6'],
+  [MOUNTAIN_SNOW_FROM - 0.04, '#aeb8c2'],
+  [1, '#c3ccd5'],
+];
+const MOUNTAIN_SKY_TOP = '#bfe3fa';
+const MOUNTAIN_SKY_LOW = '#e4f3fc';
+const SNOW = '#f7fbfe';
+const SNOW_SHADE = '#dce8f2';
+/** Chemin de nuages : bourrelets blancs sur une ombre bleutée. */
+const CLOUD_PATH = '#ffffff';
+const CLOUD_PATH_SHADE = '#cfe2f3';
+const CLOUD_PATH_CORE = '#f1f8fe';
 
 const RIVER_FILL = '#4aa3d4';
 const RIVER_HALF = 22;
@@ -275,13 +303,99 @@ export function Sprite({ kind, seed }: { kind: string; seed: number }): JSX.Elem
         </g>
       );
     case 'peak':
+      // Grand pic : face éclairée, face à l'ombre, calotte de neige en dents de scie, un pic cadet derrière.
       return (
         <g>
-          <path d="M -46 0 L -6 -64 L 34 0 Z" fill="#9aa9b8" />
-          <path d="M -6 -64 L 34 0 L 8 0 Z" fill="#8595a6" />
-          <path d="M -18 -45 L -6 -64 L 7 -43 L 0 -46 L -6 -40 L -12 -46 Z" fill="#ffffff" />
-          <path d="M 12 0 L 34 -36 L 52 0 Z" fill="#a8b6c3" />
-          <path d="M 29 -28 L 34 -36 L 39 -27 L 34 -29 Z" fill="#ffffff" />
+          <path d="M 4 0 L 40 -70 L 70 0 Z" fill="#a9b7c4" />
+          <path d="M 40 -70 L 70 0 L 50 0 Z" fill="#91a1b1" />
+          <path d="M 30 -51 L 40 -70 L 50 -50 L 44 -54 L 39 -47 L 35 -54 Z" fill={SNOW} />
+          <ellipse cx="-4" cy="0" rx="50" ry="6" fill="rgba(40,50,60,0.16)" />
+          <path d="M -48 0 L -6 -110 L 40 0 Z" fill="#9fafbf" />
+          <path d="M -6 -110 L 40 0 L 10 0 L -2 -60 Z" fill="#8193a6" />
+          <path d="M -6 -110 L -2 -60 L -20 -40 Z" fill="#b4c1cd" />
+          <path
+            d="M -22 -70 L -6 -110 L 11 -68 L 4 -74 L -1 -64 L -7 -76 L -13 -66 L -17 -74 Z"
+            fill={SNOW}
+          />
+          <path d="M -6 -110 L 11 -68 L 4 -74 L -1 -64 L -3 -90 Z" fill={SNOW_SHADE} />
+        </g>
+      );
+    case 'crag':
+    case 'snowcrag': {
+      // Rocher anguleux : trois faces (dessus éclairé, flanc, flanc à l'ombre), jamais une bosse lisse.
+      const snowy = kind === 'snowcrag';
+      return (
+        <g>
+          <ellipse cx="1" cy="0" rx="17" ry="4" fill="rgba(40,50,60,0.18)" />
+          <path d="M -16 0 L -12 -12 L -3 -21 L 8 -17 L 15 -6 L 13 0 Z" fill="#8f9ca8" />
+          <path d="M -12 -12 L -3 -21 L 8 -17 L 1 -10 Z" fill="#c3ccd4" />
+          <path d="M 1 -10 L 8 -17 L 15 -6 L 13 0 L 4 0 Z" fill="#76838f" />
+          <path d="M -16 0 L -12 -12 L 1 -10 L 4 0 Z" fill="#a3afba" />
+          {snowy && <path d="M -12 -12 L -3 -21 L 8 -17 L 3 -13 L -2 -15 L -7 -11 Z" fill={SNOW} />}
+        </g>
+      );
+    }
+    case 'drift':
+      return (
+        <g>
+          <path d="M -18 0 Q -14 -9 -4 -8 Q 2 -15 10 -9 Q 18 -8 18 0 Z" fill={SNOW_SHADE} />
+          <path d="M -15 -2 Q -12 -8 -4 -7 Q 2 -13 9 -8 Q 15 -7 15 -2 Z" fill={SNOW} />
+        </g>
+      );
+    case 'cloud':
+      return (
+        <g>
+          <ellipse cx="0" cy="-8" rx="27" ry="9" fill={CLOUD_PATH_SHADE} />
+          <circle cx="-13" cy="-12" r="10" fill={CLOUD_PATH} />
+          <circle cx="2" cy="-18" r="13" fill={CLOUD_PATH} />
+          <circle cx="15" cy="-11" r="9" fill={CLOUD_PATH} />
+          <rect x="-22" y="-12" width="44" height="8" rx="4" fill={CLOUD_PATH} />
+        </g>
+      );
+    case 'star':
+      return (
+        <path
+          d="M 0 -16 Q 1.5 -9.5 7 -8 Q 1.5 -6.5 0 0 Q -1.5 -6.5 -7 -8 Q -1.5 -9.5 0 -16 Z"
+          fill="#ffd23f"
+          stroke="#f4a300"
+          stroke-width="0.8"
+          stroke-linejoin="round"
+        />
+      );
+    case 'bird':
+      return (
+        <path
+          d="M -8 -14 Q -4 -18 0 -13 Q 4 -18 8 -14"
+          stroke="#5b6b7a"
+          stroke-width="2"
+          stroke-linecap="round"
+          fill="none"
+        />
+      );
+    case 'balloon':
+      // Montgolfière : enveloppe à côtes, nacelle suspendue ; elle flotte, son ombre reste au « sol ».
+      return (
+        <g>
+          <ellipse cx="0" cy="0" rx="10" ry="3" fill="rgba(60,90,130,0.15)" />
+          <path d="M -5 -14 L -7 -22 M 5 -14 L 7 -22" stroke="#8b5a2b" stroke-width="1" />
+          <rect x="-6" y="-15" width="12" height="7" rx="2" fill="#a86a32" />
+          <path d="M -8 -22 Q -18 -34 -16 -44 Q -12 -56 0 -56 Q 12 -56 16 -44 Q 18 -34 8 -22 Z" fill="#e63946" />
+          <path d="M -3 -22 Q -9 -38 -5 -56 L 5 -56 Q 9 -38 3 -22 Z" fill="#ffd23f" />
+          <path d="M -12 -48 Q -10 -54 -4 -55" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6" />
+        </g>
+      );
+    case 'rainbow':
+      return (
+        <g fill="none" stroke-width="3.2" stroke-linecap="round">
+          {['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#4dabf7'].map((c, k) => (
+            <path key={c} d={`M ${-24 + k * 3.2} -4 A ${24 - k * 3.2} ${22 - k * 3.2} 0 0 1 ${24 - k * 3.2} -4`} stroke={c} />
+          ))}
+          <g stroke="none" fill={CLOUD_PATH}>
+            <circle cx="-24" cy="-4" r="6" />
+            <circle cx="-17" cy="-3" r="5" />
+            <circle cx="24" cy="-4" r="6" />
+            <circle cx="17" cy="-3" r="5" />
+          </g>
         </g>
       );
     default:
@@ -534,6 +648,192 @@ function PassSprite({ passage }: { passage: Passage }) {
   );
 }
 
+/** Montagne : le ciel autour, un massif qui se resserre jusqu'au sommet, étagé de la prairie à la neige. */
+function MountainGround({ band, shape, width }: { band: WorldBand; shape: MountainShape; width: number }) {
+  const id = `mountain-${band.worldIndex}`;
+  const { rows } = shape;
+  const r = (n: number) => Math.round(n * 10) / 10;
+  // Bords un peu rocheux : de petites aspérités, toujours vers l'extérieur (le chemin reste dégagé).
+  const bump = (i: number) => hash01(band.worldIndex * 1009 + i) * 6;
+  const outline =
+    `M ${rows.map((row, i) => `${r(row.left - bump(i))} ${r(row.y)}`).join(' L ')} ` +
+    `L ${rows
+      .map((row, i) => `${r(row.right + bump(i + 500))} ${r(row.y)}`)
+      .reverse()
+      .join(' L ')} Z`;
+  const flank = rows.filter((row) => row.right < width + 20 && altitude(band, row.y) > 0.25);
+  const shade =
+    flank.length > 1
+      ? `M ${flank.map((row) => `${r(row.right)} ${r(row.y)}`).join(' L ')} L ${flank
+          .map((row) => `${r(row.right - 30)} ${r(row.y)}`)
+          .reverse()
+          .join(' L ')} Z`
+      : '';
+  // Couloirs : quelques traits obliques qui descendent des flancs, pour la texture de la roche.
+  const couloirs: string[] = [];
+  rows.forEach((row, i) => {
+    if (i % 8 !== 3 || altitude(band, row.y) < MOUNTAIN_ROCK_FROM) return;
+    const len = 26 + hash01(band.worldIndex * 13 + i) * 20;
+    if (row.left > -10) couloirs.push(`M ${r(row.left + 3)} ${r(row.y)} l ${r(len * 0.7)} ${r(len)}`);
+    if (row.right < width + 10) couloirs.push(`M ${r(row.right - 3)} ${r(row.y + 20)} l ${r(-len * 0.7)} ${r(len)}`);
+  });
+  // Sommets lointains, derrière le massif (il les recouvre : jamais sur le chemin). Ils se dressent
+  // haut au-dessus des flancs, de part et d'autre, pour que la montagne paraisse immense.
+  const farPeaks = [0.36, 0.5, 0.64].flatMap((t, k) => {
+    const row = rows.find((rw) => altitude(band, rw.y) <= t);
+    if (!row) return [];
+    const onLeft = (k + band.worldIndex) % 2 === 0;
+    const edge = onLeft ? row.left : row.right;
+    if (edge < -30 || edge > width + 30) return [];
+    const heightPx = 250 + hash01(band.worldIndex * 7 + k) * 90;
+    const half = heightPx * 0.55;
+    return [{ x: edge + (onLeft ? -half * 0.3 : half * 0.3), y: row.y + 30, h: heightPx, half, key: k }];
+  });
+  const snowY = band.bottom - MOUNTAIN_SNOW_FROM * (band.bottom - band.top);
+  let snow = `M -80 ${r(band.top - 2)} L ${width + 80} ${r(band.top - 2)}`;
+  for (let x = width + 80, k = 0; x >= -80; x -= 16, k += 1) {
+    snow += ` L ${x} ${r(snowY + (k % 2 === 0 ? 10 : -4) + hash01(band.worldIndex * 71 + k) * 6)}`;
+  }
+  snow += ' Z';
+  return (
+    <g data-world={band.world}>
+      <defs>
+        <linearGradient id={`${id}-sky`} gradientUnits="userSpaceOnUse" x1="0" y1={band.top} x2="0" y2={band.bottom}>
+          <stop offset="0" stop-color={MOUNTAIN_SKY_TOP} />
+          <stop offset="1" stop-color={MOUNTAIN_SKY_LOW} />
+        </linearGradient>
+        <linearGradient id={`${id}-rock`} gradientUnits="userSpaceOnUse" x1="0" y1={band.bottom} x2="0" y2={band.top}>
+          {MOUNTAIN_STOPS.map(([offset, color]) => (
+            <stop key={offset} offset={offset} stop-color={color} />
+          ))}
+        </linearGradient>
+        <clipPath id={`${id}-clip`}>
+          <path d={outline} />
+        </clipPath>
+      </defs>
+      <rect x="0" y={band.top} width={width} height={band.bottom - band.top} fill={`url(#${id}-sky)`} />
+      {farPeaks.map(({ x, y, h, half, key }) => {
+        const tx = x;
+        const ty = y - h;
+        const cap = h * 0.26;
+        return (
+          <g key={key}>
+            <path d={`M ${r(x - half)} ${r(y)} L ${r(tx)} ${r(ty)} L ${r(x + half)} ${r(y)} Z`} fill="#b3c2d0" />
+            <path d={`M ${r(tx)} ${r(ty)} L ${r(x + half)} ${r(y)} L ${r(x + half * 0.2)} ${r(y)} Z`} fill="#9fb0c1" />
+            <path
+              d={`M ${r(tx - cap * 0.62)} ${r(ty + cap)} L ${r(tx)} ${r(ty)} L ${r(tx + cap * 0.62)} ${r(ty + cap)} L ${r(
+                tx + cap * 0.3,
+              )} ${r(ty + cap * 0.8)} L ${r(tx)} ${r(ty + cap * 1.05)} L ${r(tx - cap * 0.3)} ${r(ty + cap * 0.8)} Z`}
+              fill={SNOW}
+            />
+          </g>
+        );
+      })}
+      <path d={outline} fill={`url(#${id}-rock)`} />
+      <g clip-path={`url(#${id}-clip)`}>
+        {groundPatches(band)
+          .filter((cy) => altitude(band, cy) < MOUNTAIN_ROCK_FROM)
+          .map((cy, i) => (
+            <ellipse
+              key={i}
+              cx={i % 2 === 0 ? width * 0.22 : width * 0.78}
+              cy={cy}
+              rx={width * 0.34}
+              ry="70"
+              fill={THEMES.mountain.patch}
+            />
+          ))}
+        {shade && <path d={shade} fill="rgba(60, 75, 95, 0.12)" />}
+        {couloirs.map((c) => (
+          <path key={c} d={c} stroke="rgba(60, 75, 95, 0.16)" stroke-width="3" stroke-linecap="round" fill="none" />
+        ))}
+        <path d={snow} fill={SNOW} />
+      </g>
+    </g>
+  );
+}
+
+/** Vers les nuages : le sommet perce une mer de nuages qui barre la carte. Dessinée par-dessus le
+ * chemin, pour que le sentier de terre s'y enfonce et en ressorte en nuage. */
+function CloudSea({ passage, width }: { passage: Passage; width: number }) {
+  const puffs = [];
+  for (let x = -16, k = 0; x < width + 30; x += 24, k += 1) {
+    const seed = passage.worldIndex * 97 + k;
+    puffs.push({ x, y: passage.y + (hash01(seed) - 0.5) * 10, r: 17 + hash01(seed + 40) * 9 });
+  }
+  return (
+    <g data-testid="map-border">
+      {puffs.map((p) => (
+        <circle key={`s${p.x}`} cx={p.x} cy={p.y + 6} r={p.r} fill={CLOUD_PATH_SHADE} />
+      ))}
+      {puffs.map((p) => (
+        <circle key={p.x} cx={p.x} cy={p.y} r={p.r} fill={CLOUD_PATH} />
+      ))}
+    </g>
+  );
+}
+
+/** Sommet : un fanion planté au bord du chemin, juste sous la mer de nuages. */
+function SummitSprite({ passage, width }: { passage: Passage; width: number }) {
+  const side = roomySide(passage, width);
+  const cx = side * (DECK_HALF + 10);
+  return (
+    <g transform={`translate(${Math.round(passage.x)} ${Math.round(passage.y)})`} data-testid="map-passage">
+      <g transform={`translate(${cx} 46)`}>
+        <ellipse cx="0" cy="0" rx="11" ry="3.5" fill="rgba(40,50,60,0.2)" />
+        <path d="M -9 0 L -7 -6 L 7 -6 L 9 0 Z" fill="#8f9ca8" />
+        <path d="M -5 -6 L -4 -11 L 5 -11 L 6 -6 Z" fill="#a3afba" />
+        <path d="M 0 -11 L 0 -40" stroke="#6e4420" stroke-width="2.2" stroke-linecap="round" />
+        <path d={`M 0 -40 L ${side * 16} -35 L 0 -29 Z`} fill="#e63946" />
+      </g>
+    </g>
+  );
+}
+
+/** Points réguliers (pas `step`) le long d'une polyligne, avec la normale en chaque point. */
+function resample(points: readonly Point[], step: number): Array<Point & { nx: number; ny: number }> {
+  const out: Array<Point & { nx: number; ny: number }> = [];
+  let carry = 0;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1] as Point;
+    const b = points[i] as Point;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (len === 0) continue;
+    const nx = -(b.y - a.y) / len;
+    const ny = (b.x - a.x) / len;
+    for (let d = carry; d < len; d += step) {
+      out.push({ x: a.x + ((b.x - a.x) * d) / len, y: a.y + ((b.y - a.y) * d) / len, nx, ny });
+    }
+    carry = (carry - len) % step;
+    if (carry < 0) carry += step;
+  }
+  return out;
+}
+
+/** Chemin de nuages : des bourrelets blancs de part et d'autre, un cœur lisse, une ombre bleutée. */
+function CloudPath({ d, samples }: { d: string; samples: readonly Point[] }) {
+  const half = PATH_WIDTH / 2;
+  const puffs = resample(samples, 12).flatMap((p, i) =>
+    [-1, 1].map((side) => {
+      const r = 7 + hash01(i * 2 + (side > 0 ? 1 : 0)) * 4;
+      const off = half - r * 0.55;
+      return { x: p.x + p.nx * off * side, y: p.y + p.ny * off * side, r, key: `${i}${side}` };
+    }),
+  );
+  return (
+    <>
+      {puffs.map((p) => (
+        <circle key={`s${p.key}`} cx={p.x.toFixed(1)} cy={(p.y + 3.5).toFixed(1)} r={p.r.toFixed(1)} fill={CLOUD_PATH_SHADE} />
+      ))}
+      {puffs.map((p) => (
+        <circle key={p.key} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r.toFixed(1)} fill={CLOUD_PATH} />
+      ))}
+      <path d={d} class="map-scenery__path" stroke={CLOUD_PATH} stroke-width={PATH_WIDTH - 8} />
+      <path d={d} class="map-scenery__path map-scenery__path--worn" stroke={CLOUD_PATH_CORE} stroke-width={PATH_WIDTH - 22} />
+    </>
+  );
+}
+
 interface Props {
   count: number;
   width: number;
@@ -547,24 +847,34 @@ export function MapScenery({ count, width }: Props) {
     const nodes = route.nodeAt.map((k) => route.points[k] as Point);
     const bands = worldBands(count).map((band) => {
       const sign = signPosition(band, width, count);
+      const shape = band.world === 'mountain' ? mountainShape(band, width, samples, nodes) : null;
       return {
         band,
         sign,
-        decor: placeDecor(band, width, samples, [...nodes, sign]),
+        shape,
+        decor: placeDecor(band, width, samples, [...nodes, sign], shape ? mountainKindsAt(band, shape) : undefined),
       };
     });
     const passageList = passages(count, width);
+    const cloudBands = bands.filter(({ band }) => band.world === 'clouds').map(({ band }) => band);
+    const inClouds = (y: number) => cloudBands.some((band) => y >= band.top && y <= band.bottom);
     return {
       height,
       d: smoothPathD(route.points),
+      // Bourrelets du chemin de nuages : seulement là où il y en a (le reste serait masqué).
+      cloudSamples: samples.filter((p) => cloudBands.some((band) => p.y >= band.top - 30 && p.y <= band.bottom + 30)),
       bands,
       passages: passageList,
-      stones: pathStones(samples, nodes, passageList),
+      cloudBands,
+      earthBands: bands.filter(({ band }) => band.world !== 'clouds').map(({ band }) => band),
+      // Pas de cailloux sur un chemin de nuages (marge : leur emprise ne déborde pas sur la frontière).
+      stones: pathStones(samples, nodes, passageList).filter((st) => !inClouds(st.y - st.rx) && !inClouds(st.y + st.rx)),
     };
   }, [count, width]);
 
   if (count === 0 || width <= 0) return null;
   const { height, d, bands } = scene;
+  const hasClouds = scene.cloudBands.length > 0;
 
   return (
     <svg
@@ -575,7 +885,10 @@ export function MapScenery({ count, width }: Props) {
       aria-hidden="true"
       data-testid="map-scenery"
     >
-      {bands.map(({ band }) => (
+      {bands.map(({ band, shape }) =>
+        shape ? (
+          <MountainGround key={`ground-${band.worldIndex}`} band={band} shape={shape} width={width} />
+        ) : (
         <g key={`ground-${band.worldIndex}`} data-world={band.world}>
           <rect x="0" y={band.top} width={width} height={band.bottom - band.top} fill={THEMES[band.world].ground} />
           {groundPatches(band).map((cy, i) => (
@@ -589,20 +902,43 @@ export function MapScenery({ count, width }: Props) {
             />
           ))}
         </g>
-      ))}
+        ),
+      )}
       {scene.passages.map((passage) => {
         const key = `border-${passage.worldIndex}`;
         if (passage.kind === 'pier') return <Shore key={key} passage={passage} width={width} />;
         if (passage.kind === 'pass') return <Ridge key={key} passage={passage} width={width} />;
+        if (passage.kind === 'summit') return null; // mer de nuages : dessinée par-dessus le chemin
         const below = (bands[passage.worldIndex - 1] as { band: WorldBand }).band.world;
         return <River key={key} passage={passage} width={width} below={below} />;
       })}
 
-      <path d={d} class="map-scenery__path" stroke="rgba(90, 70, 30, 0.1)" stroke-width={PATH_WIDTH + 6} />
-      <path d={d} class="map-scenery__path" stroke={PATH_EDGE} stroke-width={PATH_WIDTH} />
-      <path d={d} class="map-scenery__path" stroke={PATH_FILL} stroke-width={PATH_WIDTH - 6} />
-      <path d={d} class="map-scenery__path map-scenery__path--worn" stroke={PATH_WORN} stroke-width={PATH_WIDTH - 20} />
-      <path d={d} class="map-scenery__path map-scenery__path--specks" stroke={PATH_SPECK} stroke-width="2.2" />
+      {hasClouds && (
+        <defs>
+          <clipPath id="map-earth-clip">
+            {scene.earthBands.map((band) => (
+              <rect key={band.worldIndex} x="-50" y={band.top} width={width + 100} height={band.bottom - band.top} />
+            ))}
+          </clipPath>
+          <clipPath id="map-cloud-clip">
+            {scene.cloudBands.map((band) => (
+              <rect key={band.worldIndex} x="-50" y={band.top} width={width + 100} height={band.bottom - band.top} />
+            ))}
+          </clipPath>
+        </defs>
+      )}
+      <g clip-path={hasClouds ? 'url(#map-earth-clip)' : undefined}>
+        <path d={d} class="map-scenery__path" stroke="rgba(90, 70, 30, 0.1)" stroke-width={PATH_WIDTH + 6} />
+        <path d={d} class="map-scenery__path" stroke={PATH_EDGE} stroke-width={PATH_WIDTH} />
+        <path d={d} class="map-scenery__path" stroke={PATH_FILL} stroke-width={PATH_WIDTH - 6} />
+        <path d={d} class="map-scenery__path map-scenery__path--worn" stroke={PATH_WORN} stroke-width={PATH_WIDTH - 20} />
+        <path d={d} class="map-scenery__path map-scenery__path--specks" stroke={PATH_SPECK} stroke-width="2.2" />
+      </g>
+      {hasClouds && (
+        <g clip-path="url(#map-cloud-clip)" data-testid="map-cloud-path">
+          <CloudPath d={d} samples={scene.cloudSamples} />
+        </g>
+      )}
       {scene.stones.map((stone, i) => (
         <Stone key={i} stone={stone} />
       ))}
@@ -611,6 +947,14 @@ export function MapScenery({ count, width }: Props) {
         const key = `passage-${passage.worldIndex}`;
         if (passage.kind === 'pier') return <PierSprite key={key} passage={passage} width={width} />;
         if (passage.kind === 'pass') return <PassSprite key={key} passage={passage} />;
+        if (passage.kind === 'summit') {
+          return (
+            <g key={key}>
+              <CloudSea passage={passage} width={width} />
+              <SummitSprite passage={passage} width={width} />
+            </g>
+          );
+        }
         return <BridgeSprite key={key} passage={passage} />;
       })}
 

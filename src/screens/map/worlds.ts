@@ -15,6 +15,7 @@ export const WORLD_META: Record<WorldId, WorldMeta> = {
   forest: { icon: '🌳', label: 'la forêt', particles: ['🍃', '🌼', '🍂'] },
   sea: { icon: '🐠', label: 'la mer', particles: ['🐟', '🐚', '💧'] },
   mountain: { icon: '🏔️', label: 'la montagne', particles: ['❄️', '⭐', '🌸'] },
+  clouds: { icon: '☁️', label: 'les nuages', particles: ['☁️', '⭐', '🎈'] },
 };
 
 /** Monde atteint : celui du niveau en cours, sinon du dernier niveau réussi, sinon le premier. */

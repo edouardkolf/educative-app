@@ -26,6 +26,13 @@ import {
   worldIdAt,
   worldIndexForLevel,
   WORLD_ORDER,
+  MOUNTAIN_SNOW_FROM,
+  MOUNTAIN_TAPER_START,
+  MOUNTAIN_ZONES,
+  altitude,
+  mountainKindsAt,
+  mountainShape,
+  onMountain,
 } from './layout';
 
 const WIDTH = 412;
@@ -38,7 +45,8 @@ describe('mondes', () => {
     expect(worldIdAt(0)).toBe('forest');
     expect(worldIdAt(1)).toBe('sea');
     expect(worldIdAt(2)).toBe('mountain');
-    expect(worldIdAt(3)).toBe('forest');
+    expect(worldIdAt(3)).toBe('clouds');
+    expect(worldIdAt(4)).toBe('forest');
   });
 
   it('les bandes couvrent toute la hauteur, sans trou, et contiennent leurs niveaux', () => {
@@ -125,7 +133,7 @@ describe('écart entre niveaux', () => {
 });
 
 describe('passage entre deux mondes', () => {
-  const count = LEVELS_PER_WORLD * 3 + 3;
+  const count = LEVELS_PER_WORLD * 4 + 3;
   const route = buildRoute(count, WIDTH);
   const list = passages(count, WIDTH);
 
@@ -133,6 +141,7 @@ describe('passage entre deux mondes', () => {
     expect(list.map((p) => [p.world, p.kind])).toEqual([
       ['sea', 'pier'],
       ['mountain', 'pass'],
+      ['clouds', 'summit'],
       ['forest', 'bridge'],
     ]);
     const bands = worldBands(count);
@@ -245,4 +254,57 @@ describe('cailloux du sentier', () => {
       for (const c of crossings) expect(Math.hypot(c.x - stone.x, c.y - stone.y)).toBeGreaterThan(PASSAGE_HALF);
     }
   });
+});
+
+describe('montagne', () => {
+  // Montagne complète (un monde de nuages au-dessus) et montagne en fin de parcours (sommet en haut de carte).
+  for (const count of [LEVELS_PER_WORLD * 3 + 2, LEVELS_PER_WORLD * 2 + 10]) {
+    const route = buildRoute(count, WIDTH);
+    const samples = samplePath(route.points);
+    const nodes = route.nodeAt.map((k) => route.points[k]!);
+    const band = worldBands(count)[2]!;
+    const shape = mountainShape(band, WIDTH, samples, nodes);
+
+    it(`garde le chemin et les niveaux sur la roche (${count} niveaux)`, () => {
+      for (const p of samples) {
+        if (p.y < band.top || p.y > band.bottom) continue;
+        expect(onMountain(shape, p.x - PATH_WIDTH / 2, p.y)).toBe(true);
+        expect(onMountain(shape, p.x + PATH_WIDTH / 2, p.y)).toBe(true);
+      }
+      for (const n of nodes) {
+        if (n.y < band.top || n.y > band.bottom) continue;
+        expect(onMountain(shape, n.x - NODE_SIZE / 2, n.y)).toBe(true);
+        expect(onMountain(shape, n.x + NODE_SIZE / 2, n.y)).toBe(true);
+      }
+    });
+
+    it(`se resserre jusqu'au sommet (${count} niveaux)`, () => {
+      const top = shape.rows[0]!;
+      const foot = shape.rows[shape.rows.length - 1]!;
+      expect(foot.left).toBeLessThan(0);
+      expect(foot.right).toBeGreaterThan(WIDTH);
+      expect(top.right - top.left).toBeLessThan(WIDTH * 0.6);
+      expect(top.left).toBeLessThan(shape.summit.x);
+      expect(top.right).toBeGreaterThan(shape.summit.x);
+    });
+
+    it(`étage le décor : ciel à côté, neige en haut, pics loin du chemin (${count} niveaux)`, () => {
+      const decor = placeDecor(band, WIDTH, samples, nodes, mountainKindsAt(band, shape));
+      expect(decor.length).toBeGreaterThan(10);
+      const sky = new Set<string>(MOUNTAIN_ZONES.sky.map((k) => k.kind));
+      const snow = new Set<string>(MOUNTAIN_ZONES.snow.map((k) => k.kind));
+      for (const item of decor) {
+        if (!onMountain(shape, item.x, item.y)) expect(sky.has(item.kind)).toBe(true);
+        else if (altitude(band, item.y) >= MOUNTAIN_SNOW_FROM) expect(snow.has(item.kind)).toBe(true);
+        else expect(sky.has(item.kind)).toBe(false);
+        if (item.kind === 'peak') {
+          const tip = { x: item.x, y: item.y - 60 * item.scale };
+          const minPath = Math.min(...samples.map((p) => Math.hypot(p.x - tip.x, p.y - tip.y)));
+          expect(minPath).toBeGreaterThan(PATH_WIDTH / 2);
+        }
+      }
+      expect(decor.some((d) => sky.has(d.kind))).toBe(true);
+      expect(decor.some((d) => altitude(band, d.y) < MOUNTAIN_TAPER_START && d.kind === 'pine')).toBe(true);
+    });
+  }
 });
