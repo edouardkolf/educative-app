@@ -1,4 +1,6 @@
 // Rangée d'étoiles réutilisable : petite sur la carte, grande et animée en fin de niveau.
+import { Icon } from './icons/Icon';
+
 interface StarRowProps {
   count: 0 | 1 | 2 | 3;
   size?: number;
@@ -17,7 +19,7 @@ export function StarRow({ count, size = 20, total = 3, animated = false }: StarR
           style={{ fontSize: size }}
           aria-hidden="true"
         >
-          {i < count ? '⭐' : '☆'}
+          <Icon name={i < count ? 'star' : 'star-empty'} />
         </span>
       ))}
     </div>

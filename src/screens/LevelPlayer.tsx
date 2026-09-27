@@ -27,6 +27,7 @@ import { IconButton } from '../ui/IconButton';
 import { TutorialHand } from '../ui/TutorialHand';
 import { LevelEnd } from './LevelEnd';
 import { LevelFailed } from './LevelFailed';
+import { Icon } from '../ui/icons/Icon';
 
 type Phase = 'loading' | 'not-found' | 'unavailable' | 'playing' | 'end' | 'failed';
 
@@ -399,7 +400,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
           🚧
         </div>
         <IconButton size={72} onClick={() => navigate({ name: 'map' })} aria-label="Retour à la carte" data-testid="to-map">
-          🗺️
+          <Icon name="map" size={46} />
         </IconButton>
       </div>
     );
@@ -451,7 +452,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       {world && <WorldBackdrop world={world} />}
       <div class="play-topbar">
         <IconButton size={56} onClick={quit} aria-label="Quitter" data-testid="quit">
-          🏠
+          <Icon name="home" size={36} />
         </IconButton>
         <div class="play-progress">
           {rounds.map((_, i) => (
@@ -464,7 +465,7 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
         <div class="play-lives" data-testid="lives" data-lives={lives} aria-label={`${lives} vies`}>
           {Array.from({ length: maxLives }, (_, i) => (
             <span key={i} class={`play-lives__heart${i < lives ? '' : ' is-lost'}`} aria-hidden="true">
-              ❤️
+              <Icon name={i < lives ? 'heart' : 'heart-empty'} />
             </span>
           ))}
         </div>

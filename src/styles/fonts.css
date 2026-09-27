@@ -1,0 +1,12 @@
+/* Polices auto-hébergées (fonctionnent hors ligne, PWA) — sous-ensembles latin + latin-ext
+   uniquement (couvrent les caractères français : é è à ç œ « » etc.). `font-display: swap`
+   est déjà défini par fontsource dans chaque @font-face. */
+
+/* Andika (texte courant, conçue pour l'apprentissage de la lecture) — 400 et 700. */
+@import '@fontsource/andika/latin-400.css';
+@import '@fontsource/andika/latin-ext-400.css';
+@import '@fontsource/andika/latin-700.css';
+@import '@fontsource/andika/latin-ext-700.css';
+
+/* Fredoka (titres / gros chiffres) — variable, graisses 400 à 700. */
+@import '@fontsource-variable/fredoka/wght.css';

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ChoiceId, MechanicViewProps } from '../../engine/types';
 import type { GapRoundData, PickRoundData, SpellingRoundData, TilesRoundData } from './types';
+import { Icon } from '../../ui/icons/Icon';
 import './spelling.css';
 
 // ---------- Voix (haut-parleur) ----------
@@ -26,7 +27,7 @@ function SpeakButton({ text }: { text: string }) {
   if (!speechAvailable()) return null;
   return (
     <button type="button" class="spl-speak" aria-label="Écouter le mot" onClick={() => speak(text)}>
-      🔊
+      <Icon name="speaker" size="1.3em" />
     </button>
   );
 }
@@ -261,7 +262,7 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
         disabled={solved || shake || !allFilled}
         onClick={validate}
       >
-        ✓
+        <Icon name="check" size="1.1em" />
       </button>
     </div>
   );

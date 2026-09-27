@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ChoiceId, MechanicViewProps } from '../../engine/types';
 import type { CalcRoundData } from './types';
+import { Icon } from '../../ui/icons/Icon';
 import './calc.css';
 
 const OP_SYMBOL: Record<CalcRoundData['operation'], string> = { add: '+', sub: '−', mul: '×' };
@@ -175,7 +176,7 @@ function Keypad({
           disabled={solved || shaking || typed === ''}
           onClick={submit}
         >
-          ✓
+          <Icon name="check" size="1.1em" />
         </button>
       </div>
     </div>

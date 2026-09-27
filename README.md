@@ -27,3 +27,9 @@ npm test                  # tests unitaires + validation du contenu
 npm run build             # build de production (dist/)
 npm run test:e2e          # parcours complet dans un Chrome mobile simulé
 ```
+
+## Crédits / licences
+
+- **Andika** – SIL International, [SIL Open Font License 1.1](https://openfontlicense.org/).
+- **Fredoka** – Milena Brandão, [SIL Open Font License 1.1](https://openfontlicense.org/).
+- **Noto Emoji** (Google) – [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), images SVG embarquées dans `public/emoji`.

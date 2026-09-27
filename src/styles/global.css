@@ -18,6 +18,8 @@
   /* F14 : force le glyphe emoji couleur plutôt que le glyphe monochrome de la police système. */
   --emoji-font:
     'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Twemoji Mozilla', sans-serif;
+  --font-body: 'Andika', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fredoka Variable', 'Andika', system-ui, sans-serif;
 }
 
 /* ---------- Reset ---------- */
@@ -39,12 +41,7 @@ body {
 }
 
 body {
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -234,6 +231,7 @@ svg {
 
 .screen--profiles {
   justify-content: center;
+  isolation: isolate;
 }
 
 /* Accès parent : toujours ancré en haut à droite de l'écran. Spécificité renforcée
@@ -252,7 +250,7 @@ svg {
   align-items: flex-start;
   justify-content: center;
   gap: 20px;
-  max-width: 420px;
+  max-width: 460px;
 }
 
 .profile-card {
@@ -262,17 +260,31 @@ svg {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 140px;
-  min-height: 140px;
-  padding: 16px 8px;
-  border-radius: var(--radius);
+  width: 150px;
+  min-height: 168px;
+  padding: 18px 8px 14px;
+  border-radius: 28px;
   background: var(--surface);
-  box-shadow: var(--shadow);
-  transition: opacity 200ms ease;
+  box-shadow: 0 6px 0 #eadfca, var(--shadow);
+  transition: opacity 200ms ease, transform 120ms ease, box-shadow 120ms ease;
+  animation: profile-card-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+/* Les cartes arrivent l'une après l'autre (délai posé en style inline). */
+@keyframes profile-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .profile-card:active {
-  transform: scale(0.96);
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #eadfca, var(--shadow-sm);
 }
 
 .profile-card--exhausted {
@@ -296,17 +308,20 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 84px;
-  height: 84px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   font-family: var(--emoji-font);
-  font-size: 46px;
-  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+  font-size: 58px;
+  box-shadow:
+    inset 0 -6px 0 rgba(0, 0, 0, 0.08),
+    0 0 0 5px #ffffff;
 }
 
 .profile-card__name {
-  font-size: 14px;
-  color: var(--ink-soft);
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -451,8 +466,13 @@ svg {
   background: var(--locked-bg);
   border-color: var(--surface);
   color: var(--locked-ink);
-  box-shadow: none;
-  font-size: 26px;
+  box-shadow: inset 0 3px 0 rgba(61, 44, 30, 0.08);
+  font-size: 34px;
+}
+
+/* Niveau terminé : le disque orange garde un reflet, comme un bonbon. */
+.map-node--completed .map-node__disc {
+  background: radial-gradient(circle at 35% 30%, #ffd08a, var(--accent) 60%);
 }
 
 /* Étoiles lisibles sur le chemin crème ; rien sous un niveau verrouillé (moins de bruit). */
@@ -461,10 +481,6 @@ svg {
   border-radius: 999px;
   background: rgba(255, 253, 247, 0.9);
   box-shadow: var(--shadow-sm);
-}
-
-.map-node .star-row__star:not(.is-filled) {
-  filter: grayscale(1) opacity(0.55);
 }
 
 .map-node--locked .star-row {
@@ -600,39 +616,56 @@ svg {
   justify-content: center;
 }
 
+/* Pastilles de la barre du haut : posées sur une bulle crème, lisibles quel que soit le décor dessous. */
+.play-progress,
+.play-lives {
+  flex: 0 1 auto;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.92);
+  box-shadow: var(--shadow-sm);
+}
+
+.play-topbar {
+  justify-content: space-between;
+}
+
 .play-progress__dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: rgba(61, 44, 30, 0.15);
+  background: #e8dfcf;
+  transition: background 300ms ease, transform 300ms ease;
 }
 
 .play-progress__dot.is-done {
   background: var(--accent);
 }
 
+/* Manche en cours : un peu plus grosse, cerclée, elle respire. */
 .play-progress__dot.is-current {
-  background: var(--accent-ink);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 4px var(--accent);
+  transform: scale(1.25);
   animation: pulse 1.6s ease-in-out infinite;
 }
 
 .play-lives {
   display: flex;
   gap: 2px;
-  font-size: 26px;
+  padding: 0 10px;
+  font-size: 28px;
   line-height: 1;
-  font-family: var(--emoji-font);
 }
 
 .play-lives__heart {
-  display: inline-block;
-  transition: opacity 300ms ease, filter 300ms ease;
+  display: inline-flex;
 }
 
-/* Vie perdue : le cœur se vide (gris, estompé) après un petit tremblement. */
+/* Vie perdue : le cœur se vide (dessin gris) avec un petit tremblement. */
 .play-lives__heart.is-lost {
-  opacity: 0.35;
-  filter: grayscale(1);
   animation: shake 400ms ease-in-out;
 }
 
@@ -676,6 +709,21 @@ svg {
   opacity: 0;
 }
 
+/* ---------- Pictos dessinés (src/ui/icons) ---------- */
+
+/* 1em par défaut : un picto remplace un glyphe dans le flux du texte sans rien décaler. */
+.icon {
+  display: inline-block;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.mechanic-icon {
+  display: block;
+  overflow: visible;
+}
+
 /* ---------- Bouton icône ---------- */
 
 .icon-button {
@@ -713,13 +761,17 @@ svg {
 }
 
 .star-row__star {
+  display: inline-flex;
   line-height: 1;
-  color: var(--accent);
-  filter: grayscale(1) opacity(0.35);
 }
 
-.star-row__star.is-filled {
-  filter: none;
+/* Grande rangée de fin de niveau : l'étoile du milieu, plus haute, fait une petite couronne. */
+.level-end__stars .star-row__star:nth-child(2) .icon {
+  transform: translateY(-14px) scale(1.12);
+}
+
+.level-end__stars .star-row__star.is-filled .icon {
+  filter: drop-shadow(0 6px 10px rgba(245, 159, 0, 0.35));
 }
 
 .star-row--animated .star-row__star.is-filled {
@@ -733,7 +785,31 @@ svg {
 }
 
 .level-end__stars {
-  padding: 24px;
+  position: relative;
+  padding: 32px 24px 24px;
+}
+
+/* Halo doré derrière les étoiles : la récompense est le centre de l'écran. */
+.level-end__stars::before {
+  content: '';
+  position: absolute;
+  inset: -40px -30px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 224, 138, 0.85), rgba(255, 224, 138, 0));
+  animation: level-end-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes level-end-glow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
 }
 
 .level-end__actions {
