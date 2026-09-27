@@ -49,19 +49,22 @@
   border-style: solid;
   border-color: rgba(0, 0, 0, 0.12);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
-  animation: bld-snap 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: bld-snap 420ms cubic-bezier(0.34, 1.3, 0.64, 1);
   cursor: default;
 }
 
+/* La pièce part de l'endroit où l'enfant l'a lâchée (ou de sa case, au tap), à sa taille du plateau,
+   glisse jusqu'à l'emplacement, s'y agrandit à sa vraie taille et s'emboîte avec un petit rebond.
+   --snap-x/-y/-s sont posés par BuilderView au moment de la pose. */
 @keyframes bld-snap {
   0% {
-    transform: translate(-50%, -50%) scale(0.6);
+    transform: translate(var(--snap-x, 0px), var(--snap-y, 0px)) scale(var(--snap-s, 0.6));
   }
-  60% {
-    transform: translate(-50%, -50%) scale(1.12);
+  75% {
+    transform: translate(0, 0) scale(1.08);
   }
   100% {
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(0, 0) scale(1);
   }
 }
 

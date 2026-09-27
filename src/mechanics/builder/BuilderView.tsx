@@ -16,11 +16,23 @@ const FAIL_MS = 420;
 /** Cible tactile minimale (§9 ARCHITECTURE.md) : un emplacement peut être visuellement plus petit
  * (la silhouette doit rester fidèle à la figure), sa zone tapable ne l'est jamais. */
 const MIN_HIT_PX = 72;
+/** Taille (en % de la case) de la plus grande pièce de la manche sur le plateau. Toutes les pièces
+ * partagent la même échelle : un petit carré reste visiblement plus petit qu'un grand, sinon deux
+ * pièces de même forme mais de tailles différentes seraient indiscernables (seule la taille compte). */
+const TRAY_LARGEST_PCT = 78;
+
+/** Départ de l'animation de pose : là où la pièce a été lâchée (ou tapée), relatif à l'emplacement. */
+interface SnapFrom {
+  x: number;
+  y: number;
+  scale: number;
+}
 
 export function BuilderView({ round, solved, onChoose }: MechanicViewProps<BuilderRoundData>) {
   const { slots, pieces, endAnimation } = round.data;
 
   const [filled, setFilled] = useState<Record<string, string>>({}); // slotId -> pieceId
+  const [snapFrom, setSnapFrom] = useState<Record<string, SnapFrom>>({}); // slotId -> départ de l'animation
   const [placedPieceIds, setPlacedPieceIds] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -72,8 +84,25 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
     else pieceRefs.current.delete(id);
   };
 
+  /** Où se trouve la pièce (centre et taille à l'écran) par rapport à l'emplacement visé. */
+  const measureSnapFrom = (pieceId: string, slotId: string): SnapFrom | null => {
+    const shapeEl = pieceRefs.current.get(pieceId)?.querySelector('.bld-piece__shape');
+    const slotEl = slotRefs.current.get(slotId)?.querySelector('.bld-slot');
+    if (!shapeEl || !slotEl) return null;
+    const from = shapeEl.getBoundingClientRect();
+    const to = slotEl.getBoundingClientRect();
+    if (to.width === 0) return null;
+    return {
+      x: from.left + from.width / 2 - (to.left + to.width / 2),
+      y: from.top + from.height / 2 - (to.top + to.height / 2),
+      scale: from.width / to.width,
+    };
+  };
+
   const placeMatch = (pieceId: string, slotId: string) => {
     playDing();
+    const from = measureSnapFrom(pieceId, slotId);
+    if (from) setSnapFrom((prev) => ({ ...prev, [slotId]: from }));
     setFilled((prev) => ({ ...prev, [slotId]: pieceId }));
     setPlacedPieceIds((prev) => new Set(prev).add(pieceId));
     setSelected(null);
@@ -181,6 +210,8 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
   };
 
   const trayPieces = pieces.filter((p) => !placedPieceIds.has(p.id));
+  // Échelle commune à toute la manche (toutes les pièces, posées ou non : elle ne change pas en cours de jeu).
+  const trayScale = TRAY_LARGEST_PCT / Math.max(1, ...pieces.map((p) => Math.max(p.w, p.h)));
 
   return (
     <div class="bld-view">
@@ -195,6 +226,7 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
           // est plus petite : la forme visuelle reste centrée, plus petite, à l'intérieur.
           const hitW = Math.max(MIN_HIT_PX, shapePxW);
           const hitH = Math.max(MIN_HIT_PX, shapePxH);
+          const from = snapFrom[slot.id];
           return (
             <button
               key={slot.id}
@@ -211,7 +243,14 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
             >
               <span
                 class={`bld-slot bld-shape--${slot.shape}${isFilled ? ' bld-slot--filled' : ''}`}
-                style={{ width: `${shapePxW}px`, height: `${shapePxH}px`, background: color }}
+                style={{
+                  width: `${shapePxW}px`,
+                  height: `${shapePxH}px`,
+                  background: color,
+                  ...(isFilled && from
+                    ? { '--snap-x': `${from.x}px`, '--snap-y': `${from.y}px`, '--snap-s': String(from.scale) }
+                    : {}),
+                }}
                 aria-hidden="true"
               />
             </button>
@@ -222,8 +261,7 @@ export function BuilderView({ round, solved, onChoose }: MechanicViewProps<Build
       <div class="bld-tray">
         {trayPieces.map((piece) => {
           const offset = offsets[piece.id] ?? { x: 0, y: 0 };
-          const maxDim = Math.max(piece.w, piece.h, 1);
-          const scale = 60 / maxDim;
+          const scale = trayScale;
           const classes = [
             'bld-piece',
             dragging === piece.id ? 'bld-piece--dragging' : '',
