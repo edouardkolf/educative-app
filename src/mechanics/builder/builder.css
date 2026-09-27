@@ -16,7 +16,9 @@
 
 .bld-figure {
   position: relative;
-  width: min(78vw, 320px);
+  /* Bornée aussi par la hauteur : sur petit téléphone, la figure laisse la place au plateau. */
+  width: min(78vw, 320px, 42vh);
+  width: min(78vw, 320px, 42dvh);
   aspect-ratio: 1 / 1;
   flex: 0 0 auto;
 }
@@ -214,6 +216,27 @@
 .bld-piece__shape {
   display: block;
   pointer-events: none;
+}
+
+/* Petits écrans (360 × 640) : jusqu'à 7 pièces au plateau (ms-formes-03). Figure un peu plus
+   petite et pièces à la taille tactile minimale (72 px, §9) pour que tout tienne sans défilement :
+   3 rangées de 3 pièces maximum sous une figure de ~256 px. */
+@media (max-height: 700px) {
+  .bld-view {
+    gap: 10px;
+  }
+  .bld-figure {
+    width: min(78vw, 320px, 40vh);
+    width: min(78vw, 320px, 40dvh);
+  }
+  .bld-tray {
+    gap: 8px;
+  }
+  .bld-piece {
+    width: 72px;
+    height: 72px;
+    border-radius: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
