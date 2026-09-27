@@ -108,26 +108,26 @@ export function ProfilePicker() {
         {profiles.map((profile, i) => {
           const isExhausted = exhausted.has(profile.id);
           return (
-            <button
-              type="button"
-              key={profile.id}
-              class={`profile-card${isExhausted ? ' profile-card--exhausted' : ''}${
-                shakeId === profile.id ? ' is-shaking' : ''
-              }`}
-              style={{ '--enter-delay': `${i * 90}ms` }}
-              onClick={() => choose(profile)}
-              data-exhausted={isExhausted ? 'true' : undefined}
-            >
-              <span class="profile-card__avatar" style={{ background: DISC_COLORS[i % DISC_COLORS.length] }}>
-                <Emoji char={profile.avatar} />
-              </span>
-              {isExhausted && (
-                <span class="profile-card__badge" aria-hidden="true">
-                  <Emoji char="🌙" />
+            <div class="profile-card-slot" key={profile.id} style={{ '--enter-delay': `${i * 90}ms` }}>
+              <button
+                type="button"
+                class={`profile-card${isExhausted ? ' profile-card--exhausted' : ''}${
+                  shakeId === profile.id ? ' is-shaking' : ''
+                }`}
+                onClick={() => choose(profile)}
+                data-exhausted={isExhausted ? 'true' : undefined}
+              >
+                <span class="profile-card__avatar" style={{ background: DISC_COLORS[i % DISC_COLORS.length] }}>
+                  <Emoji char={profile.avatar} />
                 </span>
-              )}
-              <span class="profile-card__name">{profile.name}</span>
-            </button>
+                {isExhausted && (
+                  <span class="profile-card__badge" aria-hidden="true">
+                    <Emoji char="🌙" />
+                  </span>
+                )}
+                <span class="profile-card__name">{profile.name}</span>
+              </button>
+            </div>
           );
         })}
       </div>

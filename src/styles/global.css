@@ -267,10 +267,14 @@ svg {
   background: var(--surface);
   box-shadow: 0 6px 0 #eadfca, var(--shadow);
   transition: opacity 200ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+/* Les cartes arrivent l'une après l'autre (délai posé en style inline). Animation portée par une
+   enveloppe : la secousse (carte épuisée) et l'estompage de la carte ne la relancent jamais. */
+.profile-card-slot {
   animation: profile-card-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--enter-delay, 0ms) backwards;
 }
 
-/* Les cartes arrivent l'une après l'autre (délai posé en style inline). */
 @keyframes profile-card-in {
   from {
     opacity: 0;

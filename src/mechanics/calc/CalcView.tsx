@@ -172,6 +172,7 @@ function Keypad({
         <button
           type="button"
           class="calc-key calc-key--ok"
+          aria-label="Valider"
           data-choice="key-ok"
           disabled={solved || shaking || typed === ''}
           onClick={submit}

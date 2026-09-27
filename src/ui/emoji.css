@@ -8,3 +8,10 @@
   vertical-align: -0.1em;
   flex: none;
 }
+
+/* Repli texte quand le SVG manque : même boîte, glyphe couleur de la police système. */
+.emoji--text {
+  font-family: var(--emoji-font);
+  line-height: 1;
+  text-align: center;
+}

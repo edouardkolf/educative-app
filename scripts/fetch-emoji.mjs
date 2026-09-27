@@ -4,7 +4,7 @@
 // Usage : node scripts/fetch-emoji.mjs
 // Aucune dépendance npm : fetch natif de Node ≥ 18, écrit directement dans public/emoji/.
 import { mkdir, writeFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -24,14 +24,14 @@ export const CONTENT_EMOJIS = [
   '🦊', '🐼', '🐯', '🦁', '🐸', '🐵', '🦄', '🐙', '🐧', '🐨', '🐰', '🐻',
   // src/mechanics/read/catalog.ts (sujets et supports de « Lis et montre »)
   '🎩', '🍄', '🐤', '🎂', '🏰', '🐓', '⛸️', '🦆', '🛋️', '🛶', '🐌', '🐢', '🟫', '🪑', '📦', '🛏️',
-  // src/mechanics/color-mix/ColorMixView.tsx (fruits révélés + bulles)
-  '🫐', '🥕', '🫧',
+  // src/mechanics/color-mix/ColorMixView.tsx (fruits révélés)
+  '🫐', '🥕',
   // content/levels/**/*.json → src/mechanics/sort/types.ts SortBasket.symbol (paniers du trieur magique)
   '☁️', '🌊',
   // src/screens/map/worlds.ts (icônes de monde + particules de la fête d'arrivée)
   '🍃', '🌼', '🍂', '🐚', '💧', '🏔️', '❄️', '🌸',
-  // src/screens/LevelEnd.tsx (confettis)
-  '🎉', '✨',
+  // src/screens/ProfilePicker.tsx (accueil)
+  '✨',
   // src/screens/LockScreen.tsx (lune, zzz)
   '🌙', '💤',
   // src/screens/LevelFailed.tsx (visage triste)
@@ -102,6 +102,6 @@ async function main() {
 }
 
 // N'exécute que si lancé directement (permet d'importer notoFileName/CONTENT_EMOJIS depuis un test).
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }

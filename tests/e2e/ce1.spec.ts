@@ -328,6 +328,9 @@ test('ce1-lire-01 (Lis et montre) : les images arrivent après le texte, une man
 });
 
 test('ce1-lire-07 (Lis et montre, 2 phrases) : 4 images lisibles, sans défilement sur petit téléphone', async ({ page }) => {
+  // 8 manches, chacune avec 1,2 s de lecture imposée avant que les images deviennent tapables
+  // (IMAGES_DELAY_MS, ReadView) : le parcours complet dépasse le budget par défaut de 30 s.
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 360, height: 640 });
   await onboardWithCe1Child(page, 'Lou');
   await page.getByTestId('back-to-game').click();

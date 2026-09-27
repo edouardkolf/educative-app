@@ -258,6 +258,7 @@ function TilesView({ round, solved, onChoose }: MechanicViewProps<SpellingRoundD
       <button
         type="button"
         class="spl-validate"
+        aria-label="Valider"
         data-choice="tiles-ok"
         disabled={solved || shake || !allFilled}
         onClick={validate}
