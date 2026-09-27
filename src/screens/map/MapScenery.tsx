@@ -3,6 +3,7 @@
 // Un seul SVG en pixels, sous les niveaux ; purement décoratif.
 import { useMemo } from 'preact/hooks';
 import type { JSX } from 'preact';
+import { emojiUrl } from '../../ui/emoji';
 import {
   PASSAGE_HALF,
   PATH_WIDTH,
@@ -201,9 +202,15 @@ function WorldSign({ x, y, icon }: { x: number; y: number; icon: string }) {
       <ellipse cx="0" cy="0" rx="14" ry="4" fill="rgba(40,40,20,0.18)" />
       <rect x="-3" y="-30" width="6" height="30" rx="2" fill="#8b5a2b" />
       <rect x="-24" y="-58" width="48" height="34" rx="8" fill="#c68a4e" stroke="#8b5a2b" stroke-width="3" />
-      <text x="0" y="-34" text-anchor="middle" font-size="22" class="map-scenery__sign-icon">
-        {icon}
-      </text>
+      <image
+        href={emojiUrl(icon)}
+        x={-11}
+        y={-56}
+        width={22}
+        height={22}
+        class="map-scenery__sign-icon"
+        aria-hidden="true"
+      />
     </g>
   );
 }

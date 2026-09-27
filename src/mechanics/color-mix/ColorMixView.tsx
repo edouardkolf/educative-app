@@ -1,6 +1,7 @@
 // Vue « color-mix » : le laboratoire des couleurs. Aucun texte : fioles, chaudron, gouttes, bulles.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { Color, MechanicViewProps } from '../../engine/types';
+import { Emoji } from '../../ui/Emoji';
 import { COLOR_HEX } from '../../ui/palette';
 import { playBubble, playDrain, playPour } from '../../ui/sound';
 import { mixColors, PRIMARY_FLASKS, recipeFor } from './generate';
@@ -98,7 +99,7 @@ export function ColorMixView({ round, solved, onChoose }: MechanicViewProps<Colo
       <div class="cmx-target">
         {revealed ? (
           <span class="cmx-target__object cmx-target__object--pop" aria-hidden="true">
-            {revealColor ? OBJECT_FOR_COLOR[revealColor] : ''}
+            {revealColor && <Emoji char={OBJECT_FOR_COLOR[revealColor]} />}
           </span>
         ) : (
           <span
@@ -131,9 +132,9 @@ export function ColorMixView({ round, solved, onChoose }: MechanicViewProps<Colo
           />
           {phase === 'mixing' && (
             <div class="cmx-bubbles" aria-hidden="true">
-              <span>🫧</span>
-              <span>🫧</span>
-              <span>🫧</span>
+              <span><Emoji char="🫧" /></span>
+              <span><Emoji char="🫧" /></span>
+              <span><Emoji char="🫧" /></span>
             </div>
           )}
           <div class="cmx-cauldron__rim" aria-hidden="true" />

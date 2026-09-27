@@ -23,7 +23,7 @@
 .rd-text {
   flex: 0 0 auto;
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; /* sans empattement */
+  font-family: var(--font-body); /* Andika : lettres dessinées pour l'apprentissage de la lecture */
   font-size: 26px;
   font-weight: 700;
   line-height: 1.25;
@@ -137,7 +137,7 @@
 }
 
 .rd-emoji {
-  font-family: var(--emoji-font);
+  pointer-events: none;
 }
 
 @keyframes rd-shake {

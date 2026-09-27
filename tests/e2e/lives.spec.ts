@@ -107,7 +107,12 @@ test('plus de vies : écran triste, rejouer relance avec toutes les vies, la car
   await expect(currentRound(page)).toBeVisible();
 
   await loseAllLives(page);
-  await expect(page.getByTestId('level-failed')).toContainText('😢');
+  // L'émoji est rendu en image (SVG Noto embarqué, cf. src/ui/Emoji.tsx) : on vérifie le marqueur
+  // data-emoji plutôt que le texte, désormais vide (décoratif).
+  await expect(page.getByTestId('level-failed').locator('.level-failed__face')).toHaveAttribute(
+    'data-emoji',
+    '😢',
+  );
   // Jamais de relance automatique : l'écran d'échec reste affiché tant que l'enfant n'a pas choisi.
   await page.waitForTimeout(2000);
   await expect(page.getByTestId('level-failed')).toBeVisible();

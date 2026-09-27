@@ -5,6 +5,7 @@ import { IconButton } from '../ui/IconButton';
 import { playFanfare, playStar } from '../ui/sound';
 import { WorldBackdrop } from './map/WorldBackdrop';
 import type { WorldId } from './map/layout';
+import { Icon } from '../ui/icons/Icon';
 
 interface LevelEndProps {
   stars: 1 | 2 | 3;
@@ -28,7 +29,9 @@ const STAR_INTERVAL_MS = 600;
 const CONFETTI_COUNT = 26;
 const CONFETTI_MS = 2800;
 const CONFETTI_COLORS = ['#ffb347', '#ff6b6b', '#4dd0e1', '#81c784', '#ba68c8', '#ffd54f'];
-const CONFETTI_EMOJIS = ['⭐', '🎉', '✨'];
+/** Une pièce sur trois est une étoile dessinée (la récompense), les autres des papiers de couleur. */
+const CONFETTI_KINDS = ['star', 'paper', 'paper'] as const;
+type ConfettiKind = (typeof CONFETTI_KINDS)[number];
 
 interface ConfettiPiece {
   left: number;
@@ -36,7 +39,7 @@ interface ConfettiPiece {
   durationMs: number;
   color: string;
   rotate: number;
-  emoji: string;
+  kind: ConfettiKind;
 }
 
 function makeConfetti(): ConfettiPiece[] {
@@ -46,7 +49,7 @@ function makeConfetti(): ConfettiPiece[] {
     durationMs: 1800 + Math.random() * 900,
     color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)] as string,
     rotate: Math.random() * 360,
-    emoji: CONFETTI_EMOJIS[Math.floor(Math.random() * CONFETTI_EMOJIS.length)] as string,
+    kind: CONFETTI_KINDS[Math.floor(Math.random() * CONFETTI_KINDS.length)] as ConfettiKind,
   }));
 }
 
@@ -100,7 +103,7 @@ export function LevelEnd({ stars, world, hasNext, onNext, onReplay, onToMap, onD
           {confetti.map((piece, i) => (
             <span
               key={i}
-              class="level-end__confetti-piece"
+              class={`level-end__confetti-piece level-end__confetti-piece--${piece.kind}`}
               style={{
                 left: `${piece.left}%`,
                 animationDelay: `${piece.delayMs}ms`,
@@ -109,7 +112,7 @@ export function LevelEnd({ stars, world, hasNext, onNext, onReplay, onToMap, onD
                 transform: `rotate(${piece.rotate}deg)`,
               }}
             >
-              {piece.emoji}
+              {piece.kind === 'star' ? <Icon name="star" /> : <i style={{ background: piece.color }} />}
             </span>
           ))}
         </div>
@@ -121,14 +124,14 @@ export function LevelEnd({ stars, world, hasNext, onNext, onReplay, onToMap, onD
         <div class="level-end__actions">
           {hasNext && (
             <IconButton size={80} variant="primary" onClick={onNext} aria-label="Niveau suivant" data-testid="next">
-              ▶
+              <Icon name="next" size={46} />
             </IconButton>
           )}
           <IconButton size={72} onClick={onReplay} aria-label="Rejouer" data-testid="replay">
-            ↻
+            <Icon name="replay" size={44} />
           </IconButton>
           <IconButton size={72} onClick={onToMap} aria-label="Retour à la carte" data-testid="to-map">
-            🗺️
+            <Icon name="map" size={46} />
           </IconButton>
         </div>
       )}

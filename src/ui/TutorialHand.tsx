@@ -2,6 +2,7 @@
 // chacun dans l'ordre, en boucle. Une seule cible (cas courant) ou plusieurs à la suite (ex. color-mix :
 // verser deux fioles).
 import { useEffect, useRef } from 'preact/hooks';
+import { Emoji } from './Emoji';
 
 interface TutorialHandProps {
   /** Suite de `data-choice` à taper, dans l'ordre. Un seul élément dans la plupart des mécaniques. */
@@ -101,7 +102,7 @@ export function TutorialHand({ targets }: TutorialHandProps) {
     <div class="tutorial-hand-layer" aria-hidden="true">
       <div ref={rippleRef} class="tutorial-hand__ripple" />
       <div ref={handRef} class="tutorial-hand">
-        👆
+        <Emoji char="👆" />
       </div>
     </div>
   );

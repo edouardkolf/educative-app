@@ -7,9 +7,11 @@ import { listOverrides, listRuns, saveProfile } from '../storage';
 import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
-import { Shape } from '../ui/Shape';
 import { StarRow } from '../ui/StarRow';
 import { LongPressButton } from '../ui/LongPressButton';
+import { Emoji } from '../ui/Emoji';
+import { Icon } from '../ui/icons/Icon';
+import { MechanicIcon } from '../ui/icons/MechanicIcon';
 import { MapScenery } from './map/MapScenery';
 import {
   NODE_SIZE,
@@ -51,37 +53,6 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 }
 
-function MechanicIcon({ mechanic }: { mechanic: MechanicId | undefined }) {
-  if (mechanic === 'sequence') {
-    return (
-      <span class="map-node__icon" aria-hidden="true">
-        <Shape shape="circle" color="red" size={14} />
-        <Shape shape="circle" color="blue" size={14} />
-        <Shape shape="circle" color="red" size={14} />
-      </span>
-    );
-  }
-  if (mechanic === 'count') {
-    return (
-      <span class="map-node__icon map-node__icon--dots" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-        <i />
-        <i />
-      </span>
-    );
-  }
-  if (mechanic === 'odd-one-out') {
-    return (
-      <span class="map-node__icon" aria-hidden="true">
-        🔍
-      </span>
-    );
-  }
-  return null;
-}
-
 /** Indicateur discret (§8) : un soleil entouré d'un anneau qui se vide selon le temps restant. */
 function TimeRing({ ratio }: { ratio: number }) {
   const radius = 16;
@@ -99,7 +70,9 @@ function TimeRing({ ratio }: { ratio: number }) {
           style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
         />
       </svg>
-      <span class="map-time-ring__sun">☀️</span>
+      <span class="map-time-ring__sun">
+        <Emoji char="☀️" />
+      </span>
     </div>
   );
 }
@@ -280,7 +253,7 @@ export function SagaMap() {
   return (
     <div class="screen screen--map">
       <button type="button" class="map-back-avatar" onClick={backToProfiles} aria-label="Retour aux profils">
-        {profile.avatar}
+        <Emoji char={profile.avatar} />
       </button>
       <LongPressButton
         class="lock-button"
@@ -290,7 +263,7 @@ export function SagaMap() {
         aria-label="Espace parent"
         data-testid="parent-access"
       >
-        🔒
+        <Icon name="lock" size={34} />
       </LongPressButton>
       {remainingRatio !== null && <TimeRing ratio={remainingRatio} />}
       {(arrival?.phase === 'travel' || hop) && (
@@ -309,7 +282,7 @@ export function SagaMap() {
               style={{ left: `${traveller.x}px`, top: `${traveller.y}px` }}
               aria-hidden="true"
             >
-              {profile.avatar}
+              <Emoji char={profile.avatar} />
             </span>
           )}
           {states?.map((state, i) => {
@@ -329,14 +302,14 @@ export function SagaMap() {
               >
                 {state.current && arrival?.phase !== 'travel' && !hop && (
                   <span class="map-node__avatar" aria-hidden="true">
-                    {profile.avatar}
+                    <Emoji char={profile.avatar} />
                   </span>
                 )}
                 <span class="map-node__disc">
                   {state.status === 'locked' ? (
-                    <span aria-hidden="true">🔒</span>
+                    <Icon name="lock-muted" size={40} />
                   ) : (
-                    <MechanicIcon mechanic={level?.mechanic} />
+                    <MechanicIcon mechanic={level?.mechanic} size={54} />
                   )}
                 </span>
                 <StarRow count={state.bestStars} size={12} />

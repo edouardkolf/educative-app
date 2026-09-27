@@ -1,6 +1,7 @@
 // Vue de la mécanique « compter des objets ». Aucun texte : émoji, chiffres, points.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ChoiceId, MechanicViewProps } from '../../engine/types';
+import { Emoji } from '../../ui/Emoji';
 import { getObject } from '../../ui/objects';
 import { dotPositions } from './generate';
 import type { CountRoundData } from './types';
@@ -37,7 +38,7 @@ function ChoiceContent({ value, answers }: { value: number; answers: CountRoundD
 
 export function CountView({ round, wrongChoices, solved, onChoose }: MechanicViewProps<CountRoundData>) {
   const { objectId, layout, positions, choices, answers } = round.data;
-  const emoji = getObject(objectId)?.emoji ?? '❔';
+  const emoji = getObject(objectId)?.emoji;
 
   // Aide au comptage (correspondance terme à terme) : purement locale, aucun effet sur le score.
   const [marked, setMarked] = useState<ReadonlySet<number>>(new Set());
@@ -93,7 +94,7 @@ export function CountView({ round, wrongChoices, solved, onChoose }: MechanicVie
             aria-hidden="true"
             tabIndex={-1}
           >
-            {emoji}
+            {emoji && <Emoji char={emoji} />}
           </button>
         ))}
       </div>

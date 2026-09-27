@@ -1,6 +1,7 @@
 // Fête d'arrivée dans un nouveau monde : grand panneau de bois qui surgit, rayons et particules du monde.
 // Se ferme seule au bout de BANNER_MS, ou au premier tap.
 import { useEffect, useMemo } from 'preact/hooks';
+import { Emoji } from '../../ui/Emoji';
 import { playFanfare } from '../../ui/sound';
 import type { WorldId } from './layout';
 import { WORLD_META } from './worlds';
@@ -18,7 +19,7 @@ export function WorldBanner({ world, onDone }: Props) {
   const particles = useMemo(
     () =>
       Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-        glyph: meta.particles[i % meta.particles.length],
+        glyph: meta.particles[i % meta.particles.length] as string,
         left: (i * 53) % 100,
         delay: (i % 6) * 0.18,
         duration: 2.2 + ((i * 7) % 5) * 0.2,
@@ -55,14 +56,16 @@ export function WorldBanner({ world, onDone }: Props) {
               animationDuration: `${p.duration}s`,
             }}
           >
-            {p.glyph}
+            <Emoji char={p.glyph} />
           </span>
         ))}
       </div>
       <div class="world-banner__sign" aria-hidden="true">
         <div class="world-banner__rays" />
         <div class="world-banner__board">
-          <span class="world-banner__icon">{meta.icon}</span>
+          <span class="world-banner__icon">
+            <Emoji char={meta.icon} />
+          </span>
         </div>
         <div class="world-banner__post" />
       </div>

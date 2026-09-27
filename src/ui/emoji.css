@@ -1,0 +1,10 @@
+/* Règle générique du composant <Emoji> (src/ui/Emoji.tsx) : hérite du font-size ambiant comme le
+   faisait le glyphe texte qu'il remplace, pour ne rien changer aux mises en page existantes. */
+.emoji {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  object-fit: contain;
+  vertical-align: -0.1em;
+  flex: none;
+}

@@ -8,6 +8,9 @@ import { useProfile } from '../app/context';
 import { computeTime } from '../app/session';
 import { applyPendingUpdateIfAny } from '../app/updates';
 import { LongPressButton } from '../ui/LongPressButton';
+import { Icon } from '../ui/icons/Icon';
+import { WorldBackdrop } from './map/WorldBackdrop';
+import { Emoji } from '../ui/Emoji';
 
 const DISC_COLORS = ['#FFB347', '#7FC8A9', '#6EC6FF', '#FF8FA3', '#C9A0FF', '#FFD166'];
 
@@ -78,7 +81,8 @@ export function ProfilePicker() {
     return (
       <div class="screen screen--welcome">
         <div class="welcome-illustration" aria-hidden="true">
-          🦊✨
+          <Emoji char="🦊" />
+          <Emoji char="✨" />
         </div>
         <button type="button" class="welcome-button" onClick={openParent}>
           Commencer : espace parent
@@ -97,8 +101,9 @@ export function ProfilePicker() {
         aria-label="Espace parent"
         data-testid="parent-access"
       >
-        🔒
+        <Icon name="lock" size={34} />
       </LongPressButton>
+      <WorldBackdrop world="forest" veil="soft" />
       <div class="profile-grid">
         {profiles.map((profile, i) => {
           const isExhausted = exhausted.has(profile.id);
@@ -109,15 +114,16 @@ export function ProfilePicker() {
               class={`profile-card${isExhausted ? ' profile-card--exhausted' : ''}${
                 shakeId === profile.id ? ' is-shaking' : ''
               }`}
+              style={{ '--enter-delay': `${i * 90}ms` }}
               onClick={() => choose(profile)}
               data-exhausted={isExhausted ? 'true' : undefined}
             >
               <span class="profile-card__avatar" style={{ background: DISC_COLORS[i % DISC_COLORS.length] }}>
-                {profile.avatar}
+                <Emoji char={profile.avatar} />
               </span>
               {isExhausted && (
                 <span class="profile-card__badge" aria-hidden="true">
-                  🌙
+                  <Emoji char="🌙" />
                 </span>
               )}
               <span class="profile-card__name">{profile.name}</span>

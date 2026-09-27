@@ -6,6 +6,7 @@ import { dayKey, getUsage, grantExtraMinutes, listProfiles } from '../storage';
 import type { Profile, UsageDay } from '../storage';
 import { exportProgress } from './export';
 import type { ExportOutcome } from './export';
+import { Emoji } from '../ui/Emoji';
 import { formatDailyUsage } from './format';
 import { ImportSection } from './ImportSection';
 import { ParentSettings } from './Settings';
@@ -101,7 +102,7 @@ export function Dashboard() {
               return (
                 <li key={profile.id} className="pa-child-card">
                   <span className="pa-child-card__avatar" aria-hidden="true">
-                    {profile.avatar}
+                    <Emoji char={profile.avatar} />
                   </span>
                   <div className="pa-child-card__info">
                     <p className="pa-child-card__name">{profile.name}</p>

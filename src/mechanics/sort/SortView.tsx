@@ -3,6 +3,7 @@
 // docs/ARCHITECTURE.md). Hitbox très tolérante (voir ./hitbox.ts).
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { MechanicViewProps } from '../../engine/types';
+import { Emoji } from '../../ui/Emoji';
 import { getObject } from '../../ui/objects';
 import { playBoing, playDing } from '../../ui/sound';
 import { resolveBasket, type BasketRect, type Rect } from './hitbox';
@@ -22,7 +23,7 @@ const FAIL_MS = 420;
 
 export function SortView({ round, solved, onChoose }: MechanicViewProps<SortRoundData>) {
   const { objectId, baskets } = round.data;
-  const emoji = getObject(objectId)?.emoji ?? '❓';
+  const emoji = getObject(objectId)?.emoji;
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -150,7 +151,7 @@ export function SortView({ round, solved, onChoose }: MechanicViewProps<SortRoun
             onClick={() => handleBasketTap(basket.id)}
           >
             <span class="srt-basket__symbol" aria-hidden="true">
-              {basket.symbol}
+              <Emoji char={basket.symbol} />
             </span>
           </button>
         ))}
@@ -166,7 +167,7 @@ export function SortView({ round, solved, onChoose }: MechanicViewProps<SortRoun
           onPointerCancel={handlePointerUp}
         >
           <span class={emojiClasses} aria-hidden="true">
-            {emoji}
+            {emoji && <Emoji char={emoji} />}
           </span>
         </div>
       </div>

@@ -1,6 +1,7 @@
 // Vue de la mécanique « compléter une suite ». Aucun texte : formes, couleurs, animations.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ChoiceId, MechanicViewProps } from '../../engine/types';
+import { Emoji } from '../../ui/Emoji';
 import { Shape } from '../../ui/Shape';
 import { getObject } from '../../ui/objects';
 import type { SequenceItem, SequenceRoundData } from './types';
@@ -16,9 +17,10 @@ function ItemView({ item, size }: { item: SequenceItem; size: number }) {
   if (item.kind === 'token') {
     return <Shape shape={item.token.shape} color={item.token.color} size={size} />;
   }
+  const emoji = getObject(item.objectId)?.emoji;
   return (
     <span class="seq-emoji" style={{ fontSize: size }} aria-hidden="true">
-      {getObject(item.objectId)?.emoji}
+      {emoji && <Emoji char={emoji} />}
     </span>
   );
 }

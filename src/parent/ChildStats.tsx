@@ -6,6 +6,7 @@ import { chanceOfFirstTry, computeLevelStates, computeLevelStats, getLevel, getT
 import type { LevelStats, LevelStatus, MechanicId, SkillId } from '../engine';
 import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
 import type { LevelOverride, Profile } from '../storage';
+import { Emoji } from '../ui/Emoji';
 import { formatDateTime, formatDuration, formatPercentage } from './format';
 import { CHANCE_SCORE, MIN_ROUNDS_FOR_VERDICT, summarizeByGroup, summarizeRuns } from './stats';
 import type { GroupLevel, GroupSummary, RunsSummary, SkillVerdict } from './stats';
@@ -195,7 +196,7 @@ export function ChildStats(props: { profileId: string }) {
     <div className="pa-space">
       <header className="pa-header pa-stats-header">
         <span className="pa-stats-header__avatar" aria-hidden="true">
-          {profile.avatar}
+          <Emoji char={profile.avatar} />
         </span>
         <div>
           <h1>{profile.name}</h1>

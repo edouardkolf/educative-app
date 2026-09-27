@@ -7,6 +7,7 @@ import type { Track } from '../engine';
 import { deleteProfile, getProfile, getSettings, saveProfile } from '../storage';
 import type { AvatarId, Profile, ProfileLimits } from '../storage';
 import { AVATARS } from '../ui/avatars';
+import { Emoji } from '../ui/Emoji';
 import {
   DAILY_MINUTES_OPTIONS,
   SESSION_MINUTES_OPTIONS,
@@ -222,7 +223,7 @@ export function ChildForm(props: ChildFormProps) {
                 aria-pressed={a === avatar}
                 onClick={() => setAvatar(a)}
               >
-                {a}
+                <Emoji char={a} />
               </button>
             ))}
           </div>

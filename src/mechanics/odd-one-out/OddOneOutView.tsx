@@ -1,6 +1,7 @@
 // Vue de la mécanique « trouver l'intrus ». Aucun texte : formes, émojis, couleurs, animations.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ChoiceId, MechanicViewProps } from '../../engine/types';
+import { Emoji } from '../../ui/Emoji';
 import { Shape } from '../../ui/Shape';
 import { getObject } from '../../ui/objects';
 import type { OddOneOutRoundData } from './types';
@@ -54,6 +55,7 @@ export function OddOneOutView({ round, wrongChoices, solved, onChoose }: Mechani
           ]
             .filter(Boolean)
             .join(' ');
+          const emoji = item.kind === 'object' ? getObject(item.objectId)?.emoji : undefined;
           return (
             <button
               key={item.id}
@@ -67,7 +69,7 @@ export function OddOneOutView({ round, wrongChoices, solved, onChoose }: Mechani
                 <Shape shape={item.token.shape} color={item.token.color} size={64} />
               ) : (
                 <span class="ooo-emoji" aria-hidden="true">
-                  {getObject(item.objectId)?.emoji}
+                  {emoji && <Emoji char={emoji} />}
                 </span>
               )}
             </button>

@@ -8,6 +8,8 @@ import { computeTime } from '../app/session';
 import { getProfile, getSettings, getUsage, grantExtraMinutes, updateSettings, dayKey } from '../storage';
 import type { AppSettings, Profile, SessionState } from '../storage';
 import { LongPressButton } from '../ui/LongPressButton';
+import { Icon } from '../ui/icons/Icon';
+import { Emoji } from '../ui/Emoji';
 import { PinGate } from '../parent/PinGate';
 import '../parent/parent.css';
 
@@ -177,17 +179,23 @@ export function LockScreen() {
         aria-label="Espace parent"
         data-testid="lock-parent"
       >
-        🔒
+        <Icon name="lock" size={34} />
       </LongPressButton>
       <div class="lock-screen__sky" aria-hidden="true">
         {STARS.map((star, i) => (
           <span key={i} class="lock-screen__star" style={{ left: star.left, top: star.top, animationDelay: star.delay }} />
         ))}
-        <span class="lock-screen__moon">🌙</span>
+        <span class="lock-screen__moon">
+          <Emoji char="🌙" />
+        </span>
       </div>
       <div class="lock-screen__avatar" aria-hidden="true">
-        <span class="lock-screen__avatar-emoji">{lockedProfile?.avatar ?? '🦊'}</span>
-        <span class="lock-screen__zzz">💤</span>
+        <span class="lock-screen__avatar-emoji">
+          <Emoji char={lockedProfile?.avatar ?? '🦊'} />
+        </span>
+        <span class="lock-screen__zzz">
+          <Emoji char="💤" />
+        </span>
       </div>
     </div>
   );

@@ -267,7 +267,7 @@ svg {
   background: var(--surface);
   box-shadow: 0 6px 0 #eadfca, var(--shadow);
   transition: opacity 200ms ease, transform 120ms ease, box-shadow 120ms ease;
-  animation: profile-card-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation: profile-card-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--enter-delay, 0ms) backwards;
 }
 
 /* Les cartes arrivent l'une après l'autre (délai posé en style inline). */
@@ -529,28 +529,6 @@ svg {
   }
 }
 
-.map-node__icon {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  font-family: var(--emoji-font); /* F14 : icône 🔍 de l'intrus ; sans effet sur les formes SVG */
-}
-
-.map-node__icon--dots {
-  flex-wrap: wrap;
-  width: 26px;
-  justify-content: center;
-}
-
-.map-node__icon--dots i {
-  width: 5px;
-  height: 5px;
-  margin: 1px;
-  border-radius: 50%;
-  background: var(--ink);
-  display: block;
-}
-
 /* ---------- Indicateur de temps restant (carte) ---------- */
 
 .map-time-ring {
@@ -647,7 +625,7 @@ svg {
 /* Manche en cours : un peu plus grosse, cerclée, elle respire. */
 .play-progress__dot.is-current {
   background: var(--surface);
-  box-shadow: inset 0 0 0 4px var(--accent);
+  border: 4px solid var(--accent);
   transform: scale(1.25);
   animation: pulse 1.6s ease-in-out infinite;
 }
@@ -844,12 +822,29 @@ svg {
 .level-end__confetti-piece {
   position: absolute;
   top: -10%;
-  font-size: 28px;
+  font-size: 30px;
   line-height: 1;
-  font-family: var(--emoji-font);
   animation-name: level-end-confetti-fall;
   animation-timing-function: ease-in;
   animation-fill-mode: forwards;
+}
+
+/* Papier de confetti : petit rectangle arrondi qui papillonne en tombant. */
+.level-end__confetti-piece--paper i {
+  display: block;
+  width: 10px;
+  height: 16px;
+  border-radius: 3px;
+  animation: level-end-confetti-flutter 600ms ease-in-out infinite alternate;
+}
+
+@keyframes level-end-confetti-flutter {
+  from {
+    transform: rotateY(0deg) rotate(0deg);
+  }
+  to {
+    transform: rotateY(70deg) rotate(25deg);
+  }
 }
 
 @keyframes level-end-confetti-fall {

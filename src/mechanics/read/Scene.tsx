@@ -2,6 +2,7 @@
 // (émoji, 1 ou 3 exemplaires) posé selon une relation spatiale (sur, sous, à côté, devant — voir ANCHOR_RELATIONS).
 // Chaque position doit se distinguer sans ambiguïté des autres, pour le même support, à 140 px.
 import type { AnchorId, Relation } from '../../engine/types';
+import { emojiUrl } from '../../ui/emoji';
 import type { Placement, Scene as SceneData } from './types';
 
 const GROUND_Y = 88;
@@ -69,6 +70,23 @@ function slotsFor(anchor: AnchorId, relation: Relation, count: 1 | 3): Slot[] {
   return [-1, 0, 1].map((i) => ({ x: base.x + i * ROW_SPACING, y: base.y, scale, z: base.z }));
 }
 
+/** Un émoji dessiné dans la scène SVG (remplace un `<text>` centré, même ancrage : `x,y` = centre
+ * horizontal, ligne de base verticale — voir emojiUrl). Taille et position calées pour occuper le
+ * même espace visuel que le glyphe texte qu'il remplace. */
+function SceneEmoji({ emoji, x, y, fontSize }: { emoji: string; x: number; y: number; fontSize: number }) {
+  return (
+    <image
+      href={emojiUrl(emoji)}
+      x={x - fontSize / 2}
+      y={y - fontSize}
+      width={fontSize}
+      height={fontSize}
+      class="rd-emoji"
+      aria-hidden="true"
+    />
+  );
+}
+
 /** Le support : dessiné au centre-bas de la case. La table est un SVG simple, les autres sont des émojis. */
 function Support({ anchor }: { anchor: AnchorId }) {
   if (anchor === 'table') {
@@ -87,26 +105,11 @@ function Support({ anchor }: { anchor: AnchorId }) {
     tree: { emoji: '🌳', y: 86, fs: 58 },
   };
   const { emoji, y, fs } = config[anchor];
-  return (
-    <text x={50} y={y} font-size={fs} text-anchor="middle" class="rd-emoji" aria-hidden="true">
-      {emoji}
-    </text>
-  );
+  return <SceneEmoji emoji={emoji} x={50} y={y} fontSize={fs} />;
 }
 
 function Subject({ emoji, slot, subjectFs }: { emoji: string; slot: Slot; subjectFs: number }) {
-  return (
-    <text
-      x={slot.x}
-      y={slot.y}
-      font-size={subjectFs * slot.scale}
-      text-anchor="middle"
-      class="rd-emoji"
-      aria-hidden="true"
-    >
-      {emoji}
-    </text>
-  );
+  return <SceneEmoji emoji={emoji} x={slot.x} y={slot.y} fontSize={subjectFs * slot.scale} />;
 }
 
 // Étendue verticale réellement utilisée par le contenu (supports + sujets), toutes relations
