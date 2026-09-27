@@ -12,8 +12,7 @@ import {
   NODE_SIZE,
   SUMMIT_RISE,
   SUMMIT_SPACING,
-  MOUNTAIN_ROCK_FROM,
-  MOUNTAIN_SNOW_FROM,
+  SNOW_CAP,
   altitude,
   mountainKindsAt,
   mountainShape,
@@ -65,14 +64,7 @@ export const THEMES: Record<WorldId, WorldTheme> = {
   },
 };
 
-/** Étages de la montagne, du pied au sommet (voir MOUNTAIN_ZONES), et ciel autour des flancs. */
-const MOUNTAIN_STOPS: Array<[number, string]> = [
-  [0, '#cbdcae'],
-  [MOUNTAIN_ROCK_FROM - 0.06, '#c9d8ab'],
-  [MOUNTAIN_ROCK_FROM + 0.06, '#bfc2b6'],
-  [MOUNTAIN_SNOW_FROM - 0.04, '#aeb8c2'],
-  [1, '#c3ccd5'],
-];
+/** Ciel au-dessus des montagnes. */
 const MOUNTAIN_SKY_TOP = '#bfe3fa';
 const MOUNTAIN_SKY_LOW = '#e4f3fc';
 const SNOW = '#f7fbfe';
@@ -656,105 +648,125 @@ function PassSprite({ passage }: { passage: Passage }) {
   );
 }
 
-/** Montagne : le ciel autour, un massif qui se resserre jusqu'au sommet, étagé de la prairie à la neige. */
+/** Une montagne dessinée de face : flanc éclairé à gauche, flanc à l'ombre à droite, pointe arrondie,
+ * et une calotte de neige si elle est haute. */
+function Peak({ x, tip, half, base, light, dark, snow }: {
+  x: number;
+  tip: number;
+  half: number;
+  base: number;
+  light: string;
+  dark: string;
+  snow: boolean;
+}) {
+  const r = (n: number) => Math.round(n * 10) / 10;
+  const round = 6;
+  const f = round / (base - tip);
+  const body =
+    `M ${r(x - half)} ${r(base)} L ${r(x - half * f)} ${r(tip + round)} ` +
+    `Q ${r(x)} ${r(tip - 2)} ${r(x + half * f)} ${r(tip + round)} L ${r(x + half)} ${r(base)} Z`;
+  const shade = `M ${r(x)} ${r(tip)} L ${r(x + half)} ${r(base)} L ${r(x + half * 0.18)} ${r(base)} Z`;
+  const depth = Math.min(60, (base - tip) * 0.2);
+  const g = depth / (base - tip);
+  const cap = snow
+    ? `M ${r(x - half * f)} ${r(tip + round)} Q ${r(x)} ${r(tip - 2)} ${r(x + half * f)} ${r(tip + round)} ` +
+      `L ${r(x + half * g)} ${r(tip + depth)} L ${r(x + half * g * 0.4)} ${r(tip + depth * 0.72)} ` +
+      `L ${r(x)} ${r(tip + depth * 0.95)} L ${r(x - half * g * 0.4)} ${r(tip + depth * 0.7)} L ${r(x - half * g)} ${r(tip + depth)} Z`
+    : '';
+  return (
+    <g>
+      <path d={body} fill={light} />
+      <path d={shade} fill={dark} />
+      {cap && <path d={cap} fill={SNOW} />}
+    </g>
+  );
+}
+
+/**
+ * Montagne : une grande montagne verte vue de face, dont la pointe coiffe le dernier niveau ;
+ * derrière, les montagnes voisines puis une chaîne lointaine bleutée, et le ciel au-dessus.
+ */
 function MountainGround({ band, shape, width }: { band: WorldBand; shape: MountainShape; width: number }) {
   const id = `mountain-${band.worldIndex}`;
-  const { rows } = shape;
+  const { rows, summit } = shape;
   const r = (n: number) => Math.round(n * 10) / 10;
-  // Bords un peu rocheux : de petites aspérités, toujours vers l'extérieur (le chemin reste dégagé).
-  const bump = (i: number) => hash01(band.worldIndex * 1009 + i) * 6;
+  const H = band.bottom - summit.y;
+  const at = (t: number) => band.bottom - t * H; // ordonnée d'une altitude (0 au pied, 1 à la pointe)
   const outline =
-    `M ${rows.map((row, i) => `${r(row.left - bump(i))} ${r(row.y)}`).join(' L ')} ` +
+    `M ${rows.map((row) => `${r(row.left)} ${r(row.y)}`).join(' L ')} ` +
     `L ${rows
-      .map((row, i) => `${r(row.right + bump(i + 500))} ${r(row.y)}`)
+      .map((row) => `${r(row.right)} ${r(row.y)}`)
       .reverse()
       .join(' L ')} Z`;
-  const flank = rows.filter((row) => row.right < width + 20 && altitude(shape.climb, row.y) > 0.25);
-  const shade =
-    flank.length > 1
-      ? `M ${flank.map((row) => `${r(row.right)} ${r(row.y)}`).join(' L ')} L ${flank
-          .map((row) => `${r(row.right - 30)} ${r(row.y)}`)
-          .reverse()
-          .join(' L ')} Z`
-      : '';
-  // Couloirs : quelques traits obliques qui descendent des flancs, pour la texture de la roche.
-  const couloirs: string[] = [];
-  rows.forEach((row, i) => {
-    if (i % 8 !== 3 || altitude(shape.climb, row.y) < MOUNTAIN_ROCK_FROM) return;
-    const len = 26 + hash01(band.worldIndex * 13 + i) * 20;
-    if (row.left > -10) couloirs.push(`M ${r(row.left + 3)} ${r(row.y)} l ${r(len * 0.7)} ${r(len)}`);
-    if (row.right < width + 10) couloirs.push(`M ${r(row.right - 3)} ${r(row.y + 20)} l ${r(-len * 0.7)} ${r(len)}`);
-  });
-  // Sommets lointains, derrière le massif (il les recouvre : jamais sur le chemin). Ils se dressent
-  // haut au-dessus des flancs, de part et d'autre, pour que la montagne paraisse immense.
-  const farPeaks = [0.36, 0.5, 0.64].flatMap((t, k) => {
-    const row = rows.find((rw) => altitude(shape.climb, rw.y) <= t);
-    if (!row) return [];
-    const onLeft = (k + band.worldIndex) % 2 === 0;
-    const edge = onLeft ? row.left : row.right;
-    if (edge < -30 || edge > width + 30) return [];
-    const heightPx = 250 + hash01(band.worldIndex * 7 + k) * 90;
-    const half = heightPx * 0.55;
-    return [{ x: edge + (onLeft ? -half * 0.3 : half * 0.3), y: row.y + 30, h: heightPx, half, key: k }];
-  });
-  const snowY = band.bottom - MOUNTAIN_SNOW_FROM * (band.bottom - shape.climb.top);
+  // Arête : de la pointe, elle descend en biais ; à sa droite, le flanc à l'ombre.
+  const ridge = rows.map((row) => ({ x: summit.x + (row.y - summit.y) * 0.14, y: row.y }));
+  const shade = `M ${ridge.map((p) => `${r(p.x)} ${r(p.y)}`).join(' L ')} L ${width + 80} ${r(band.bottom)} L ${width + 80} ${r(summit.y)} Z`;
   let snow = `M -80 ${r(band.top - 2)} L ${width + 80} ${r(band.top - 2)}`;
-  for (let x = width + 80, k = 0; x >= -80; x -= 16, k += 1) {
-    snow += ` L ${x} ${r(snowY + (k % 2 === 0 ? 10 : -4) + hash01(band.worldIndex * 71 + k) * 6)}`;
+  const snowY = summit.y + SNOW_CAP;
+  for (let x = width + 80, k = 0; x >= -80; x -= 14, k += 1) {
+    snow += ` L ${x} ${r(snowY + (k % 2 === 0 ? 8 : -6) + hash01(band.worldIndex * 71 + k) * 6)}`;
   }
   snow += ' Z';
+  const far = [
+    { x: width * 0.1, t: 0.93 },
+    { x: width * 0.9, t: 0.97 },
+    { x: width * 0.62, t: 0.9 },
+  ];
+  const near = [
+    { x: -width * 0.04, t: 0.8, light: '#a3d27a', dark: '#8cc466' },
+    { x: width * 1.04, t: 0.76, light: '#a3d27a', dark: '#8cc466' },
+    { x: width * 0.2, t: 0.62, light: '#99cc70', dark: '#83bd5f' },
+    { x: width * 0.84, t: 0.58, light: '#99cc70', dark: '#83bd5f' },
+  ];
   return (
     <g data-world={band.world}>
       <defs>
-        <linearGradient id={`${id}-sky`} gradientUnits="userSpaceOnUse" x1="0" y1={band.top} x2="0" y2={band.bottom}>
+        <linearGradient id={`${id}-sky`} gradientUnits="userSpaceOnUse" x1="0" y1={band.top} x2="0" y2={at(0.6)}>
           <stop offset="0" stop-color={MOUNTAIN_SKY_TOP} />
           <stop offset="1" stop-color={MOUNTAIN_SKY_LOW} />
-        </linearGradient>
-        <linearGradient id={`${id}-rock`} gradientUnits="userSpaceOnUse" x1="0" y1={band.bottom} x2="0" y2={band.top}>
-          {MOUNTAIN_STOPS.map(([offset, color]) => (
-            <stop key={offset} offset={offset} stop-color={color} />
-          ))}
         </linearGradient>
         <clipPath id={`${id}-clip`}>
           <path d={outline} />
         </clipPath>
       </defs>
       <rect x="0" y={band.top} width={width} height={band.bottom - band.top} fill={`url(#${id}-sky)`} />
-      {farPeaks.map(({ x, y, h, half, key }) => {
-        const tx = x;
-        const ty = y - h;
-        const cap = h * 0.26;
-        return (
-          <g key={key}>
-            <path d={`M ${r(x - half)} ${r(y)} L ${r(tx)} ${r(ty)} L ${r(x + half)} ${r(y)} Z`} fill="#b3c2d0" />
-            <path d={`M ${r(tx)} ${r(ty)} L ${r(x + half)} ${r(y)} L ${r(x + half * 0.2)} ${r(y)} Z`} fill="#9fb0c1" />
-            <path
-              d={`M ${r(tx - cap * 0.62)} ${r(ty + cap)} L ${r(tx)} ${r(ty)} L ${r(tx + cap * 0.62)} ${r(ty + cap)} L ${r(
-                tx + cap * 0.3,
-              )} ${r(ty + cap * 0.8)} L ${r(tx)} ${r(ty + cap * 1.05)} L ${r(tx - cap * 0.3)} ${r(ty + cap * 0.8)} Z`}
-              fill={SNOW}
-            />
-          </g>
-        );
-      })}
-      <path d={outline} fill={`url(#${id}-rock)`} />
+      {far.map((p) => (
+        <Peak
+          key={`f${p.x}`}
+          x={p.x}
+          tip={at(p.t)}
+          half={H * p.t * 0.5}
+          base={band.bottom}
+          light="#b3d9d2"
+          dark="#9cc9c0"
+          snow
+        />
+      ))}
+      {near.map((p) => (
+        <Peak
+          key={`n${p.x}`}
+          x={p.x}
+          tip={at(p.t)}
+          half={H * p.t * 0.46}
+          base={band.bottom}
+          light={p.light}
+          dark={p.dark}
+          snow={false}
+        />
+      ))}
+      <path d={outline} fill="#b0d985" stroke="#8cc466" stroke-width="2.5" stroke-linejoin="round" />
       <g clip-path={`url(#${id}-clip)`}>
-        {groundPatches(band)
-          .filter((cy) => altitude(shape.climb, cy) < MOUNTAIN_ROCK_FROM)
-          .map((cy, i) => (
-            <ellipse
-              key={i}
-              cx={i % 2 === 0 ? width * 0.22 : width * 0.78}
-              cy={cy}
-              rx={width * 0.34}
-              ry="70"
-              fill={THEMES.mountain.patch}
-            />
-          ))}
-        {shade && <path d={shade} fill="rgba(60, 75, 95, 0.12)" />}
-        {couloirs.map((c) => (
-          <path key={c} d={c} stroke="rgba(60, 75, 95, 0.16)" stroke-width="3" stroke-linecap="round" fill="none" />
+        {groundPatches(band).map((cy, i) => (
+          <ellipse
+            key={i}
+            cx={i % 2 === 0 ? width * 0.22 : width * 0.78}
+            cy={cy}
+            rx={width * 0.34}
+            ry="70"
+            fill="#bde195"
+          />
         ))}
+        <path d={shade} fill="rgba(70, 120, 40, 0.13)" />
         <path d={snow} fill={SNOW} />
       </g>
     </g>

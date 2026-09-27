@@ -26,8 +26,8 @@ import {
   worldIdAt,
   worldIndexForLevel,
   WORLD_ORDER,
-  MOUNTAIN_SNOW_FROM,
-  MOUNTAIN_TAPER_START,
+  MOUNTAIN_HIGH_FROM,
+  NEIGHBOURS_TOP,
   MOUNTAIN_ZONES,
   altitude,
   mountainKindsAt,
@@ -35,8 +35,6 @@ import {
   onMountain,
   SUMMIT_RISE,
   SUMMIT_SPACING,
-  SWITCHBACK_SPACING,
-  TRAVERSE_RISE,
 } from './layout';
 
 const WIDTH = 412;
@@ -118,8 +116,7 @@ describe('écart entre niveaux', () => {
       { length: count - 1 },
       (_, i) => nodePosition(i, count, WIDTH).y - nodePosition(i + 1, count, WIDTH).y,
     );
-    // Hors montagne (monde 2), où les niveaux vont par deux sur des traversées en lacets.
-    const inner = gaps.filter((_, i) => (i + 1) % LEVELS_PER_WORLD !== 0 && worldIndexForLevel(i) !== 2);
+    const inner = gaps.filter((_, i) => (i + 1) % LEVELS_PER_WORLD !== 0);
     for (const g of inner) {
       expect(g).toBeGreaterThanOrEqual(Math.floor(SPACING * (1 - SPACING_JITTER)));
       expect(g).toBeLessThanOrEqual(Math.ceil(SPACING * (1 + SPACING_JITTER)));
@@ -305,40 +302,27 @@ describe('montagne', () => {
       expect(shape.summit.y).toBe(highest - SUMMIT_RISE);
     });
 
-    it(`deux niveaux par traversée, un lacet serré entre deux traversées (${count} niveaux)`, () => {
-      const first = 2 * LEVELS_PER_WORLD;
-      const last = Math.min(count, 3 * LEVELS_PER_WORLD) - 1;
-      for (let i = first; i < last; i += 1) {
-        const a = nodePosition(i, count, WIDTH);
-        const b = nodePosition(i + 1, count, WIDTH);
-        if (i % 2 === 0) {
-          expect(a.y - b.y).toBe(TRAVERSE_RISE); // même traversée, presque à plat
-          expect(Math.abs(a.x - b.x)).toBeGreaterThan(NODE_SIZE + 12); // côte à côte, sans se toucher
-        } else {
-          expect(a.y - b.y).toBe(SWITCHBACK_SPACING);
-          expect(SWITCHBACK_SPACING).toBeGreaterThan(NODE_SIZE + 40); // place pour le disque et ses étoiles
-        }
-      }
-      for (const p of route.points) {
-        expect(p.x).toBeGreaterThanOrEqual(WIDTH * 0.1 - 0.001);
-        expect(p.x).toBeLessThanOrEqual(WIDTH * 0.9 + 0.001);
-      }
+    it(`le chemin serpente de moins en moins large en montant (${count} niveaux)`, () => {
+      const first = 2 * LEVELS_PER_WORLD + 1;
+      const last = Math.min(count, 3 * LEVELS_PER_WORLD) - 2;
+      const spread = (from: number, to: number) => {
+        const xs = Array.from({ length: to - from + 1 }, (_, k) => nodePosition(from + k, count, WIDTH).x);
+        return Math.max(...xs.map((x) => Math.abs(x - WIDTH / 2)));
+      };
+      const mid = Math.floor((first + last) / 2);
+      expect(spread(mid, last)).toBeLessThan(spread(first, mid));
     });
 
     it(`étage le décor : ciel à côté, neige en haut, pics loin du chemin (${count} niveaux)`, () => {
       const decor = placeDecor(band, WIDTH, samples, nodes, mountainKindsAt(band, shape));
       expect(decor.length).toBeGreaterThan(10);
       const sky = new Set<string>(MOUNTAIN_ZONES.sky.map((k) => k.kind));
-      const snow = new Set<string>(MOUNTAIN_ZONES.snow.map((k) => k.kind));
+      const high = new Set<string>(MOUNTAIN_ZONES.high.map((k) => k.kind));
       for (const item of decor) {
-        if (!onMountain(shape, item.x, item.y)) expect(sky.has(item.kind)).toBe(true);
-        else if (altitude(band, item.y) >= MOUNTAIN_SNOW_FROM) expect(snow.has(item.kind)).toBe(true);
+        const t = altitude(shape.climb, item.y);
+        if (!onMountain(shape, item.x, item.y)) expect(sky.has(item.kind)).toBe(t >= NEIGHBOURS_TOP);
+        else if (t >= MOUNTAIN_HIGH_FROM) expect(high.has(item.kind)).toBe(true);
         else expect(sky.has(item.kind)).toBe(false);
-        if (item.kind === 'peak') {
-          const tip = { x: item.x, y: item.y - 60 * item.scale };
-          const minPath = Math.min(...samples.map((p) => Math.hypot(p.x - tip.x, p.y - tip.y)));
-          expect(minPath).toBeGreaterThan(PATH_WIDTH / 2);
-        }
       }
       expect(decor.some((d) => sky.has(d.kind))).toBe(true);
       const meadow = new Set<string>(['pine', 'flower', 'grass']);
