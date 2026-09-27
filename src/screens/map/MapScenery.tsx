@@ -9,6 +9,9 @@ import {
   PATH_WIDTH,
   buildRoute,
   hash01,
+  NODE_SIZE,
+  SUMMIT_RISE,
+  SUMMIT_SPACING,
   MOUNTAIN_ROCK_FROM,
   MOUNTAIN_SNOW_FROM,
   altitude,
@@ -78,6 +81,11 @@ const SNOW_SHADE = '#dce8f2';
 const CLOUD_PATH = '#ffffff';
 const CLOUD_PATH_SHADE = '#cfe2f3';
 const CLOUD_PATH_CORE = '#f1f8fe';
+/** Où s'arrête le chemin de terre d'une montagne : au pied de l'échelle s'il y a des nuages au-dessus,
+ * sinon au fanion, un peu sous la pointe. */
+function summitPathEnd(band: WorldBand, shape: MountainShape): number {
+  return band.top > 0 ? shape.summit.y + SUMMIT_RISE - NODE_SIZE / 2 : shape.summit.y + 40;
+}
 
 const RIVER_FILL = '#4aa3d4';
 const RIVER_HALF = 22;
@@ -661,7 +669,7 @@ function MountainGround({ band, shape, width }: { band: WorldBand; shape: Mounta
       .map((row, i) => `${r(row.right + bump(i + 500))} ${r(row.y)}`)
       .reverse()
       .join(' L ')} Z`;
-  const flank = rows.filter((row) => row.right < width + 20 && altitude(band, row.y) > 0.25);
+  const flank = rows.filter((row) => row.right < width + 20 && altitude(shape.climb, row.y) > 0.25);
   const shade =
     flank.length > 1
       ? `M ${flank.map((row) => `${r(row.right)} ${r(row.y)}`).join(' L ')} L ${flank
@@ -672,7 +680,7 @@ function MountainGround({ band, shape, width }: { band: WorldBand; shape: Mounta
   // Couloirs : quelques traits obliques qui descendent des flancs, pour la texture de la roche.
   const couloirs: string[] = [];
   rows.forEach((row, i) => {
-    if (i % 8 !== 3 || altitude(band, row.y) < MOUNTAIN_ROCK_FROM) return;
+    if (i % 8 !== 3 || altitude(shape.climb, row.y) < MOUNTAIN_ROCK_FROM) return;
     const len = 26 + hash01(band.worldIndex * 13 + i) * 20;
     if (row.left > -10) couloirs.push(`M ${r(row.left + 3)} ${r(row.y)} l ${r(len * 0.7)} ${r(len)}`);
     if (row.right < width + 10) couloirs.push(`M ${r(row.right - 3)} ${r(row.y + 20)} l ${r(-len * 0.7)} ${r(len)}`);
@@ -680,7 +688,7 @@ function MountainGround({ band, shape, width }: { band: WorldBand; shape: Mounta
   // Sommets lointains, derrière le massif (il les recouvre : jamais sur le chemin). Ils se dressent
   // haut au-dessus des flancs, de part et d'autre, pour que la montagne paraisse immense.
   const farPeaks = [0.36, 0.5, 0.64].flatMap((t, k) => {
-    const row = rows.find((rw) => altitude(band, rw.y) <= t);
+    const row = rows.find((rw) => altitude(shape.climb, rw.y) <= t);
     if (!row) return [];
     const onLeft = (k + band.worldIndex) % 2 === 0;
     const edge = onLeft ? row.left : row.right;
@@ -689,7 +697,7 @@ function MountainGround({ band, shape, width }: { band: WorldBand; shape: Mounta
     const half = heightPx * 0.55;
     return [{ x: edge + (onLeft ? -half * 0.3 : half * 0.3), y: row.y + 30, h: heightPx, half, key: k }];
   });
-  const snowY = band.bottom - MOUNTAIN_SNOW_FROM * (band.bottom - band.top);
+  const snowY = band.bottom - MOUNTAIN_SNOW_FROM * (band.bottom - shape.climb.top);
   let snow = `M -80 ${r(band.top - 2)} L ${width + 80} ${r(band.top - 2)}`;
   for (let x = width + 80, k = 0; x >= -80; x -= 16, k += 1) {
     snow += ` L ${x} ${r(snowY + (k % 2 === 0 ? 10 : -4) + hash01(band.worldIndex * 71 + k) * 6)}`;
@@ -732,7 +740,7 @@ function MountainGround({ band, shape, width }: { band: WorldBand; shape: Mounta
       <path d={outline} fill={`url(#${id}-rock)`} />
       <g clip-path={`url(#${id}-clip)`}>
         {groundPatches(band)
-          .filter((cy) => altitude(band, cy) < MOUNTAIN_ROCK_FROM)
+          .filter((cy) => altitude(shape.climb, cy) < MOUNTAIN_ROCK_FROM)
           .map((cy, i) => (
             <ellipse
               key={i}
@@ -773,19 +781,38 @@ function CloudSea({ passage, width }: { passage: Passage; width: number }) {
   );
 }
 
-/** Sommet : un fanion planté au bord du chemin, juste sous la mer de nuages. */
-function SummitSprite({ passage, width }: { passage: Passage; width: number }) {
-  const side = roomySide(passage, width);
-  const cx = side * (DECK_HALF + 10);
+/** Du sommet aux nuages : une échelle de bois dressée sur la pointe, qui file dans la mer de nuages. */
+function Ladder({ passage }: { passage: Passage }) {
+  const bottom = SUMMIT_SPACING / 2 - NODE_SIZE / 2 + 6;
+  const top = 4;
+  const half = 11;
+  const rungs = [];
+  for (let y = bottom - 10; y > top; y -= 13) {
+    rungs.push(<path key={y} d={`M ${-half} ${y} L ${half} ${y}`} stroke="#a8713d" stroke-width="3.2" stroke-linecap="round" />);
+  }
   return (
     <g transform={`translate(${Math.round(passage.x)} ${Math.round(passage.y)})`} data-testid="map-passage">
-      <g transform={`translate(${cx} 46)`}>
-        <ellipse cx="0" cy="0" rx="11" ry="3.5" fill="rgba(40,50,60,0.2)" />
-        <path d="M -9 0 L -7 -6 L 7 -6 L 9 0 Z" fill="#8f9ca8" />
-        <path d="M -5 -6 L -4 -11 L 5 -11 L 6 -6 Z" fill="#a3afba" />
-        <path d="M 0 -11 L 0 -40" stroke="#6e4420" stroke-width="2.2" stroke-linecap="round" />
-        <path d={`M 0 -40 L ${side * 16} -35 L 0 -29 Z`} fill="#e63946" />
-      </g>
+      <path d={`M ${-half + 3} ${bottom + 2} L ${half + 3} ${bottom + 2}`} stroke="rgba(40,50,60,0.2)" stroke-width="6" stroke-linecap="round" />
+      {rungs}
+      {[-1, 1].map((sx) => (
+        <path
+          key={sx}
+          d={`M ${sx * half} ${bottom} L ${sx * half} ${top}`}
+          stroke="#8b5a2b"
+          stroke-width="4.5"
+          stroke-linecap="round"
+        />
+      ))}
+    </g>
+  );
+}
+
+/** Fin de parcours au sommet : un fanion planté sur la pointe. */
+function SummitFlag({ at }: { at: Point }) {
+  return (
+    <g transform={`translate(${Math.round(at.x)} ${Math.round(at.y + 42)})`}>
+      <path d="M 0 0 L 0 -34" stroke="#6e4420" stroke-width="2.4" stroke-linecap="round" />
+      <path d="M 0 -34 L 18 -28 L 0 -21 Z" fill="#e63946" />
     </g>
   );
 }
@@ -866,9 +893,18 @@ export function MapScenery({ count, width }: Props) {
       bands,
       passages: passageList,
       cloudBands,
-      earthBands: bands.filter(({ band }) => band.world !== 'clouds').map(({ band }) => band),
-      // Pas de cailloux sur un chemin de nuages (marge : leur emprise ne déborde pas sur la frontière).
-      stones: pathStones(samples, nodes, passageList).filter((st) => !inClouds(st.y - st.rx) && !inClouds(st.y + st.rx)),
+      // Le chemin de terre s'arrête à la pointe d'une montagne : au-dessus, le ciel (et l'échelle).
+      earthBands: bands
+        .filter(({ band }) => band.world !== 'clouds')
+        .map(({ band, shape }) => ({ ...band, top: shape ? summitPathEnd(band, shape) : band.top })),
+      // Pas de cailloux sur un chemin de nuages (marge : leur emprise ne déborde pas sur la frontière),
+      // ni au-dessus d'un sommet.
+      stones: pathStones(samples, nodes, passageList).filter(
+        (st) =>
+          !inClouds(st.y - st.rx) &&
+          !inClouds(st.y + st.rx) &&
+          !bands.some(({ band, shape }) => shape && st.y < band.bottom && st.y - st.rx < summitPathEnd(band, shape) + 20),
+      ),
     };
   }, [count, width]);
 
@@ -913,21 +949,21 @@ export function MapScenery({ count, width }: Props) {
         return <River key={key} passage={passage} width={width} below={below} />;
       })}
 
-      {hasClouds && (
-        <defs>
-          <clipPath id="map-earth-clip">
+      <defs>
+        <clipPath id="map-earth-clip">
             {scene.earthBands.map((band) => (
               <rect key={band.worldIndex} x="-50" y={band.top} width={width + 100} height={band.bottom - band.top} />
             ))}
           </clipPath>
+        {hasClouds && (
           <clipPath id="map-cloud-clip">
             {scene.cloudBands.map((band) => (
               <rect key={band.worldIndex} x="-50" y={band.top} width={width + 100} height={band.bottom - band.top} />
             ))}
           </clipPath>
-        </defs>
-      )}
-      <g clip-path={hasClouds ? 'url(#map-earth-clip)' : undefined}>
+        )}
+      </defs>
+      <g clip-path="url(#map-earth-clip)">
         <path d={d} class="map-scenery__path" stroke="rgba(90, 70, 30, 0.1)" stroke-width={PATH_WIDTH + 6} />
         <path d={d} class="map-scenery__path" stroke={PATH_EDGE} stroke-width={PATH_WIDTH} />
         <path d={d} class="map-scenery__path" stroke={PATH_FILL} stroke-width={PATH_WIDTH - 6} />
@@ -950,13 +986,16 @@ export function MapScenery({ count, width }: Props) {
         if (passage.kind === 'summit') {
           return (
             <g key={key}>
+              <Ladder passage={passage} />
               <CloudSea passage={passage} width={width} />
-              <SummitSprite passage={passage} width={width} />
             </g>
           );
         }
         return <BridgeSprite key={key} passage={passage} />;
       })}
+      {bands.map(({ band, shape }) =>
+        shape && band.top === 0 ? <SummitFlag key={`summit-${band.worldIndex}`} at={shape.summit} /> : null,
+      )}
 
       {bands.map(({ band, sign, decor }) => (
         <g key={`decor-${band.worldIndex}`}>

@@ -8,6 +8,14 @@ export const SPACING = 168;
 export const SPACING_JITTER = 0.15;
 /** Écart plus grand autour d'une frontière, pour laisser la place au passage (pont, ponton, col). */
 export const BORDER_SPACING = 224;
+/** Montagne : deux niveaux par traversée, presque à plat (TRAVERSE_RISE), puis un lacet serré qui
+ * remonte d'un étage (SWITCHBACK_SPACING : juste la place d'un niveau et de ses étoiles). */
+export const TRAVERSE_RISE = 8;
+export const SWITCHBACK_SPACING = 124;
+/** Du dernier niveau de la montagne (au sommet) au premier des nuages : le sommet, du ciel, l'échelle. */
+export const SUMMIT_SPACING = 440;
+/** Hauteur de la pointe du sommet au-dessus du dernier niveau de la montagne. */
+export const SUMMIT_RISE = 150;
 export const TOP_PAD = 120;
 export const BOTTOM_PAD = 140;
 /** Largeur visible du chemin (bordure comprise) : un sentier, plus étroit que les niveaux posés dessus. */
@@ -26,7 +34,9 @@ export interface Point {
 }
 
 export function trackHeightFor(count: number): number {
-  return TOP_PAD + BOTTOM_PAD + nodeRise(Math.max(0, count - 1));
+  // Parcours qui s'achève en montagne : de la place au-dessus du dernier niveau pour le sommet et le ciel.
+  const summit = count > 0 && isMountainLevel(count - 1) ? SUMMIT_RISE + 70 : 0;
+  return TOP_PAD + summit + BOTTOM_PAD + nodeRise(Math.max(0, count - 1));
 }
 
 /** Demi-hauteur de la bande frontière (rivière, plage, crête), et demi-longueur du passage rectiligne. */
@@ -44,7 +54,8 @@ export function hash01(n: number): number {
 
 /** Écart vertical entre le niveau `i` et le suivant. */
 function gapAfter(i: number): number {
-  if ((i + 1) % LEVELS_PER_WORLD === 0) return BORDER_SPACING;
+  if ((i + 1) % LEVELS_PER_WORLD === 0) return isMountainLevel(i) ? SUMMIT_SPACING : BORDER_SPACING;
+  if (isMountainLevel(i)) return i % 2 === 0 ? TRAVERSE_RISE : SWITCHBACK_SPACING;
   return Math.round(SPACING * (1 - SPACING_JITTER + hash01(i * 7 + 4) * 2 * SPACING_JITTER));
 }
 
@@ -72,6 +83,9 @@ const xCache: number[] = [];
 
 /** Abscisse du passage entre le monde `worldIndex - 1` et `worldIndex`, en fraction de largeur. */
 function bridgeFraction(worldIndex: number): number {
+  // Col vers la montagne et échelle vers les nuages : alignés sur le premier (resp. dernier) lacet.
+  if (worldIdAt(worldIndex) === 'mountain') return mountainXFraction(worldIndex * LEVELS_PER_WORLD);
+  if (worldIndex > 0 && worldIdAt(worldIndex - 1) === 'mountain') return mountainXFraction(worldIndex * LEVELS_PER_WORLD - 1);
   return 0.38 + hash01(worldIndex * 31 + 7) * 0.24;
 }
 
@@ -96,13 +110,8 @@ function xFraction(index: number): number {
     const base = (MOTIFS[m] as readonly number[])[i % MOTIF_LEN] as number;
     const jitter = (hash01(i * 17 + 1) - 0.5) * 0.08;
     const bridgeWorld = bridgeWorldAt(i);
-    if (bridgeWorld === null && isMountainLevel(i)) {
-      // Montagne : les niveaux s'alignent sur la ligne de pente, du col jusqu'au sommet ; les lacets
-      // du chemin partent de part et d'autre (voir buildRoute).
-      const w = worldIndexForLevel(i);
-      const k = (i % LEVELS_PER_WORLD) / (LEVELS_PER_WORLD - 1);
-      const fall = bridgeFraction(w) + (bridgeFraction(w + 1) - bridgeFraction(w)) * k;
-      xCache.push(fall + (i % 2 === 0 ? -0.03 : 0.03));
+    if (isMountainLevel(i)) {
+      xCache.push(mountainXFraction(i));
       continue;
     }
     xCache.push(bridgeWorld !== null ? bridgeFraction(bridgeWorld) : (mirror ? 1 - base : base) + jitter);
@@ -112,6 +121,24 @@ function xFraction(index: number): number {
 
 function isMountainLevel(index: number): boolean {
   return worldIdAt(worldIndexForLevel(index)) === 'mountain';
+}
+
+/**
+ * Montagne : deux niveaux par traversée, de part et d'autre du milieu ; le sens alterne d'une
+ * traversée à l'autre, si bien que chaque lacet relie deux niveaux superposés. Les traversées
+ * raccourcissent en montant.
+ */
+function mountainXFraction(index: number): number {
+  const k = index % LEVELS_PER_WORLD;
+  const reach = 0.17 + (0.12 - 0.17) * (k / (LEVELS_PER_WORLD - 1));
+  const dir = traverseDir(index);
+  return 0.5 + (k % 2 === 0 ? -dir : dir) * reach;
+}
+
+/** Sens de la traversée (+1 vers la droite) qui porte le niveau de montagne `index`. */
+function traverseDir(index: number): number {
+  const pair = Math.floor((index % LEVELS_PER_WORLD) / 2);
+  return (pair + worldIndexForLevel(index)) % 2 === 0 ? 1 : -1;
 }
 
 /** Niveau 0 en bas ; le chemin monte en enchaînant zigzags, traversées et virages. */
@@ -193,7 +220,6 @@ export function buildRoute(count: number, width: number): Route {
   const points: Point[] = [];
   const nodeAt: number[] = [];
   const first = nodePosition(0, count, width);
-  const bands = worldBands(count);
   points.push({ x: first.x, y: height + 20 });
   for (let i = 0; i < count; i += 1) {
     const a = nodePosition(i, count, width);
@@ -208,7 +234,8 @@ export function buildRoute(count: number, width: number): Route {
       continue;
     }
     if (isMountainLevel(i)) {
-      points.push(...hairpin(i, a, b, bands[worldIndexForLevel(i)] as WorldBand, width));
+      // Entre deux niveaux d'une même traversée : tout droit. Sinon, un lacet au bout de la traversée.
+      if (i % 2 === 1) points.push(...hairpin(i, a, b, width));
       continue;
     }
     const dx = Math.abs(b.x - a.x) / width;
@@ -221,35 +248,39 @@ export function buildRoute(count: number, width: number): Route {
       points.push({ x: x * width, y: (a.y + b.y) / 2 });
     }
   }
-  points.push({ x: width / 2, y: -20 });
+  const last = points[points.length - 1] as Point;
+  if (isMountainLevel(count - 1)) {
+    // Le parcours s'arrête au sommet : le chemin grimpe tout droit jusqu'à la pointe, puis sort
+    // (masqué au-dessus de la pointe, dans le ciel).
+    points.push({ x: last.x, y: last.y - SUMMIT_RISE / 2 }, { x: last.x, y: -20 });
+  } else {
+    points.push({ x: width / 2, y: -20 });
+  }
   return { points, nodeAt };
 }
 
-/** Pente d'une traversée de lacet : elle ne monte presque pas, c'est le virage qui fait gagner la hauteur. */
-const TRAVERSE_RISE = 8;
-/** Écrasement horizontal du virage en épingle (1 : demi-cercle). */
-const HAIRPIN_SQUASH = 0.55;
+/** Écrasement horizontal du virage en épingle (1 : demi-cercle) : un lacet serré. */
+const HAIRPIN_SQUASH = 0.62;
 
 /**
- * Chemin de montagne entre le niveau `i` (point `a`) et le suivant (`b`) : une traversée presque
- * horizontale vers un bord, un virage en épingle, puis une traversée retour jusqu'au niveau suivant.
- * Les lacets s'élargissent au pied et se resserrent vers le sommet, en suivant les flancs.
+ * Lacet de montagne entre le dernier niveau d'une traversée (`a`) et le premier de la suivante (`b`),
+ * presque à la verticale l'un de l'autre : le chemin file un peu plus loin, tourne en épingle serrée
+ * et revient au-dessus.
  */
-function hairpin(i: number, a: Point, b: Point, band: WorldBand, width: number): Point[] {
-  const side = (i + worldIndexForLevel(i)) % 2 === 0 ? 1 : -1;
+function hairpin(i: number, a: Point, b: Point, width: number): Point[] {
+  const side = traverseDir(i);
   const radius = (a.y - b.y) / 2;
   const yMid = (a.y + b.y) / 2;
-  const t = altitude(band, yMid);
-  const cx = (a.x + b.x) / 2;
-  const reach = Math.min(width * 0.36, Math.max(NODE_SIZE / 2 + 26 + radius * HAIRPIN_SQUASH, mountainHalfWidth(t, width) - 44));
-  const turnX = Math.max(width * 0.12, Math.min(width * 0.88, cx + side * reach));
+  const edge = Math.max(a.x, b.x) * (side > 0 ? 1 : 0) + Math.min(a.x, b.x) * (side > 0 ? 0 : 1);
+  // Le virage commence sous le bord du disque du niveau : il reste serré et dans la carte.
+  const turnX = Math.max(width * 0.1, Math.min(width * 0.9, edge + side * (NODE_SIZE / 2 - 12 + radius * HAIRPIN_SQUASH)));
   const bendX = turnX - side * radius * HAIRPIN_SQUASH;
-  const out: Point[] = [{ x: bendX, y: a.y - TRAVERSE_RISE }];
-  for (const deg of [-50, 0, 50]) {
+  const out: Point[] = [{ x: bendX, y: a.y - 2 }];
+  for (const deg of [-55, 0, 55]) {
     const th = (deg * Math.PI) / 180;
-    out.push({ x: bendX + side * radius * HAIRPIN_SQUASH * Math.cos(th), y: yMid - radius * Math.sin(th) * 0.9 });
+    out.push({ x: bendX + side * radius * HAIRPIN_SQUASH * Math.cos(th), y: yMid - radius * Math.sin(th) * 0.92 });
   }
-  out.push({ x: bendX, y: b.y + TRAVERSE_RISE });
+  out.push({ x: bendX, y: b.y + 2 });
   return out;
 }
 
@@ -431,23 +462,30 @@ export const MOUNTAIN_TAPER_START = 0.3;
 export const MOUNTAIN_ROCK_FROM = 0.4;
 export const MOUNTAIN_SNOW_FROM = 0.78;
 /** Demi-largeur du sommet, de part et d'autre du chemin. */
-const SUMMIT_HALF = 52;
+const SUMMIT_HALF = 4;
+/** Évasement de la pointe : demi-largeur gagnée par pixel de descente. */
+const SUMMIT_SLOPE = 0.62;
+/** Retrait maximal d'un flanc par pixel de montée. */
+const FLANK_MAX_SLOPE = 1.7;
 /** Marge minimale entre un flanc et le chemin, puis un niveau (étoiles comprises). */
 const FLANK_PATH_CLEAR = PATH_WIDTH / 2 + 18;
 const FLANK_NODE_CLEAR = NODE_SIZE / 2 + 22;
 const FLANK_STEP = 12;
 
-/** Demi-largeur « naturelle » du massif à l'altitude `t` (flancs concaves : ils se redressent en haut). */
+/** Demi-largeur « naturelle » du massif à l'altitude `t` : des flancs presque droits jusqu'à la pointe. */
 export function mountainHalfWidth(t: number, width: number): number {
   if (t <= MOUNTAIN_TAPER_START) return width;
   const u = (t - MOUNTAIN_TAPER_START) / (1 - MOUNTAIN_TAPER_START);
-  return SUMMIT_HALF + (width * 0.62 - SUMMIT_HALF) * (1 - u) ** 1.6;
+  return SUMMIT_HALF + (width * 0.62 - SUMMIT_HALF) * (1 - u) ** 1.05;
 }
 
 export interface MountainShape {
   /** Du haut vers le bas de la bande, pas de FLANK_STEP : ordonnée et bords gauche/droit du massif. */
   rows: Array<{ y: number; left: number; right: number }>;
+  /** La pointe du sommet. */
   summit: Point;
+  /** La bande ramenée du pied à la pointe : c'est sur elle que se lisent les étages. */
+  climb: WorldBand;
 }
 
 /** Hauteur relative (0 au pied, 1 au sommet) d'une ordonnée dans la bande. */
@@ -466,22 +504,29 @@ export function mountainShape(
   samples: readonly Point[],
   nodes: readonly Point[],
 ): MountainShape {
-  const summitX = band.top > 0 ? bridgeFraction(band.worldIndex + 1) * width : width / 2;
+  // La pointe, au-dessus du plus haut niveau de la bande : au-delà, c'est le ciel.
+  const inBand = nodes.filter((n) => n.y > band.top && n.y < band.bottom);
+  const top = inBand.reduce((best, n) => (n.y < best.y ? n : best), inBand[0] ?? { x: width / 2, y: band.top });
+  const apex = { x: top.x, y: Math.max(band.top + 8, top.y - SUMMIT_RISE) };
+  const climb: WorldBand = { ...band, top: apex.y };
+  const summitX = apex.x;
   const raw: Array<{ y: number; left: number; right: number }> = [];
-  for (let y = band.top; y <= band.bottom + FLANK_STEP / 2; y += FLANK_STEP) {
-    const t = altitude(band, y);
+  for (let y = apex.y; y <= band.bottom + FLANK_STEP / 2; y += FLANK_STEP) {
+    const t = altitude(climb, y);
     let left = -60;
     let right = width + 60;
     if (t > MOUNTAIN_TAPER_START) {
       const u = (t - MOUNTAIN_TAPER_START) / (1 - MOUNTAIN_TAPER_START);
-      // Flancs concaves : ils se resserrent vite en haut, comme une vraie pente qui se redresse.
+      // Flancs presque droits : le massif se termine en pointe.
       const half = mountainHalfWidth(t, width);
       const cx = width / 2 + (summitX - width / 2) * u;
       left = cx - half;
       right = cx + half;
     }
     for (const p of samples) {
-      if (Math.abs(p.y - y) > FLANK_STEP * 2) continue;
+      // Au-dessus du dernier niveau, le chemin file droit vers la pointe (et l'échelle) : il ne
+      // doit pas élargir le sommet.
+      if (Math.abs(p.y - y) > FLANK_STEP * 2 || p.y < top.y - NODE_SIZE / 2) continue;
       left = Math.min(left, p.x - FLANK_PATH_CLEAR);
       right = Math.max(right, p.x + FLANK_PATH_CLEAR);
     }
@@ -506,14 +551,31 @@ export function mountainShape(
       right: near.reduce((sum, n) => sum + n.right, 0) / near.length,
     };
   });
-  return { rows, summit: { x: summitX, y: band.top } };
+  // Au-dessus du dernier niveau, rien à dégager : une vraie pointe, aux flancs droits (le lissage
+  // l'aurait émoussée).
+  const tipEnd = top.y - NODE_SIZE / 2 - FLANK_STEP;
+  for (const row of rows) {
+    if (row.y >= tipEnd) break;
+    const half = SUMMIT_HALF + (row.y - apex.y) * SUMMIT_SLOPE;
+    row.left = Math.max(row.left, apex.x - half);
+    row.right = Math.min(row.right, apex.x + half);
+  }
+  // Pas de marche : en montant, un flanc ne rentre jamais plus vite que FLANK_MAX_SLOPE.
+  for (let i = rows.length - 2; i >= 0; i -= 1) {
+    const row = rows[i] as { left: number; right: number };
+    const below = rows[i + 1] as { left: number; right: number };
+    row.left = Math.min(row.left, below.left + FLANK_MAX_SLOPE * FLANK_STEP);
+    row.right = Math.max(row.right, below.right - FLANK_MAX_SLOPE * FLANK_STEP);
+  }
+  return { rows, summit: apex, climb };
 }
 
 /** Le point (x, y) est-il sur la montagne (et non dans le ciel à côté) ? */
 export function onMountain(shape: MountainShape, x: number, y: number): boolean {
   const first = shape.rows[0];
   if (!first) return false;
-  const i = Math.max(0, Math.min(shape.rows.length - 1, Math.round((y - first.y) / FLANK_STEP)));
+  if (y < first.y) return false;
+  const i = Math.min(shape.rows.length - 1, Math.round((y - first.y) / FLANK_STEP));
   const row = shape.rows[i] as { left: number; right: number };
   return x > row.left && x < row.right;
 }
@@ -522,7 +584,7 @@ export function onMountain(shape: MountainShape, x: number, y: number): boolean 
 export function mountainKindsAt(band: WorldBand, shape: MountainShape) {
   return (x: number, y: number): readonly DecorKind[] => {
     if (!onMountain(shape, x, y)) return MOUNTAIN_ZONES.sky;
-    const t = altitude(band, y);
+    const t = altitude(shape.climb, y);
     if (t >= MOUNTAIN_SNOW_FROM) return MOUNTAIN_ZONES.snow;
     if (t >= MOUNTAIN_ROCK_FROM) return MOUNTAIN_ZONES.rock;
     return MOUNTAIN_ZONES.meadow;

@@ -33,6 +33,10 @@ import {
   mountainKindsAt,
   mountainShape,
   onMountain,
+  SUMMIT_RISE,
+  SUMMIT_SPACING,
+  SWITCHBACK_SPACING,
+  TRAVERSE_RISE,
 } from './layout';
 
 const WIDTH = 412;
@@ -114,7 +118,8 @@ describe('écart entre niveaux', () => {
       { length: count - 1 },
       (_, i) => nodePosition(i, count, WIDTH).y - nodePosition(i + 1, count, WIDTH).y,
     );
-    const inner = gaps.filter((_, i) => (i + 1) % LEVELS_PER_WORLD !== 0);
+    // Hors montagne (monde 2), où les niveaux vont par deux sur des traversées en lacets.
+    const inner = gaps.filter((_, i) => (i + 1) % LEVELS_PER_WORLD !== 0 && worldIndexForLevel(i) !== 2);
     for (const g of inner) {
       expect(g).toBeGreaterThanOrEqual(Math.floor(SPACING * (1 - SPACING_JITTER)));
       expect(g).toBeLessThanOrEqual(Math.ceil(SPACING * (1 + SPACING_JITTER)));
@@ -257,6 +262,14 @@ describe('cailloux du sentier', () => {
 });
 
 describe('montagne', () => {
+  it("laisse la place au sommet, au ciel et à l'échelle avant les nuages", () => {
+    const count = LEVELS_PER_WORLD * 4;
+    const summit = nodePosition(3 * LEVELS_PER_WORLD - 1, count, WIDTH);
+    const clouds = nodePosition(3 * LEVELS_PER_WORLD, count, WIDTH);
+    expect(summit.y - clouds.y).toBe(SUMMIT_SPACING);
+    expect(clouds.x).toBe(summit.x); // l'échelle monte tout droit
+  });
+
   // Montagne complète (un monde de nuages au-dessus) et montagne en fin de parcours (sommet en haut de carte).
   for (const count of [LEVELS_PER_WORLD * 3 + 2, LEVELS_PER_WORLD * 2 + 10]) {
     const route = buildRoute(count, WIDTH);
@@ -267,7 +280,8 @@ describe('montagne', () => {
 
     it(`garde le chemin et les niveaux sur la roche (${count} niveaux)`, () => {
       for (const p of samples) {
-        if (p.y < band.top || p.y > band.bottom) continue;
+        // Au-dessus du dernier niveau : le chemin file vers la pointe puis l'échelle, dans le ciel.
+        if (p.y < shape.summit.y + SUMMIT_RISE - NODE_SIZE / 2 || p.y > band.bottom) continue;
         expect(onMountain(shape, p.x - PATH_WIDTH / 2, p.y)).toBe(true);
         expect(onMountain(shape, p.x + PATH_WIDTH / 2, p.y)).toBe(true);
       }
@@ -278,14 +292,37 @@ describe('montagne', () => {
       }
     });
 
-    it(`se resserre jusqu'au sommet (${count} niveaux)`, () => {
+    it(`se resserre jusqu'à une pointe, avec du ciel au-dessus (${count} niveaux)`, () => {
       const top = shape.rows[0]!;
       const foot = shape.rows[shape.rows.length - 1]!;
       expect(foot.left).toBeLessThan(0);
       expect(foot.right).toBeGreaterThan(WIDTH);
-      expect(top.right - top.left).toBeLessThan(WIDTH * 0.6);
-      expect(top.left).toBeLessThan(shape.summit.x);
-      expect(top.right).toBeGreaterThan(shape.summit.x);
+      expect(top.y).toBe(shape.summit.y);
+      expect(top.right - top.left).toBeLessThan(40);
+      expect(shape.summit.y).toBeGreaterThan(band.top);
+      expect(onMountain(shape, shape.summit.x, shape.summit.y - 10)).toBe(false);
+      const highest = Math.min(...nodes.filter((n) => n.y > band.top && n.y < band.bottom).map((n) => n.y));
+      expect(shape.summit.y).toBe(highest - SUMMIT_RISE);
+    });
+
+    it(`deux niveaux par traversée, un lacet serré entre deux traversées (${count} niveaux)`, () => {
+      const first = 2 * LEVELS_PER_WORLD;
+      const last = Math.min(count, 3 * LEVELS_PER_WORLD) - 1;
+      for (let i = first; i < last; i += 1) {
+        const a = nodePosition(i, count, WIDTH);
+        const b = nodePosition(i + 1, count, WIDTH);
+        if (i % 2 === 0) {
+          expect(a.y - b.y).toBe(TRAVERSE_RISE); // même traversée, presque à plat
+          expect(Math.abs(a.x - b.x)).toBeGreaterThan(NODE_SIZE + 12); // côte à côte, sans se toucher
+        } else {
+          expect(a.y - b.y).toBe(SWITCHBACK_SPACING);
+          expect(SWITCHBACK_SPACING).toBeGreaterThan(NODE_SIZE + 40); // place pour le disque et ses étoiles
+        }
+      }
+      for (const p of route.points) {
+        expect(p.x).toBeGreaterThanOrEqual(WIDTH * 0.1 - 0.001);
+        expect(p.x).toBeLessThanOrEqual(WIDTH * 0.9 + 0.001);
+      }
     });
 
     it(`étage le décor : ciel à côté, neige en haut, pics loin du chemin (${count} niveaux)`, () => {
@@ -304,7 +341,8 @@ describe('montagne', () => {
         }
       }
       expect(decor.some((d) => sky.has(d.kind))).toBe(true);
-      expect(decor.some((d) => altitude(band, d.y) < MOUNTAIN_TAPER_START && d.kind === 'pine')).toBe(true);
+      const meadow = new Set<string>(['pine', 'flower', 'grass']);
+      expect(decor.some((d) => meadow.has(d.kind))).toBe(true); // la prairie au pied
     });
   }
 });
