@@ -100,7 +100,7 @@ async function unlockLevel(page: Page, childName: string, levelId: string): Prom
   await openChildStats(page, childName);
   await page.getByTestId(`override-${levelId}-unlocked`).click();
   await expect(page.getByTestId(`override-${levelId}-unlocked`)).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: '← Tableau de bord' }).click();
+  await page.getByRole('button', { name: 'Retour aux enfants' }).click();
   await page.getByTestId('back-to-game').click();
   await expect(page.getByText('Commencer : espace parent')).toHaveCount(0);
 }

@@ -17,7 +17,19 @@ export type IconName =
   | 'star-empty'
   | 'speaker'
   | 'check'
-  | 'back';
+  | 'back'
+  // Espace parent
+  | 'children'
+  | 'folder'
+  | 'gear'
+  | 'stats'
+  | 'edit'
+  | 'plus'
+  | 'clock-plus'
+  | 'export'
+  | 'import'
+  | 'key'
+  | 'shield';
 
 interface IconProps {
   name: IconName;
@@ -135,6 +147,127 @@ const DRAWINGS: Record<IconName, () => JSX.Element> = {
   ),
   back: () => (
     <path d="M29 12L17 24L29 36" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  ),
+
+  // ---------- Espace parent ----------
+
+  // Deux enfants côte à côte : l'onglet « Enfants ».
+  children: () => (
+    <>
+      <ellipse cx="24" cy="43" rx="17" ry="2.5" fill={SHADOW} />
+      <path d="M4.5 42Q5 31 15 31Q25 31 25.5 42Z" fill="#1d7fd8" />
+      <circle cx="15" cy="20" r="8.5" fill="#ffd3a8" />
+      <path d="M6.5 19.5Q7 10.5 15 10.5Q23 10.5 23.5 19.5Q19 14.5 11 16.5Z" fill="#8b5a2b" />
+      <path d="M22.5 42Q23 32.5 33 32.5Q43 32.5 43.5 42Z" fill="#e63946" />
+      <circle cx="33" cy="23" r="7.5" fill="#f0bf8e" />
+      <path d="M25.3 22Q25.5 14.5 33 14.5Q40.5 14.5 40.7 22Q37 17.5 29 19Z" fill="#f2a516" />
+      <circle cx="41" cy="18" r="3" fill="#f2a516" />
+      <circle cx="12.3" cy="21.5" r="1.2" fill="#3d2c1e" />
+      <circle cx="17.7" cy="21.5" r="1.2" fill="#3d2c1e" />
+      <circle cx="30.8" cy="24.3" r="1.1" fill="#3d2c1e" />
+      <circle cx="35.2" cy="24.3" r="1.1" fill="#3d2c1e" />
+    </>
+  ),
+  // Une chemise cartonnée : l'onglet « Données » (sauvegarde, restauration).
+  folder: () => (
+    <>
+      <ellipse cx="24" cy="42.5" rx="17" ry="2.5" fill={SHADOW} />
+      <path d="M6 13.5Q6 10 9.5 10H18.5L22 14H38.5Q42 14 42 17.5V37Q42 40.5 38.5 40.5H9.5Q6 40.5 6 37Z" fill="#e0a526" />
+      <rect x="10" y="16.5" width="28" height="15" rx="2" fill="#ffffff" />
+      <path d="M13.5 21H30M13.5 25.5H26" stroke="#d6cbb8" stroke-width="2" stroke-linecap="round" />
+      <path d="M6 22.5Q6 20 8.5 20H39.5Q42 20 42 22.5V37Q42 40.5 38.5 40.5H9.5Q6 40.5 6 37Z" fill="#ffc53d" />
+      <path d="M9.5 24.5H22" stroke="#ffe38f" stroke-width="2.4" stroke-linecap="round" />
+    </>
+  ),
+  // Une roue dentée : l'onglet « Réglages ».
+  gear: () => (
+    <>
+      <g transform="translate(24 24)">
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+          <rect key={a} x="-4.2" y="-19" width="8.4" height="10" rx="2.4" fill="#6f8fa8" transform={`rotate(${a})`} />
+        ))}
+        <circle r="13.5" fill="#6f8fa8" />
+        <circle r="13.5" fill="#8fb0c9" transform="translate(0 -1.5) scale(.93)" />
+        <circle r="5.5" fill="#fff7e8" />
+        <path d="M-9 -4.5A10 10 0 0 1 -4 -9.3" fill="none" stroke="#c4d8e8" stroke-width="2.4" stroke-linecap="round" />
+      </g>
+    </>
+  ),
+  // Trois barres qui montent : les statistiques.
+  stats: () => (
+    <>
+      <rect x="7" y="25" width="9" height="15" rx="3" fill="#1d7fd8" />
+      <rect x="19.5" y="17" width="9" height="23" rx="3" fill="#f59f00" />
+      <rect x="32" y="8.5" width="9" height="31.5" rx="3" fill="#43a047" />
+      <rect x="9" y="27.5" width="2.4" height="6" rx="1.2" fill="#8cc4f2" />
+      <rect x="21.5" y="19.5" width="2.4" height="8" rx="1.2" fill="#ffd27a" />
+      <rect x="34" y="11" width="2.4" height="10" rx="1.2" fill="#9ad49c" />
+      <rect x="4.5" y="39.5" width="39" height="3.5" rx="1.75" fill="#a6978a" />
+    </>
+  ),
+  // Un crayon de couleur : modifier.
+  edit: () => (
+    <g transform="rotate(45 24 24)">
+      <rect x="18" y="4" width="12" height="8" rx="3" fill="#ff8fa0" />
+      <rect x="18" y="10.5" width="12" height="4" fill="#a6978a" />
+      <rect x="18" y="14" width="12" height="20" fill="#ffc53d" />
+      <rect x="18" y="14" width="4" height="20" fill="#ffe38f" />
+      <rect x="26" y="14" width="4" height="20" fill="#f2a516" />
+      <path d="M18 34H30L24 44Z" fill="#f5d6a8" stroke="#f5d6a8" stroke-width="1.5" stroke-linejoin="round" />
+      <path d="M22 40.7L24 44L26 40.7Z" fill="#5a3a12" stroke="#5a3a12" stroke-width="1.5" stroke-linejoin="round" />
+    </g>
+  ),
+  // Un « + » dans une pastille blanche, lisible sur un bouton orange.
+  plus: () => (
+    <>
+      <circle cx="24" cy="24" r="17" fill="#ffffff" />
+      <path d="M24 15.5V32.5M15.5 24H32.5" stroke="#e0861a" stroke-width="5" stroke-linecap="round" />
+    </>
+  ),
+  // Un réveil avec un petit « + » : du temps de jeu en plus aujourd'hui.
+  'clock-plus': () => (
+    <>
+      <path d="M11 14.5L15.5 9.5M37 14.5L32.5 9.5" stroke="#e63946" stroke-width="4.5" stroke-linecap="round" />
+      <circle cx="22.5" cy="26" r="15" fill="#e63946" />
+      <circle cx="22.5" cy="26" r="11.5" fill="#ffffff" />
+      <path d="M22.5 18.5V26L27.5 29" fill="none" stroke="#3d2c1e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="37" cy="36" r="8.5" fill="#43a047" />
+      <path d="M37 31.5V40.5M32.5 36H41.5" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+    </>
+  ),
+  // Une flèche qui sort du bac : sauvegarder vers un fichier.
+  export: () => (
+    <>
+      <path d="M6 27V36.5Q6 41 10.5 41H37.5Q42 41 42 36.5V27" fill="none" stroke="#b77838" stroke-width="5" stroke-linecap="round" />
+      <path d="M24 30V9" stroke="#1d7fd8" stroke-width="5.5" stroke-linecap="round" />
+      <path d="M14.5 17.5L24 8L33.5 17.5" fill="none" stroke="#1d7fd8" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
+    </>
+  ),
+  // Une flèche qui entre dans le bac : restaurer depuis un fichier.
+  import: () => (
+    <>
+      <path d="M6 27V36.5Q6 41 10.5 41H37.5Q42 41 42 36.5V27" fill="none" stroke="#b77838" stroke-width="5" stroke-linecap="round" />
+      <path d="M24 7V29" stroke="#43a047" stroke-width="5.5" stroke-linecap="round" />
+      <path d="M14.5 20.5L24 30L33.5 20.5" fill="none" stroke="#43a047" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
+    </>
+  ),
+  // Une clé dorée : le code parent.
+  key: () => (
+    <>
+      <path d="M22 26L40 26M34 26V33M39 26V31" stroke="#f2a516" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="15" cy="26" r="10" fill="#f2a516" />
+      <circle cx="15" cy="24.8" r="9" fill="#ffc53d" />
+      <circle cx="13" cy="25" r="3.4" fill="#fff7e8" />
+      <path d="M9.5 20.5A6.5 6.5 0 0 1 14 17.8" fill="none" stroke="#ffe38f" stroke-width="2.2" stroke-linecap="round" />
+    </>
+  ),
+  // Un bouclier vert coché : le stockage est protégé.
+  shield: () => (
+    <>
+      <path d="M24 6L39 11.5V23Q39 35 24 42Q9 35 9 23V11.5Z" fill="#43a047" stroke="#43a047" stroke-width="3" stroke-linejoin="round" />
+      <path d="M24 6L39 11.5V23Q39 35 24 42Z" fill="#2e7d32" opacity="0.45" />
+      <path d="M16.5 24L22 29.5L32 18.5" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+    </>
   ),
 };
 

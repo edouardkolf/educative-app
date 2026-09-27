@@ -8,6 +8,7 @@ import { deleteProfile, getProfile, getSettings, saveProfile } from '../storage'
 import type { AvatarId, Profile, ProfileLimits } from '../storage';
 import { AVATARS, AVATAR_NAMES } from '../ui/avatars';
 import { Emoji } from '../ui/Emoji';
+import { Icon } from '../ui/icons/Icon';
 import {
   DAILY_MINUTES_OPTIONS,
   SESSION_MINUTES_OPTIONS,
@@ -17,6 +18,7 @@ import {
 } from './limits';
 import { NumericKeypad } from './NumericKeypad';
 import { verifyPin } from './pin';
+import { BackToChildren } from './ParentShell';
 import { describeError } from './util';
 
 const DEFAULT_LIMITS: ProfileLimits = { sessionMinutes: 15, dailyMinutes: 30 };
@@ -181,19 +183,14 @@ export function ChildForm(props: ChildFormProps) {
     return (
       <div className="pa-space">
         <p className="pa-error">{loadError}</p>
-        <button
-          type="button"
-          className="pa-button pa-button--ghost"
-          onClick={() => navigate({ name: 'parent', path: [] })}
-        >
-          ← Tableau de bord
-        </button>
+        <BackToChildren />
       </div>
     );
   }
 
   return (
     <div className="pa-space">
+      <BackToChildren />
       <header className="pa-header">
         <h1>{isEdit ? `Modifier ${existing?.name ?? 'un enfant'}` : 'Ajouter un enfant'}</h1>
       </header>
@@ -297,7 +294,8 @@ export function ChildForm(props: ChildFormProps) {
 
         <div className="pa-form__actions">
           <button type="submit" className="pa-button pa-button--primary" data-testid="save-child" disabled={saving}>
-            {saving ? 'Enregistrement…' : 'Enregistrer'}
+            <Icon name="check" size={24} />
+            <span>{saving ? 'Enregistrement…' : 'Enregistrer'}</span>
           </button>
           <button
             type="button"

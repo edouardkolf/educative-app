@@ -1,7 +1,8 @@
-// Réglages du tableau de bord : son, changement du code parent, protection du stockage.
+// Onglet « Réglages » : son, changement du code parent, protection du stockage.
 import { useEffect, useState } from 'preact/hooks';
 import { getSettings, isPersisted, requestPersistence, updateSettings } from '../storage';
 import type { AppSettings } from '../storage';
+import { Icon } from '../ui/icons/Icon';
 import { setSoundEnabled } from '../ui/sound';
 import { NumericKeypad } from './NumericKeypad';
 import { generateSalt, hashPin } from './pin';
@@ -115,87 +116,117 @@ export function ParentSettings() {
   }
 
   return (
-    <section className="pa-section">
-      <h2 className="pa-section__title">Réglages</h2>
-
+    <>
       {loadError && <p className="pa-error">{loadError}</p>}
 
-      {settings && (
-        <div className="pa-setting-row">
-          <span>Son</span>
+      <section className="pa-section">
+        <div className="pa-section__head">
+          <span className="pa-section__icon" aria-hidden="true">
+            <Icon name="speaker" size={30} />
+          </span>
+          <div className="pa-section__grow">
+            <h2 className="pa-section__title">Son</h2>
+            <p className="pa-muted">Voix, bruitages et musique du jeu.</p>
+          </div>
+          {settings && (
+            <button
+              type="button"
+              className="pa-toggle"
+              aria-pressed={settings.soundOn}
+              aria-label="Son"
+              data-testid="toggle-sound"
+              onClick={toggleSound}
+            >
+              <span className="pa-toggle__knob" aria-hidden="true" />
+              <span className="pa-toggle__text">{settings.soundOn ? 'Activé' : 'Désactivé'}</span>
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="pa-section">
+        <div className="pa-section__head">
+          <span className="pa-section__icon" aria-hidden="true">
+            <Icon name="key" size={30} />
+          </span>
+          <div>
+            <h2 className="pa-section__title">Code parent</h2>
+            <p className="pa-muted">Les 4 chiffres qui ouvrent cet espace.</p>
+          </div>
+        </div>
+
+        {pinStep.kind === 'closed' && (
+          <button type="button" className="pa-button pa-button--secondary" data-testid="change-pin" onClick={openChangePin}>
+            <Icon name="key" size={24} />
+            <span>Changer le code parent</span>
+          </button>
+        )}
+
+        {(pinStep.kind === 'enter' || pinStep.kind === 'confirm') && (
+          <div className="pa-pin-change">
+            <p className="pa-field__label">{pinStep.kind === 'enter' ? 'Nouveau code' : 'Confirme le nouveau code'}</p>
+            {pinError && (
+              <p className="pa-error" role="alert">
+                {pinError}
+              </p>
+            )}
+            <div
+              className="pa-pin-dots"
+              role="status"
+              aria-label={`${digits.length} chiffre${digits.length > 1 ? 's' : ''} sur 4 saisis`}
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <span key={i} className={`pa-pin-dot${i < digits.length ? ' pa-pin-dot--filled' : ''}`} aria-hidden="true" />
+              ))}
+            </div>
+            <NumericKeypad onDigit={handlePinDigit} onDelete={handlePinDelete} disabled={pinBusy} />
+            <button type="button" className="pa-button pa-button--ghost" onClick={cancelChangePin}>
+              Annuler
+            </button>
+          </div>
+        )}
+
+        {pinStep.kind === 'done' && (
+          <div className="pa-setting-row">
+            <p className="pa-success" role="status">
+              Code parent changé.
+            </p>
+            <button type="button" className="pa-link" onClick={cancelChangePin}>
+              OK
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="pa-section">
+        <div className="pa-section__head">
+          <span className={`pa-section__icon${persisted ? '' : ' pa-section__icon--muted'}`} aria-hidden="true">
+            <Icon name="shield" size={30} />
+          </span>
+          <div>
+            <h2 className="pa-section__title">Stockage</h2>
+            <p className={persisted ? 'pa-success' : 'pa-muted'}>
+              {persisted === null
+                ? 'Vérification du stockage…'
+                : persisted
+                  ? 'Stockage protégé : le téléphone ne l’effacera pas pour faire de la place.'
+                  : 'Stockage non protégé : le téléphone pourrait l’effacer s’il manque de place.'}
+            </p>
+          </div>
+        </div>
+        {persisted === false && (
           <button
             type="button"
-            className="pa-toggle"
-            aria-pressed={settings.soundOn}
-            data-testid="toggle-sound"
-            onClick={toggleSound}
+            className="pa-button pa-button--secondary"
+            data-testid="protect-storage"
+            disabled={protecting}
+            onClick={handleProtect}
           >
-            {settings.soundOn ? 'Activé' : 'Désactivé'}
+            <Icon name="shield" size={24} />
+            <span>{protecting ? 'Protection…' : 'Protéger le stockage'}</span>
           </button>
-        </div>
-      )}
-
-      {pinStep.kind === 'closed' && (
-        <button type="button" className="pa-button pa-button--secondary" data-testid="change-pin" onClick={openChangePin}>
-          Changer le code parent
-        </button>
-      )}
-
-      {(pinStep.kind === 'enter' || pinStep.kind === 'confirm') && (
-        <div className="pa-pin-change">
-          <p className="pa-field__label">{pinStep.kind === 'enter' ? 'Nouveau code' : 'Confirme le nouveau code'}</p>
-          {pinError && (
-            <p className="pa-error" role="alert">
-              {pinError}
-            </p>
-          )}
-          <div
-            className="pa-pin-dots"
-            role="status"
-            aria-label={`${digits.length} chiffre${digits.length > 1 ? 's' : ''} sur 4 saisis`}
-          >
-            {[0, 1, 2, 3].map((i) => (
-              <span key={i} className={`pa-pin-dot${i < digits.length ? ' pa-pin-dot--filled' : ''}`} aria-hidden="true" />
-            ))}
-          </div>
-          <NumericKeypad onDigit={handlePinDigit} onDelete={handlePinDelete} disabled={pinBusy} />
-          <button type="button" className="pa-button pa-button--ghost" onClick={cancelChangePin}>
-            Annuler
-          </button>
-        </div>
-      )}
-
-      {pinStep.kind === 'done' && (
-        <div className="pa-setting-row">
-          <p className="pa-success" role="status">
-            Code parent changé.
-          </p>
-          <button type="button" className="pa-link" onClick={cancelChangePin}>
-            OK
-          </button>
-        </div>
-      )}
-
-      <div className="pa-setting-row">
-        <span className={persisted ? 'pa-success' : 'pa-muted'}>
-          {persisted === null
-            ? 'Vérification du stockage…'
-            : persisted
-              ? 'Stockage protégé ✓'
-              : 'Stockage non protégé'}
-        </span>
-      </div>
-      {persisted === false && (
-        <button
-          type="button"
-          className="pa-button pa-button--secondary"
-          data-testid="protect-storage"
-          disabled={protecting}
-          onClick={handleProtect}
-        >
-          {protecting ? 'Protection…' : 'Protéger le stockage'}
-        </button>
-      )}
-    </section>
+        )}
+      </section>
+    </>
   );
 }

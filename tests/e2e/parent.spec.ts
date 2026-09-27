@@ -189,7 +189,7 @@ test('verrouiller puis débloquer un niveau change la carte de l’enfant', asyn
   await expect(badge).toHaveText('Verrouillé');
 
   // ---- … et sur la carte du parcours vue par l'enfant ----
-  await page.getByRole('button', { name: '← Tableau de bord' }).click();
+  await page.getByRole('button', { name: 'Retour aux enfants' }).click();
   await page.getByTestId('back-to-game').click();
   await chooseProfile(page, 'Yuna');
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'locked');
@@ -202,7 +202,7 @@ test('verrouiller puis débloquer un niveau change la carte de l’enfant', asyn
   await expect(page.getByTestId('override-ms-suite-01-unlocked')).toHaveAttribute('aria-pressed', 'true');
   await expect(badge).toHaveText('Débloqué');
 
-  await page.getByRole('button', { name: '← Tableau de bord' }).click();
+  await page.getByRole('button', { name: 'Retour aux enfants' }).click();
   await page.getByTestId('back-to-game').click();
   await chooseProfile(page, 'Yuna');
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'unlocked');
@@ -243,6 +243,7 @@ test('export puis import dans un contexte vierge restaure l’enfant et ses stat
 
     await backToProfiles(pageA);
     await openParentDashboard(pageA);
+    await pageA.getByTestId('tab-data').click();
     const downloadPromise = pageA.waitForEvent('download');
     await pageA.getByTestId('export').click();
     const download = await downloadPromise;
@@ -257,6 +258,7 @@ test('export puis import dans un contexte vierge restaure l’enfant et ses stat
       await createParentCode(pageB);
       await expect(pageB.getByText("Aucun enfant pour l'instant.")).toBeVisible();
 
+      await pageB.getByTestId('tab-data').click();
       await pageB.setInputFiles('[data-testid="import-file"]', {
         name: 'petits-malins.json',
         mimeType: 'application/json',
@@ -266,6 +268,7 @@ test('export puis import dans un contexte vierge restaure l’enfant et ses stat
       await pageB.getByTestId('import-confirm').click();
       await expect(pageB.getByText('Sauvegarde importée : 1 enfant(s), 1 partie(s).')).toBeVisible();
 
+      await pageB.getByRole('button', { name: 'Voir les enfants' }).click();
       await expect(pageB.getByText('Lina')).toBeVisible();
       await pageB.getByRole('button', { name: 'Statistiques' }).click();
       await expect(pageB.getByRole('heading', { name: 'Lina' })).toBeVisible();
@@ -274,7 +277,7 @@ test('export puis import dans un contexte vierge restaure l’enfant et ses stat
       await expect(statValue(card, 'Réussites')).toHaveText('1');
 
       // La progression est recalculée à partir des parties importées : la carte le confirme aussi.
-      await pageB.getByRole('button', { name: '← Tableau de bord' }).click();
+      await pageB.getByRole('button', { name: 'Retour aux enfants' }).click();
       await pageB.getByTestId('back-to-game').click();
       await chooseProfile(pageB, 'Lina');
       await expect(mapNode(pageB, 'ms-suite-01')).toHaveAttribute('data-status', 'completed');
@@ -293,6 +296,7 @@ test('un fichier de sauvegarde invalide affiche une erreur et ne change rien', a
   await addChild(page, 'Noé');
   await expect(page.getByText('Noé')).toBeVisible();
 
+  await page.getByTestId('tab-data').click();
   await page.setInputFiles('[data-testid="import-file"]', {
     name: 'invalide.json',
     mimeType: 'application/json',
@@ -302,6 +306,7 @@ test('un fichier de sauvegarde invalide affiche une erreur et ne change rien', a
   await expect(page.locator('.pa-import .pa-error')).toBeVisible();
   await expect(page.getByTestId('import-confirm')).toHaveCount(0);
   // Rien n'a changé : l'enfant est toujours là, aucune donnée remplacée.
+  await page.getByTestId('tab-children').click();
   await expect(page.getByText('Noé')).toBeVisible();
 });
 

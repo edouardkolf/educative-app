@@ -1,13 +1,17 @@
 /*
  * Espace parent (préfixe de classes : pa-).
  * Interface pour adultes : sobre, lisible en portrait 360–412 px, boutons ≥ 48 px, cartes empilées
- * (jamais de tableau large), fond clair. Importé une fois depuis ParentSpace.tsx.
+ * (jamais de tableau large), fond clair. Même direction artistique que le côté enfant, en plus calme :
+ * cartes crème à relief (ombre pleine sous le bord), titres et boutons en Fredoka, pictos dessinés
+ * (Icon.tsx) à gauche de chaque action. Importé une fois depuis ParentSpace.tsx.
  */
 
 .pa-space {
-  --pa-bg: #fff8ec;
+  --pa-bg: #fff7e8;
   --pa-surface: #ffffff;
-  --pa-border: #e7dcc8;
+  --pa-border: #eadfca;
+  --pa-ledge: #eadfca;
+  --pa-primary-ledge: #e0861a;
   --pa-text: #2b2118;
   --pa-muted: #6b5e4f;
   --pa-primary: #ffb347;
@@ -17,7 +21,7 @@
   --pa-success: #21692b;
   --pa-success-bg: #e9f6ea;
   --pa-focus: #1d7fd8;
-  --pa-radius: 14px;
+  --pa-radius: 20px;
 
   box-sizing: border-box;
   min-height: 100dvh;
@@ -29,7 +33,7 @@
   gap: 20px;
   background: var(--pa-bg);
   color: var(--pa-text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.45;
 }
@@ -59,18 +63,24 @@
 
 .pa-space h1 {
   margin: 0;
-  font-size: 22px;
-  line-height: 1.25;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .pa-space h2 {
   margin: 0;
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
 }
 
 .pa-space h3 {
   margin: 0;
+  font-family: var(--font-display);
   font-size: 17px;
+  font-weight: 600;
 }
 
 .pa-space p {
@@ -100,21 +110,42 @@
 
 /* ---------- Boutons ---------- */
 
+/* Bouton à relief : une ombre pleine sous le bord, qui disparaît à l'appui (la touche s'enfonce),
+   comme les boutons du jeu. Le picto se place à gauche du texte. */
 .pa-button {
-  min-height: 48px;
-  padding: 12px 18px;
-  font-size: 16px;
+  min-height: 52px;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 17px;
   font-weight: 600;
-  font-family: inherit;
-  border-radius: 12px;
+  font-family: var(--font-display);
+  line-height: 1.2;
+  border-radius: 16px;
   border: 2px solid transparent;
   cursor: pointer;
   width: 100%;
   color: var(--pa-text);
   background: var(--pa-surface);
+  box-shadow: 0 4px 0 var(--pa-ledge);
+  transition:
+    transform 90ms ease,
+    box-shadow 90ms ease;
+}
+
+.pa-button .icon {
+  flex: none;
+}
+
+.pa-button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--pa-ledge);
 }
 
 .pa-button--primary {
+  --pa-ledge: var(--pa-primary-ledge);
   background: var(--pa-primary);
   border-color: var(--pa-primary);
   color: var(--pa-primary-text);
@@ -129,9 +160,15 @@
   background: transparent;
   border-color: var(--pa-border);
   color: var(--pa-muted);
+  box-shadow: none;
+}
+
+.pa-button--ghost:active:not(:disabled) {
+  box-shadow: none;
 }
 
 .pa-button--danger {
+  --pa-ledge: #7f1a14;
   background: var(--pa-danger);
   border-color: var(--pa-danger);
   color: #fff;
@@ -158,16 +195,254 @@
 
 .pa-section {
   background: var(--pa-surface);
-  border: 1px solid var(--pa-border);
   border-radius: var(--pa-radius);
-  padding: 16px;
+  box-shadow: 0 5px 0 var(--pa-ledge);
+  padding: 18px 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
 .pa-section__title {
-  font-size: 18px;
+  font-size: 19px;
+}
+
+/* En-tête de carte : pastille-picto, titre et une ligne d'explication. */
+.pa-section__head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pa-section__head .pa-muted,
+.pa-section__head .pa-success {
+  margin-top: 2px;
+  font-size: 15px;
+}
+
+.pa-section__grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.pa-section__icon {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--pa-bg);
+}
+
+.pa-section__icon--muted .icon {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+/* ---------- Coque à onglets (ParentShell) ---------- */
+
+.pa-space--tabs {
+  /* Place pour la barre d'onglets fixe en bas. */
+  padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+}
+
+.pa-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pa-home {
+  flex: none;
+  min-height: 48px;
+  padding: 6px 14px 6px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pa-text);
+  background: var(--pa-surface);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 var(--pa-ledge);
+  cursor: pointer;
+}
+
+.pa-home:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--pa-ledge);
+}
+
+.pa-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pa-tabbar {
+  position: fixed;
+  z-index: 10;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(100%, 480px);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--pa-surface);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -4px 16px rgba(61, 44, 30, 0.1);
+}
+
+.pa-tab {
+  min-height: 64px;
+  padding: 4px 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pa-muted);
+  background: none;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.pa-tab__icon {
+  width: 56px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transition: background 150ms ease;
+}
+
+.pa-tab:not([aria-current='page']) .pa-tab__icon .icon {
+  filter: saturate(0.35);
+  opacity: 0.75;
+}
+
+.pa-tab[aria-current='page'] {
+  color: var(--pa-text);
+}
+
+.pa-tab[aria-current='page'] .pa-tab__icon {
+  background: color-mix(in srgb, var(--pa-primary) 35%, var(--pa-surface));
+}
+
+.pa-tab[aria-current='page'] .pa-tab__icon .icon {
+  animation: pa-tab-pop 260ms ease;
+}
+
+@keyframes pa-tab-pop {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Retour d'une sous-page vers l'onglet « Enfants ». */
+.pa-back {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 4px 14px 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pa-text);
+  background: var(--pa-surface);
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 var(--pa-ledge);
+  cursor: pointer;
+}
+
+.pa-back:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--pa-ledge);
+}
+
+.pa-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 0 4px;
+  text-align: center;
+}
+
+/* Petite action secondaire en pastille (ex. « +15 min aujourd'hui »). */
+.pa-chip {
+  min-height: 44px;
+  padding: 4px 14px 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pa-text);
+  background: var(--pa-surface);
+  border: 2px solid var(--pa-border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pa-chip:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.pa-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Bouton-fichier : le champ natif est masqué, l'étiquette fait bouton. */
+.pa-file {
+  position: relative;
+}
+
+.pa-file__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pa-file:focus-within {
+  outline: 3px solid var(--pa-focus);
+  outline-offset: 2px;
+}
+
+.pa-file--disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pa-tab[aria-current='page'] .pa-tab__icon .icon {
+    animation: none;
+  }
 }
 
 /* ---------- Tableau de bord : liste d'enfants ---------- */
@@ -183,25 +458,68 @@
 
 .pa-child-card {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  background: var(--pa-surface);
+  border-radius: var(--pa-radius);
+  box-shadow: 0 5px 0 var(--pa-ledge);
+}
+
+.pa-child-card__top {
+  display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 14px;
+}
+
+.pa-child-card__time {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
   background: var(--pa-bg);
-  border: 1px solid var(--pa-border);
-  border-radius: 12px;
+  border-radius: 14px;
+}
+
+.pa-child-card__time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Jauge du temps du jour : verte, puis orange quand la limite est atteinte. */
+.pa-time-meter {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--pa-border);
+  overflow: hidden;
+}
+
+.pa-time-meter__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #43a047;
+  transition: width 300ms ease;
+}
+
+.pa-time-meter--full .pa-time-meter__fill {
+  background: #e0861a;
 }
 
 .pa-child-card__avatar {
   flex: none;
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--emoji-font);
-  font-size: 30px;
-  background: var(--pa-surface);
+  font-size: 36px;
+  background: var(--pa-bg);
   border-radius: 50%;
 }
 
@@ -211,8 +529,9 @@
 }
 
 .pa-child-card__name {
-  font-weight: 700;
-  font-size: 17px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
 }
 
 .pa-child-card__track {
@@ -230,26 +549,13 @@
   width: auto;
   flex: 1;
   padding: 10px 8px;
-}
-
-.pa-child-card__grant {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .pa-child-card__usage {
   color: var(--pa-muted);
-  font-weight: 600;
-}
-
-.pa-child-card__grant .pa-button {
-  width: auto;
-  flex: none;
-  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 /* ---------- Code parent (PinGate) ---------- */
@@ -258,7 +564,7 @@
   width: 100%;
   max-width: 340px;
   background: var(--pa-surface);
-  border: 1px solid var(--pa-border);
+  box-shadow: 0 5px 0 var(--pa-ledge);
   border-radius: var(--pa-radius);
   padding: 24px 20px;
   display: flex;
@@ -303,18 +609,25 @@
 
 .pa-keypad__key {
   min-height: 64px;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 600;
-  font-family: inherit;
-  border-radius: 12px;
-  border: 1px solid var(--pa-border);
+  font-family: var(--font-display);
+  border-radius: 16px;
+  border: none;
   background: var(--pa-bg);
+  box-shadow: 0 3px 0 var(--pa-ledge);
   color: var(--pa-text);
   cursor: pointer;
 }
 
+.pa-keypad__key:active:not(:disabled):not(.pa-keypad__key--spacer) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--pa-ledge);
+}
+
 .pa-keypad__key--spacer {
   border: none;
+  box-shadow: none;
   background: none;
   cursor: default;
 }
@@ -555,12 +868,7 @@
 }
 
 .pa-star {
-  font-size: 24px;
-  color: var(--pa-border);
-}
-
-.pa-star--filled {
-  color: var(--pa-primary);
+  display: block;
 }
 
 .pa-stat-grid {
@@ -669,24 +977,56 @@
   gap: 10px;
 }
 
+/* Interrupteur : pastille qui glisse, texte « Activé / Désactivé » dessous pour lever l'ambiguïté. */
 .pa-toggle {
+  flex: none;
   min-height: 48px;
-  min-width: 108px;
-  padding: 10px 16px;
-  font-size: 16px;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 13px;
   font-weight: 600;
-  font-family: inherit;
-  border-radius: 999px;
-  border: 2px solid var(--pa-border);
-  background: var(--pa-surface);
   color: var(--pa-muted);
+  background: none;
+  border: none;
   cursor: pointer;
 }
 
+.pa-toggle__knob {
+  position: relative;
+  width: 56px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--pa-border);
+  transition: background 180ms ease;
+}
+
+.pa-toggle__knob::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 3px rgba(61, 44, 30, 0.25);
+  transition: transform 180ms ease;
+}
+
 .pa-toggle[aria-pressed='true'] {
-  border-color: var(--pa-primary);
-  background: var(--pa-primary);
-  color: var(--pa-primary-text);
+  color: var(--pa-success);
+}
+
+.pa-toggle[aria-pressed='true'] .pa-toggle__knob {
+  background: #43a047;
+}
+
+.pa-toggle[aria-pressed='true'] .pa-toggle__knob::after {
+  transform: translateX(24px);
 }
 
 .pa-pin-change {
@@ -846,4 +1186,17 @@
 
 .pa-skill__warning {
   color: #9a3f0c;
+}
+
+/* ---------- Statistiques : chiffres et badges dans la police des titres ---------- */
+
+.pa-stat__value,
+.pa-skill__percent,
+.pa-badge {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.pa-stat__value {
+  font-size: 24px;
 }

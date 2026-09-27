@@ -2,6 +2,7 @@
 // puis remplacement de toutes les données. Le code parent n'est jamais touché (contrat `importAll`).
 import { useRef, useState } from 'preact/hooks';
 import { useProfile } from '../app/context';
+import { Icon } from '../ui/icons/Icon';
 import { importAll } from '../storage';
 import { describeError } from './util';
 import { describeImportCounts, formatImportConfirmation, formatImportSuccess, parseImportFile } from './import';
@@ -60,11 +61,13 @@ export function ImportSection(props: { onImported: () => void }) {
 
   return (
     <div className="pa-import">
-      <label className="pa-field">
-        <span className="pa-field__label">Importer une sauvegarde</span>
+      {/* Le champ fichier natif est masqué : c'est l'étiquette, habillée en bouton, qui l'ouvre. */}
+      <label className={`pa-button pa-button--secondary pa-file${busy ? ' pa-file--disabled' : ''}`}>
+        <Icon name="import" size={24} />
+        <span>Choisir un fichier de sauvegarde</span>
         <input
           ref={inputRef}
-          className="pa-input"
+          className="pa-file__input"
           type="file"
           accept="application/json,.json"
           data-testid="import-file"

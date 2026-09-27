@@ -1,12 +1,13 @@
 // Statistiques d'un enfant : résumé global, bilan par compétence ou par jeu, puis une carte par niveau du parcours (ARCHITECTURE §7).
 import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { navigate } from '../app/routes';
 import { chanceOfFirstTry, computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelStats, LevelStatus, MechanicId, SkillId } from '../engine';
 import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
 import type { LevelOverride, Profile } from '../storage';
 import { Emoji } from '../ui/Emoji';
+import { Icon } from '../ui/icons/Icon';
+import { BackToChildren } from './ParentShell';
 import { formatDateTime, formatDuration, formatPercentage } from './format';
 import { CHANCE_SCORE, MIN_ROUNDS_FOR_VERDICT, summarizeByGroup, summarizeRuns } from './stats';
 import type { GroupLevel, GroupSummary, RunsSummary, SkillVerdict } from './stats';
@@ -173,7 +174,7 @@ export function ChildStats(props: { profileId: string }) {
     return (
       <div className="pa-space">
         <p className="pa-error">{error}</p>
-        <BackButton />
+        <BackToChildren />
       </div>
     );
   }
@@ -194,6 +195,7 @@ export function ChildStats(props: { profileId: string }) {
 
   return (
     <div className="pa-space">
+      <BackToChildren />
       <header className="pa-header pa-stats-header">
         <span className="pa-stats-header__avatar" aria-hidden="true">
           <Emoji char={profile.avatar} />
@@ -382,8 +384,6 @@ export function ChildStats(props: { profileId: string }) {
           </li>
         </ul>
       </section>
-
-      <BackButton />
     </div>
   );
 }
@@ -442,26 +442,12 @@ function GroupRow(props: { label: string; testId: string; summary: GroupSummary 
   );
 }
 
-function BackButton() {
-  return (
-    <button
-      type="button"
-      className="pa-button pa-button--ghost"
-      onClick={() => navigate({ name: 'parent', path: [] })}
-    >
-      ← Tableau de bord
-    </button>
-  );
-}
-
 function Stars(props: { count: 0 | 1 | 2 | 3 }) {
   const { count } = props;
   return (
     <div className="pa-stars" role="img" aria-label={`${count} étoile${count > 1 ? 's' : ''} sur 3`}>
       {[1, 2, 3].map((i) => (
-        <span key={i} className={`pa-star${i <= count ? ' pa-star--filled' : ''}`} aria-hidden="true">
-          ★
-        </span>
+        <Icon key={i} name={i <= count ? 'star' : 'star-empty'} size={26} class="pa-star" />
       ))}
     </div>
   );

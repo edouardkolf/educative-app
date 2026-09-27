@@ -1,4 +1,5 @@
-// Espace parent : verrou par code puis sous-routes (tableau de bord, ajout/modif enfant, statistiques).
+// Espace parent : verrou par code puis sous-routes : trois onglets (enfants, données, réglages)
+// et les sous-pages d'un enfant (ajout, modification, statistiques).
 // Le déverrouillage vit dans cet état ; il est donc perdu quand ce composant est démonté
 // (c'est-à-dire quand on quitte l'espace parent, ex. « Retour au jeu »).
 import { useEffect, useState } from 'preact/hooks';
@@ -7,6 +8,9 @@ import type { AppSettings } from '../storage';
 import { ChildForm } from './ChildForm';
 import { ChildStats } from './ChildStats';
 import { Dashboard } from './Dashboard';
+import { DataPanel } from './DataPanel';
+import { ParentShell } from './ParentShell';
+import { ParentSettings } from './Settings';
 import './parent.css';
 import { PinGate } from './PinGate';
 import { describeError } from './util';
@@ -73,5 +77,23 @@ function ParentRoutes(props: { path: string[] }) {
   if (segment === 'child' && id) {
     return <ChildStats profileId={id} />;
   }
-  return <Dashboard />;
+  if (segment === 'data') {
+    return (
+      <ParentShell tab="data">
+        <DataPanel />
+      </ParentShell>
+    );
+  }
+  if (segment === 'settings') {
+    return (
+      <ParentShell tab="settings">
+        <ParentSettings />
+      </ParentShell>
+    );
+  }
+  return (
+    <ParentShell tab="children">
+      <Dashboard />
+    </ParentShell>
+  );
 }

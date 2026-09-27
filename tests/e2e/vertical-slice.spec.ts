@@ -309,7 +309,8 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   await page.screenshot({ path: shot('06-stats.png'), fullPage: true });
 
   // ---- Export : format, 1 profil, 3 parties, aucun champ pinHash ----
-  await page.getByRole('button', { name: '← Tableau de bord' }).click();
+  await page.getByRole('button', { name: 'Retour aux enfants' }).click();
+  await page.getByTestId('tab-data').click();
   const downloadPromise = page.waitForEvent('download');
   await page.getByTestId('export').click();
   const download = await downloadPromise;
