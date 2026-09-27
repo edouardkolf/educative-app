@@ -1,0 +1,35 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-12",
+  "title": "Défi : toutes les suites",
+  "skill": "patterns",
+  "objective": "Retrouver le nombre manquant dans des suites qui montent ou descendent, de 2, 3, 5, 10 ou 100, ou à deux pas.",
+  "mechanic": "sequence",
+  "rounds": 8,
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  },
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 10,
+      "max": 90
+    },
+    "steps": [
+      3,
+      5,
+      -2,
+      -3,
+      -10,
+      100,
+      [
+        2,
+        1
+      ]
+    ],
+    "length": 8,
+    "blank": "middle",
+    "choices": 4
+  }
+}

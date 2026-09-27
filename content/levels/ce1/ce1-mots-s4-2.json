@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s4-2",
+  "title": "Série 4 : lettres manquantes",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Compléter les lettres manquantes des mots de la série 4 (bien, bientôt, car, ceci, cela), dans une phrase.",
+  "rounds": 6,
+  "params": {
+    "words": [
+      "bien",
+      "bientot",
+      "car",
+      "ceci",
+      "cela"
+    ],
+    "mode": "gap",
+    "sentence": true,
+    "choices": 3
+  }
+}

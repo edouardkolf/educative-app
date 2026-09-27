@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-10",
+  "title": "De 4 en 4, de 100 en 100",
+  "skill": "patterns",
+  "objective": "Continuer une suite qui avance de 4 en 4, ou de 100 en 100 (les centaines changent, le reste non).",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 0,
+      "max": 60
+    },
+    "steps": [
+      4,
+      100
+    ],
+    "length": 7,
+    "blank": "end",
+    "choices": 4
+  }
+}

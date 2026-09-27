@@ -49,8 +49,23 @@ function semanticErrors(level: Level): string[] {
       break;
     }
     case 'sequence': {
-      const { pattern, vary, colors, shapes, objects, choices } = level.params;
+      const { pattern = '', vary, colors, shapes, objects, choices, start, steps, length } = level.params;
       const distinctLetters = new Set(pattern.split('')).size;
+
+      if (vary === 'number') {
+        if (start && start.min > start.max) errors.push(`sequence : start.min (${start.min}) doit être ≤ start.max (${start.max})`);
+        if (level.params.blank === 'middle' && length < 5) {
+          errors.push('sequence : un trou au milieu d\'une suite de nombres demande au moins 5 cases (2 avant, 1 après)');
+        }
+        for (const step of steps ?? []) {
+          const cycle = Array.isArray(step) ? step : [step];
+          const values = [0];
+          for (let i = 1; i < length; i += 1) values.push((values[i - 1] ?? 0) + (cycle[(i - 1) % cycle.length] ?? 0));
+          const span = Math.max(...values) - Math.min(...values);
+          if (span > 999) errors.push(`sequence : le pas ${JSON.stringify(step)} sur ${length} cases dépasse 999`);
+        }
+        break;
+      }
 
       if (vary === 'object') {
         const poolSize = objects?.length ?? 0;

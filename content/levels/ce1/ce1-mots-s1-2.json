@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s1-2",
+  "title": "Série 1 : lettres manquantes",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Compléter les lettres manquantes des mots de la série 1 (afin, alors, après, assez, aujourd'hui), dans une phrase.",
+  "rounds": 6,
+  "params": {
+    "words": [
+      "afin",
+      "alors",
+      "apres",
+      "assez",
+      "aujourdhui"
+    ],
+    "mode": "gap",
+    "sentence": true,
+    "choices": 3
+  }
+}

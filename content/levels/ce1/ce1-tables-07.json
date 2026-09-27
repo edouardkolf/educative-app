@@ -1,0 +1,27 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-tables-07",
+  "title": "Le facteur manquant, au pavé",
+  "skill": "multiplication",
+  "objective": "Trouver de mémoire le facteur manquant (4 × ? = 12) et le taper au pavé, tables jusqu'à 4 × 4 et 3 × 5.",
+  "mechanic": "calc",
+  "rounds": 8,
+  "params": {
+    "operation": "mul",
+    "a": {
+      "min": 2,
+      "max": 4
+    },
+    "b": {
+      "min": 2,
+      "max": 5
+    },
+    "unknown": "operand",
+    "answer": "keypad",
+    "maxProduct": 16
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

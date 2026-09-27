@@ -57,11 +57,28 @@ export const SKILLS = [
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
 
-/** Compléter une suite. Chaque lettre du motif est un élément distinct : "AB", "AAB", "ABC"… */
+/**
+ * Pas d'une suite de nombres : un entier (+2, −3…) ou un cycle de pas ([2, 1] : +2, +1, +2, +1…).
+ * Négatif : la suite descend.
+ */
+export type SequenceStep = number | number[];
+
+/**
+ * Compléter une suite. Chaque lettre du motif est un élément distinct : "AB", "AAB", "ABC"…
+ * vary = "number" : suite de nombres (compter de 2 en 2, de 10 en 10, à rebours…), sans motif de lettres.
+ */
 export interface SequenceParams {
-  pattern: string;
-  /** Ce qui distingue les éléments du motif. "object" : émojis du catalogue plutôt que forme/couleur. */
-  vary: 'color' | 'shape' | 'both' | 'object';
+  /** Motif de lettres (requis sauf si vary = "number"). */
+  pattern?: string;
+  /**
+   * Ce qui distingue les éléments du motif. "object" : émojis du catalogue plutôt que forme/couleur.
+   * "number" : des nombres qui avancent d'un pas régulier (voir `start` et `steps`).
+   */
+  vary: 'color' | 'shape' | 'both' | 'object' | 'number';
+  /** vary = "number" : premier nombre de la suite, tiré dans cette plage (décalé si la suite passerait sous 0). */
+  start?: IntRange;
+  /** vary = "number" : pas possibles, un tiré par manche (jamais deux fois de suite si possible). */
+  steps?: SequenceStep[];
   /** Réservoir de couleurs où piocher (requis si vary = "color"/"shape"/"both", au moins autant que de lettres distinctes si vary ≠ shape). */
   colors?: Color[];
   /** Réservoir de formes où piocher (requis si vary = "color"/"shape"/"both", au moins autant que de lettres distinctes si vary ≠ color). */
@@ -211,6 +228,16 @@ export const WORD_IDS = [
   'autour',
   'autant',
   'autrefois',
+  'alors',
+  'autrement',
+  'avant',
+  'avec',
+  'beaucoup',
+  'bien',
+  'bientot',
+  'car',
+  'ceci',
+  'cela',
 ] as const;
 export type WordId = (typeof WORD_IDS)[number];
 

@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-08",
+  "title": "À rebours",
+  "skill": "patterns",
+  "objective": "Continuer une suite qui descend de 2 en 2 ou de 10 en 10 (58, 48, 38…).",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 40,
+      "max": 90
+    },
+    "steps": [
+      -2,
+      -10
+    ],
+    "length": 7,
+    "blank": "end",
+    "choices": 3
+  }
+}

@@ -34,7 +34,8 @@ describe('sequence.generateRounds', () => {
 
     for (let i = 0; i < full.length; i += 1) {
       for (let j = i + 1; j < full.length; j += 1) {
-        const sameLetter = params.pattern[i % params.pattern.length] === params.pattern[j % params.pattern.length];
+        const pattern = params.pattern!;
+        const sameLetter = pattern[i % pattern.length] === pattern[j % pattern.length];
         if (sameLetter) expect(tokenId(full[i] as Token)).toBe(tokenId(full[j] as Token));
         else expect(tokenId(full[i] as Token)).not.toBe(tokenId(full[j] as Token));
       }
@@ -73,7 +74,7 @@ describe('sequence.generateRounds', () => {
   it('la case vide est au milieu (après un motif complet, jamais en dernière case) quand blank = "middle"', () => {
     const params = seqParams({ pattern: 'AB', blank: 'middle', length: 8 });
     for (const round of generateRounds(params, 20, createRng(2))) {
-      expect(round.data.blankIndex).toBeGreaterThanOrEqual(params.pattern.length);
+      expect(round.data.blankIndex).toBeGreaterThanOrEqual(params.pattern!.length);
       expect(round.data.blankIndex).toBeLessThanOrEqual(params.length - 2);
     }
   });
@@ -143,7 +144,8 @@ describe('sequence.generateRounds', () => {
 
     for (let i = 0; i < full.length; i += 1) {
       for (let j = i + 1; j < full.length; j += 1) {
-        const sameLetter = params.pattern[i % params.pattern.length] === params.pattern[j % params.pattern.length];
+        const pattern = params.pattern!;
+        const sameLetter = pattern[i % pattern.length] === pattern[j % pattern.length];
         if (sameLetter) expect(full[i]!.objectId).toBe(full[j]!.objectId);
         else expect(full[i]!.objectId).not.toBe(full[j]!.objectId);
       }
@@ -207,5 +209,86 @@ describe('sequence.generateRounds', () => {
       choices: 2,
     });
     expect(() => generateRounds(params, 3, createRng(1))).not.toThrow();
+  });
+});
+
+describe('sequence.generateRounds — vary "number"', () => {
+  const numberParams = (overrides: Partial<SequenceParams> = {}): SequenceParams => ({
+    vary: 'number',
+    start: { min: 0, max: 20 },
+    steps: [2],
+    length: 7,
+    blank: 'end',
+    choices: 3,
+    ...overrides,
+  });
+
+  const valuesOf = (round: ReturnType<typeof generateRounds>[number]): number[] => {
+    const answer = Number(round.answer.slice(2));
+    return round.data.items.map((it) => (it && it.kind === 'number' ? it.value : answer));
+  };
+
+  it('avance d\'un pas régulier, la réponse est le nombre manquant', () => {
+    for (const round of generateRounds(numberParams({ steps: [2, 5, 10] }), 12, createRng(4))) {
+      const values = valuesOf(round);
+      const step = (values[1] as number) - (values[0] as number);
+      expect([2, 5, 10]).toContain(step);
+      for (let i = 1; i < values.length; i += 1) expect((values[i] as number) - (values[i - 1] as number)).toBe(step);
+      expect(round.data.choices.map((c) => c.id)).toContain(round.answer);
+    }
+  });
+
+  it('à rebours : jamais sous 0', () => {
+    for (const round of generateRounds(numberParams({ steps: [-3, -10], start: { min: 0, max: 30 } }), 20, createRng(8))) {
+      const values = valuesOf(round);
+      expect(Math.min(...values)).toBeGreaterThanOrEqual(0);
+      expect((values[1] as number) - (values[0] as number)).toBeLessThan(0);
+    }
+  });
+
+  it('cycle de pas [2, 1] : +2, +1, +2, +1…', () => {
+    const [round] = generateRounds(numberParams({ steps: [[2, 1]], start: { min: 5, max: 5 } }), 1, createRng(1));
+    expect(valuesOf(round!)).toEqual([5, 7, 8, 10, 11, 13, 14]);
+  });
+
+  it('propositions : uniques, positives, jamais un nombre déjà affiché, en nombre demandé', () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      for (const round of generateRounds(numberParams({ steps: [2, 3, -2], blank: 'middle', choices: 4 }), 10, createRng(seed))) {
+        const ids = round.data.choices.map((c) => c.id);
+        expect(ids).toHaveLength(4);
+        expect(new Set(ids).size).toBe(4);
+        const shown = round.data.items.flatMap((it) => (it && it.kind === 'number' ? [it.value] : []));
+        for (const { id, item } of round.data.choices) {
+          expect(item.kind).toBe('number');
+          if (item.kind !== 'number') continue;
+          expect(item.value).toBeGreaterThanOrEqual(0);
+          if (id !== round.answer) expect(shown).not.toContain(item.value);
+        }
+      }
+    }
+  });
+
+  it('trou au milieu : au moins deux nombres avant, jamais en dernière case', () => {
+    for (const round of generateRounds(numberParams({ blank: 'middle', length: 6 }), 20, createRng(9))) {
+      expect(round.data.blankIndex).toBeGreaterThanOrEqual(2);
+      expect(round.data.blankIndex).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it('change de pas d\'une manche à l\'autre quand il y en a plusieurs', () => {
+    const rounds = generateRounds(numberParams({ steps: [2, 5] }), 6, createRng(3));
+    const steps = rounds.map((r) => {
+      const v = valuesOf(r);
+      return (v[1] as number) - (v[0] as number);
+    });
+    for (let i = 1; i < steps.length; i += 1) expect(steps[i]).not.toBe(steps[i - 1]);
+  });
+
+  it('de 100 en 100 : les pièges sont des erreurs de rang (±10), pas seulement d\'unités', () => {
+    for (const round of generateRounds(numberParams({ steps: [100], start: { min: 10, max: 60 }, choices: 4 }), 6, createRng(5))) {
+      const answer = Number(round.answer.slice(2));
+      const offsets = round.data.choices.map((c) => (c.item.kind === 'number' ? c.item.value - answer : 0));
+      expect(offsets.some((o) => Math.abs(o) >= 10 || o === -90)).toBe(true);
+    }
   });
 });

@@ -1,0 +1,25 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-09",
+  "title": "Quel est le pas ?",
+  "skill": "patterns",
+  "objective": "Trouver le nombre manquant d'une suite qui avance de 2, 3, 5 ou 10 : repérer le pas avant de compter.",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 0,
+      "max": 30
+    },
+    "steps": [
+      2,
+      3,
+      5,
+      10
+    ],
+    "length": 7,
+    "blank": "middle",
+    "choices": 4
+  }
+}

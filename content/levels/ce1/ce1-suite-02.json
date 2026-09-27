@@ -1,0 +1,24 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-02",
+  "title": "Motif ABBC, trou au milieu",
+  "skill": "patterns",
+  "objective": "Retrouver l'élément manquant au milieu d'une suite ABBC (un élément répété dans le motif).",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "pattern": "ABBC",
+    "vary": "object",
+    "objects": [
+      "apple",
+      "banana",
+      "strawberry",
+      "cherries",
+      "pear",
+      "grapes"
+    ],
+    "length": 8,
+    "blank": "middle",
+    "choices": 3
+  }
+}

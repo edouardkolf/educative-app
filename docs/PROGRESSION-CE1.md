@@ -2,7 +2,7 @@
 
 Repères : programme de CP-CE1, cycle 2. En CE1, on vise la maîtrise de l'addition et soustraction (entiers naturels jusqu'à 100, avec et sans retenue/emprunt), le début des tables de multiplication (2, 3, 4), la comparaison de nombres, et l'orthographe de mots invariables fréquents.
 
-**Principe de la carte** : six jeux sont entrelacés (addition, comparaison, orthographe, lecture, soustraction, tables), montant en difficulté par petites marches. Chaque jeu suit une progression : **reconnaissance (choix parmi) → production (pavé numérique)** pour le calcul ; en orthographe, reconnaissance seulement, de plus en plus fine (l'écriture se travaille en dictée à la maison). Chaque jeu commence par un niveau avec tutoriel. Les niveaux de 8 manches assouplissent les seuils d'étoiles pour tenir compte de la complexité accrue.
+**Principe de la carte** : sept jeux sont entrelacés (addition, comparaison, orthographe, lecture, soustraction, tables, suites logiques), montant en difficulté par petites marches. Chaque jeu suit une progression : **reconnaissance (choix parmi) → production (pavé numérique)** pour le calcul ; en orthographe, reconnaissance seulement, de plus en plus fine (l'écriture se travaille en dictée à la maison). Chaque jeu commence par un niveau avec tutoriel. Les niveaux de 8 manches assouplissent les seuils d'étoiles pour tenir compte de la complexité accrue.
 
 ## Addition
 
@@ -26,23 +26,30 @@ Repères : programme de CP-CE1, cycle 2. En CE1, on vise la maîtrise de l'addit
 | 4 | ce1-compare-04 | 20–80, nombre ? addition à deux chiffres, écart max 3 | 47 < 23 + 26 |
 | 5 | ce1-compare-05 | 100–999, nombres, écart max 20 | Trois chiffres : ordre des centaines |
 | 6 | ce1-compare-06 | 10–40, alterne nombre ? addition et deux additions, écart max 3 | Comparer deux calculs |
+| 7 | ce1-compare-07 | 20–99, deux additions à deux chiffres, écart max 3, **8 manches** | Nuages : comparer deux calculs à deux chiffres |
 
 ## Orthographe des mots invariables
 
-Groupe A : après, auprès, aussi, aussitôt, assez  
-Groupe B : afin, aujourd'hui, autour, autant, autrefois
+Les mots viennent de la liste de la classe (période 1), **une série par monde** de la carte :
+
+| Monde | Série | Mots |
+|---|---|---|
+| Forêt | 1 | afin, alors, après, assez, aujourd'hui |
+| Mer | 2 | auprès, aussi, aussitôt, autant, autour |
+| Montagne | 3 | autrefois, autrement, avant, avec, beaucoup |
+| Nuages | 4 | bien, bientôt, car, ceci, cela |
+
+Les séries 5 à 8 (période 2 : cependant… envers) attendront un cinquième monde.
+
+Chaque série suit les mêmes quatre marches, réparties dans son monde :
 
 | # | id | Contenu | Progression |
 |---|---|---|---|
-| 1 | ce1-mots-01 | Groupe A, reconnaissance (choix), avec phrase, variantes grossières, **tutoriel** | Première orthographe parmi variantes faciles à écarter |
-| 2 | ce1-mots-02 | Groupe A, trous, avec phrase | Compléter les lettres manquantes |
-| 3 | ce1-mots-03 | Groupe B, reconnaissance (choix), avec phrase, variantes grossières | Deuxième groupe, reconnaissance parmi variantes faciles à écarter |
-| 4 | ce1-mots-04 | Groupe B, trous, avec phrase | Deuxième groupe, compléter les trous |
-| 5 | ce1-mots-05 | Groupe A, reconnaissance (4 choix), avec phrase, variantes moyennes | Groupe A, fautes plus proches du bon mot |
-| 6 | ce1-mots-06 | Groupe B, reconnaissance (4 choix), avec phrase, variantes moyennes | Groupe B, fautes plus proches du bon mot |
-| 7 | ce1-mots-07 | 10 mots, reconnaissance (4 choix), sans phrase, variantes moyennes, **8 manches** | Tous les mots hors contexte, fautes plus proches : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 8 | ce1-mots-08 | 10 mots, lettre piège (4 choix), sans phrase, **8 manches** | La difficulté de chaque mot (ss, è, ô, z…) : défi consolidation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
-| 9 | ce1-mots-09 | 10 mots, reconnaissance (4 choix), sans phrase, variantes subtiles, **8 manches** | L'orthographe exacte, à un accent ou une lettre près (aprés / après) : dernier niveau du parcours |
+| 1 | ce1-mots-sN-1 | Reconnaissance (3 choix), avec phrase, variantes grossières (**tutoriel** en série 1) | Première rencontre avec la forme du mot |
+| 2 | ce1-mots-sN-2 | Lettres manquantes (3 choix), avec phrase | La difficulté du mot (ss, è, ô, eau…) |
+| 3 | ce1-mots-sN-3 | Reconnaissance (4 choix), avec phrase, variantes moyennes | Fautes plus proches du bon mot |
+| 4 | ce1-mots-sN-4 | Reconnaissance (4 choix), sans phrase, variantes subtiles, **8 manches** ; à partir de la série 2, les mots de la série précédente reviennent | L'orthographe exacte, à un accent près (aprés / après), et la révision |
+| 17 | ce1-mots-revision | Les 20 mots, lettre piège (4 choix), sans phrase, **10 manches** (≤1 raté = 3★, ≤3 = 2★) | Dernier niveau du parcours |
 
 ## Soustraction
 
@@ -75,12 +82,45 @@ Facteurs jamais > 4 ; chaque niveau commence par un tutoriel ou une mécanique c
 | 4 | ce1-tables-04 | Les 8 résultats jusqu'à 4 × 4 et 3 × 5, **8 manches** | Mémorisation (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 | 5 | ce1-tables-05 | Mêmes tables, au pavé, **8 manches** | Production de mémoire (seuils : ≤1 raté = 3★, ≤2 = 2★) |
 | 6 | ce1-tables-06 | Facteur manquant (3 × ? = 12), 4 choix | Réversibilité |
+| 7 | ce1-tables-07 | Facteur manquant, au pavé, **8 manches** | Nuages : réversibilité de mémoire |
+
+## Suites logiques
+
+Repérer une régularité, puis l'appliquer. On part des motifs de formes (comme en maternelle, mais plus longs),
+puis on passe aux suites de nombres : compter de 2 en 2, de 10 en 10, de 5 en 5, de 3 en 3, à rebours, et enfin
+des suites dont le pas change en alternance (+2, +1, +2…). Trois suites par monde.
+
+Les propositions fausses sont les erreurs vraisemblables : une unité à côté, le pas oublié (compter de 1 en 1),
+le pas fait deux fois, une dizaine à côté ; jamais un nombre déjà affiché. La suite ne passe jamais sous 0.
+
+| # | id | Monde | Contenu |
+|---|---|---|---|
+| 1 | ce1-suite-01 | Forêt | Motif ABC, formes et couleurs, **tutoriel** |
+| 2 | ce1-suite-02 | Forêt | Motif ABBC (fruits), trou au milieu |
+| 3 | ce1-suite-03 | Forêt | De 2 en 2 (départ 0 à 10) |
+| 4 | ce1-suite-04 | Mer | De 10 en 10 à partir de n'importe quel nombre (7, 17, 27…) |
+| 5 | ce1-suite-05 | Mer | De 5 en 5 (3, 8, 13…) |
+| 6 | ce1-suite-06 | Mer | De 2 en 2 ou de 10 en 10, trou au milieu |
+| 7 | ce1-suite-07 | Montagne | De 3 en 3 |
+| 8 | ce1-suite-08 | Montagne | À rebours de 2 en 2 ou de 10 en 10 |
+| 9 | ce1-suite-09 | Montagne | Pas de 2, 3, 5 ou 10, trou au milieu, 4 choix |
+| 10 | ce1-suite-10 | Nuages | De 4 en 4, de 100 en 100 |
+| 11 | ce1-suite-11 | Nuages | Deux pas en alternance : +2 +1, +1 +3, +10 +1 |
+| 12 | ce1-suite-12 | Nuages | Défi : tout mélangé, montée et descente, trou au milieu, **8 manches** |
+
+## Les mondes de la carte
+
+La carte compte 16 niveaux par monde : forêt (1–16), mer (17–32), montagne (33–48), nuages (49–64). Chaque monde
+mêle 4 niveaux de mots invariables (sa série), 3 suites logiques et 8 à 9 niveaux de calcul et de lecture, dans
+l'ordre de difficulté de chaque jeu. Le monde des nuages reçoit les sommets de chaque jeu, plus deux niveaux qui lui
+sont propres : **ce1-compare-07** (deux additions à deux chiffres, écart ≤ 3, 8 manches) et **ce1-tables-07**
+(facteur manquant au pavé, 8 manches).
 
 ## Notes
 
 **Paramètres communs** : 5 ou 6 manches pour les niveaux réguliers (5 pour les tutoriels ; 4 pour les tables 01 à 03, qui n'ont que 4 faits chacune), 8 manches pour les défis de consolidation. Seuils d'étoiles par défaut : 0 raté du premier coup = 3 étoiles, 1 raté = 2 étoiles, sinon 1.
 
-**Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-sous-07, ce1-tables-04, ce1-tables-05, ce1-mots-07, ce1-mots-08, ce1-mots-09 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
+**Niveaux à 8 manches** (plus complexes) : ce1-add-06, ce1-sous-05, ce1-sous-07, ce1-tables-04, ce1-tables-05, ce1-tables-07, ce1-compare-07, ce1-mots-sN-4, ce1-suite-12 assouplissent les seuils à `{ "maxMissesFor3": 1, "maxMissesFor2": 2 }` pour encourager l'apprentissage sans décourager.
 
 **À observer dans les statistiques** : un taux de réussite au premier coup sous 50 % sur deux parties signale une marche trop haute. Possible : ajouter un niveau intermédiaire ou assouplir temporairement depuis l'espace parent.
 

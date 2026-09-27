@@ -1,0 +1,29 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-01",
+  "title": "Suite de 3 formes",
+  "skill": "patterns",
+  "objective": "Continuer une suite ABC où forme et couleur changent ensemble.",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "tutorial": true,
+  "params": {
+    "pattern": "ABC",
+    "vary": "both",
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green"
+    ],
+    "shapes": [
+      "circle",
+      "square",
+      "triangle",
+      "star"
+    ],
+    "length": 7,
+    "blank": "end",
+    "choices": 3
+  }
+}

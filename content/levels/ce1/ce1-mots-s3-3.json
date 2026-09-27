@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s3-3",
+  "title": "Série 3 : fautes proches",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Reconnaître les mots de la série 3 parmi 4 propositions aux fautes plus proches du bon mot, dans une phrase.",
+  "rounds": 6,
+  "params": {
+    "words": [
+      "autrefois",
+      "autrement",
+      "avant",
+      "avec",
+      "beaucoup"
+    ],
+    "mode": "pick",
+    "sentence": true,
+    "choices": 4,
+    "closeness": 2
+  }
+}

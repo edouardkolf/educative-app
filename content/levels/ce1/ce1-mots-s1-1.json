@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s1-1",
+  "title": "Série 1 : reconnaître le mot",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Reconnaître l'orthographe des mots de la série 1 (afin, alors, après, assez, aujourd'hui) parmi des variantes faciles à écarter, dans une phrase.",
+  "rounds": 5,
+  "tutorial": true,
+  "params": {
+    "words": [
+      "afin",
+      "alors",
+      "apres",
+      "assez",
+      "aujourdhui"
+    ],
+    "mode": "pick",
+    "sentence": true,
+    "choices": 3,
+    "closeness": 1
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-03",
+  "title": "Compter de 2 en 2",
+  "skill": "patterns",
+  "objective": "Continuer une suite de nombres qui avance de 2 en 2 (4, 6, 8…).",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 0,
+      "max": 10
+    },
+    "steps": [
+      2
+    ],
+    "length": 7,
+    "blank": "end",
+    "choices": 3
+  }
+}

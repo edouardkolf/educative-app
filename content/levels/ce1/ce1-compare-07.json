@@ -1,0 +1,20 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-compare-07",
+  "title": "Deux additions à deux chiffres",
+  "skill": "comparison",
+  "objective": "Comparer deux additions à deux chiffres aux résultats très proches (23 + 18 ? 25 + 14).",
+  "mechanic": "compare",
+  "rounds": 8,
+  "params": {
+    "min": 20,
+    "max": 99,
+    "form": "sums",
+    "equalRate": 0.2,
+    "maxGap": 3
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

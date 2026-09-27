@@ -50,14 +50,35 @@ Continuer un motif répété. Exemple complet (extrait de ms-suite-01.json) :
 ```
 
 **Champs** :
-- `pattern` : Motif répété (AB, AAB, ABB, ABC, etc.)
-- `vary` : Ce qui distingue les éléments (`"color"`, `"shape"`, `"both"`, `"object"`)
+- `pattern` : Motif répété (AB, AAB, ABB, ABC, etc.) — sauf `vary` = `"number"`
+- `vary` : Ce qui distingue les éléments (`"color"`, `"shape"`, `"both"`, `"object"`, `"number"`)
 - `colors` : Liste des couleurs disponibles (requis si `vary` ≠ `"object"`)
 - `shapes` : Liste des formes disponibles (requis si `vary` ≠ `"object"`)
 - `objects` : Liste d'objets illustrés du catalogue (requis, et utilisé uniquement, si `vary` = `"object"`) — au moins autant d'objets que de lettres distinctes du motif
 - `length` : Nombre total de cases
 - `blank` : `"end"` (continuer) ou `"middle"` (combler un trou)
 - `choices` : Nombre de propositions (2–4)
+
+`vary` = `"number"` (CE1) affiche une suite de nombres au lieu d'un motif : pas de `pattern`, `colors`,
+`shapes` ni `objects`, mais deux champs à eux :
+- `start` : plage du premier nombre, ex. `{ "min": 0, "max": 10 }` (la suite est décalée si elle passerait sous 0 ou au-delà de 999) ;
+- `steps` : pas possibles, un tiré par manche. `2` = de 2 en 2, `-10` = à rebours de 10 en 10, `[2, 1]` = +2, +1, +2, +1…
+
+Exemple (extrait de ce1-suite-09.json) :
+
+```json
+{
+  "mechanic": "sequence",
+  "params": {
+    "vary": "number",
+    "start": { "min": 0, "max": 30 },
+    "steps": [2, 3, 5, 10],
+    "length": 7,
+    "blank": "middle",
+    "choices": 4
+  }
+}
+```
 
 `vary` = `"object"` remplace formes/couleurs par des émojis du catalogue (`src/ui/objects.ts`), par exemple des
 animaux ou des plantes, pour varier les thèmes. Exemple (extrait de ms-suite-nature-01.json) :
@@ -254,19 +275,19 @@ Le hasard : 1 chance sur `choices` en mode choix, quasi nulle au pavé — les s
 
 ### Spelling (mots invariables — CE1)
 
-Les 10 mots invariables sont décrits dans `src/mechanics/spelling/words.ts` (orthographe, variantes fautives classées par proximité,
+Les 20 mots invariables (séries 1 à 4) sont décrits dans `src/mechanics/spelling/words.ts` (orthographe, variantes fautives classées par proximité,
 lettres à trou, phrases d'exemple). Un bouton 🔊 lit le mot (et la phrase) avec la synthèse vocale du téléphone,
-s'il en a une. Exemple (extrait de ce1-mots-05.json) :
+s'il en a une. Exemple (extrait de ce1-mots-s1-3.json) :
 
 ```json
 {
   "mechanic": "spelling",
-  "params": { "words": ["apres", "aupres", "aussi", "aussitot", "assez"], "mode": "pick", "sentence": true, "choices": 4, "closeness": 2 }
+  "params": { "words": ["afin", "alors", "apres", "assez", "aujourdhui"], "mode": "pick", "sentence": true, "choices": 4, "closeness": 2 }
 }
 ```
 
 **Champs** :
-- `words` : identifiants sans accent — apres, aupres, aussi, aussitot, assez, afin, aujourdhui, autour, autant, autrefois
+- `words` : identifiants sans accent — série 1 : afin, alors, apres, assez, aujourdhui ; série 2 : aupres, aussi, aussitot, autant, autour ; série 3 : autrefois, autrement, avant, avec, beaucoup ; série 4 : bien, bientot, car, ceci, cela. Un nouveau mot s'ajoute dans `words.ts`, `WORD_IDS` (`src/engine/types.ts`) et l'énumération `wordId` du schéma.
 - `mode` : `"pick"` (la bonne orthographe parmi des variantes fautives), `"gap"` (les lettres manquantes, ex. au▢itôt → ss),
   `"tiles"` (reconstituer le mot avec des étiquettes-lettres, puis valider — disponible, mais non utilisé dans le parcours CE1 : l'écriture se travaille en dictée)
 - `sentence` : affiche une phrase d'exemple avec le mot en trou

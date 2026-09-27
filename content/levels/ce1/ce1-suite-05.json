@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-05",
+  "title": "Compter de 5 en 5",
+  "skill": "patterns",
+  "objective": "Continuer une suite qui avance de 5 en 5 (3, 8, 13…) : les unités alternent.",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 0,
+      "max": 10
+    },
+    "steps": [
+      5
+    ],
+    "length": 7,
+    "blank": "end",
+    "choices": 3
+  }
+}

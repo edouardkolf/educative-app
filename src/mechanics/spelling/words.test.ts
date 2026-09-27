@@ -4,7 +4,7 @@ import { WORD_IDS } from '../../engine/types';
 import { WORDS } from './words';
 
 describe('WORDS (catalogue)', () => {
-  it('contient les 10 mots attendus', () => {
+  it('contient les mots attendus', () => {
     expect(Object.keys(WORDS).sort()).toEqual([...WORD_IDS].sort());
   });
 

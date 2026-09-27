@@ -1,5 +1,5 @@
 // Génération pure des manches de la mécanique « compléter une suite ». Aucun DOM, aucun stockage.
-import type { ChoiceId, ObjectId, Rng, Round, SequenceParams, Token } from '../../engine/types';
+import type { ChoiceId, ObjectId, Rng, Round, SequenceParams, SequenceStep, Token } from '../../engine/types';
 import type { SequenceItem, SequenceRoundData } from './types';
 
 const MAX_RETRIES_DIFFERENT_ROUND = 8;
@@ -13,8 +13,15 @@ export function objectItemId(objectId: ObjectId): ChoiceId {
   return `obj:${objectId}`;
 }
 
+/** Identifiant d'un nombre, préfixé comme les objets. */
+export function numberItemId(value: number): ChoiceId {
+  return `n:${value}`;
+}
+
 function itemId(item: SequenceItem): ChoiceId {
-  return item.kind === 'token' ? tokenId(item.token) : objectItemId(item.objectId);
+  if (item.kind === 'token') return tokenId(item.token);
+  if (item.kind === 'object') return objectItemId(item.objectId);
+  return numberItemId(item.value);
 }
 
 /** Un jeton distinct par lettre distincte du motif (ex. "AAB" → 2 lettres : A, B). */
@@ -24,7 +31,7 @@ function distinctLetters(pattern: string): string[] {
 
 /** vary "color" → une forme pour toute la manche, couleurs distinctes ; "shape" → l'inverse ; "both" → les deux. */
 function tokensForPattern(params: SequenceParams, rng: Rng): Map<string, Token> {
-  const letters = distinctLetters(params.pattern);
+  const letters = distinctLetters(params.pattern ?? 'AB');
   const map = new Map<string, Token>();
   const colors = params.colors ?? [];
   const shapes = params.shapes ?? [];
@@ -50,7 +57,7 @@ function tokensForPattern(params: SequenceParams, rng: Rng): Map<string, Token> 
 
 /** vary "object" : un objet distinct du réservoir par lettre distincte du motif. */
 function objectsForPattern(params: SequenceParams, rng: Rng): Map<string, ObjectId> {
-  const letters = distinctLetters(params.pattern);
+  const letters = distinctLetters(params.pattern ?? 'AB');
   const pool = rng.shuffle(params.objects ?? []);
   const map = new Map<string, ObjectId>();
   letters.forEach((letter, i) => map.set(letter, pool[i % Math.max(pool.length, 1)] as ObjectId));
@@ -124,8 +131,9 @@ function roundSignature(data: SequenceRoundData): string {
 }
 
 function buildOneRound(params: SequenceParams, rng: Rng): Round<SequenceRoundData> {
-  const patternChars = params.pattern.split('');
-  const letters = distinctLetters(params.pattern);
+  const pattern = params.pattern ?? 'AB';
+  const patternChars = pattern.split('');
+  const letters = distinctLetters(pattern);
 
   let itemsByLetter: Map<string, SequenceItem>;
   if (params.vary === 'object') {
@@ -157,17 +165,109 @@ function buildOneRound(params: SequenceParams, rng: Rng): Round<SequenceRoundDat
   return { data: { items, blankIndex, choices }, answer: itemId(correct) };
 }
 
+// ---------- vary "number" : suites de nombres ----------
+
+/** Plus grand nombre affiché (trois chiffres tiennent dans une case). */
+export const MAX_NUMBER = 999;
+
+function stepCycle(step: SequenceStep): number[] {
+  return Array.isArray(step) ? step : [step];
+}
+
+/** Les `length` nombres de la suite ; décalée vers le haut si elle passerait sous 0, vers le bas au-delà de 999. */
+export function numberSequence(start: number, step: SequenceStep, length: number): number[] {
+  const cycle = stepCycle(step);
+  const values = [start];
+  for (let i = 1; i < length; i += 1) {
+    values.push((values[i - 1] as number) + (cycle[(i - 1) % cycle.length] as number));
+  }
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  const shift = low < 0 ? -low : high > MAX_NUMBER ? MAX_NUMBER - high : 0;
+  return values.map((v) => v + shift);
+}
+
+/**
+ * Propositions pièges, par ordre de vraisemblance : (pas de 100) une erreur de rang, une unité à côté, le pas
+ * oublié (compter de 1 en 1),
+ * le pas fait deux fois, deux unités à côté, une dizaine à côté. Jamais un nombre déjà affiché ni négatif.
+ */
+function numberDistractors(values: number[], blankIndex: number, rng: Rng): number[] {
+  const correct = values[blankIndex] as number;
+  const before = blankIndex > 0 ? (values[blankIndex - 1] as number) : null;
+  const delta = before === null ? (values[1] as number) - correct : correct - before;
+  const direction = Math.sign(delta) || 1;
+  const shown = new Set(values.filter((_, i) => i !== blankIndex));
+
+  // De 100 en 100 : l'erreur typique est de rang (ajouter 10 ou 1 au lieu de 100), pas d'une unité à côté.
+  const placeValueSlips =
+    before !== null && Math.abs(delta) >= 100 ? rng.shuffle([before + direction * 10, correct + 10, correct - 10]) : [];
+  const tiers: number[][] = [
+    placeValueSlips,
+    rng.shuffle([correct + 1, correct - 1]),
+    before === null ? [] : [before + direction],
+    [correct + delta],
+    rng.shuffle([correct + 2, correct - 2]),
+    rng.shuffle([correct + 10, correct - 10]),
+    rng.shuffle([correct + 3, correct - 3, correct + 4, correct - 4, correct + 5, correct - 5]),
+  ];
+  const result: number[] = [];
+  for (const candidate of tiers.flat()) {
+    if (candidate < 0 || candidate > MAX_NUMBER || candidate === correct) continue;
+    if (shown.has(candidate) || result.includes(candidate)) continue;
+    result.push(candidate);
+  }
+  return result;
+}
+
+function buildNumberRound(params: SequenceParams, step: SequenceStep, rng: Rng): Round<SequenceRoundData> {
+  const start = params.start ?? { min: 0, max: 10 };
+  const values = numberSequence(rng.int(start.min, start.max), step, params.length);
+
+  // "middle" : au moins deux nombres avant le trou, pour voir le pas ; jamais le dernier.
+  const blankIndex = params.blank === 'end' ? params.length - 1 : rng.int(2, params.length - 2);
+  const correct = values[blankIndex] as number;
+
+  const wrongs = numberDistractors(values, blankIndex, rng);
+  // Les pièges les plus vraisemblables d'abord, mais pas toujours les mêmes : on pioche dans les premiers.
+  const picked = rng.shuffle(wrongs.slice(0, params.choices + 1)).slice(0, params.choices - 1);
+  const choices = rng
+    .shuffle([correct, ...picked])
+    .map((value) => ({ id: numberItemId(value), item: { kind: 'number', value } as SequenceItem }));
+
+  const items: (SequenceItem | null)[] = values.map((value) => ({ kind: 'number', value }));
+  items[blankIndex] = null;
+  return { data: { items, blankIndex, choices }, answer: numberItemId(correct) };
+}
+
+/** Pioche un pas par manche, sans répétition tant que le réservoir n'est pas épuisé, jamais deux fois de suite. */
+function makeStepPicker(steps: readonly SequenceStep[], rng: Rng): () => SequenceStep {
+  let queue: SequenceStep[] = [];
+  let last: SequenceStep | null = null;
+  return () => {
+    if (queue.length === 0) {
+      queue = rng.shuffle(steps);
+      if (queue[0] === last && queue.length > 1) queue.push(queue.shift() as SequenceStep);
+    }
+    last = queue.shift() as SequenceStep;
+    return last;
+  };
+}
+
 /** Génère `count` manches ; deux manches consécutives ne sont (quasi) jamais identiques. */
 export function generateRounds(params: SequenceParams, count: number, rng: Rng): Round<SequenceRoundData>[] {
   const rounds: Round<SequenceRoundData>[] = [];
   let previousSignature: string | null = null;
+  const pickStep = params.vary === 'number' ? makeStepPicker(params.steps ?? [2], rng) : null;
+  const build = (): Round<SequenceRoundData> =>
+    pickStep ? buildNumberRound(params, pickStep(), rng) : buildOneRound(params, rng);
 
   for (let i = 0; i < count; i += 1) {
-    let round = buildOneRound(params, rng);
+    let round = build();
     let signature = roundSignature(round.data);
     let attempts = 0;
     while (signature === previousSignature && attempts < MAX_RETRIES_DIFFERENT_ROUND) {
-      round = buildOneRound(params, rng);
+      round = build();
       signature = roundSignature(round.data);
       attempts += 1;
     }

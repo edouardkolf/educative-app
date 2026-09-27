@@ -1,4 +1,4 @@
-// Vue de la mécanique « compléter une suite ». Aucun texte : formes, couleurs, animations.
+// Vue de la mécanique « compléter une suite ». Aucun texte : formes, couleurs, nombres (CE1), animations.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { ChoiceId, MechanicViewProps } from '../../engine/types';
 import { Emoji } from '../../ui/Emoji';
@@ -12,10 +12,20 @@ interface Cell {
   index: number;
 }
 
-/** Rendu d'un élément de suite : forme SVG (token) ou émoji géant (object), même gabarit de case. */
+/** Rendu d'un élément de suite : forme SVG (token), émoji géant (object) ou nombre, même gabarit de case. */
 function ItemView({ item, size }: { item: SequenceItem; size: number }) {
   if (item.kind === 'token') {
     return <Shape shape={item.token.shape} color={item.token.color} size={size} />;
+  }
+  if (item.kind === 'number') {
+    const digits = String(item.value).length;
+    // La taille suit la case ; trois chiffres doivent tenir dans une case de 52 px.
+    const fontSize = Math.round(size * (digits >= 3 ? 0.42 : digits === 2 ? 0.55 : 0.65));
+    return (
+      <span class="seq-number" style={{ fontSize }}>
+        {item.value}
+      </span>
+    );
   }
   const emoji = getObject(item.objectId)?.emoji;
   return (

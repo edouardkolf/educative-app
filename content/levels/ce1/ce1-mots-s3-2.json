@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s3-2",
+  "title": "Série 3 : lettres manquantes",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Compléter les lettres manquantes des mots de la série 3 (autrefois, autrement, avant, avec, beaucoup), dans une phrase.",
+  "rounds": 6,
+  "params": {
+    "words": [
+      "autrefois",
+      "autrement",
+      "avant",
+      "avec",
+      "beaucoup"
+    ],
+    "mode": "gap",
+    "sentence": true,
+    "choices": 3
+  }
+}

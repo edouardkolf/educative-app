@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s3-1",
+  "title": "Série 3 : reconnaître le mot",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Reconnaître l'orthographe des mots de la série 3 (autrefois, autrement, avant, avec, beaucoup) parmi des variantes faciles à écarter, dans une phrase.",
+  "rounds": 5,
+  "params": {
+    "words": [
+      "autrefois",
+      "autrement",
+      "avant",
+      "avec",
+      "beaucoup"
+    ],
+    "mode": "pick",
+    "sentence": true,
+    "choices": 3,
+    "closeness": 1
+  }
+}

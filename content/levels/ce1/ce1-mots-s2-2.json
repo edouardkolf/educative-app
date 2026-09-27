@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s2-2",
+  "title": "Série 2 : lettres manquantes",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Compléter les lettres manquantes des mots de la série 2 (auprès, aussi, aussitôt, autant, autour), dans une phrase.",
+  "rounds": 6,
+  "params": {
+    "words": [
+      "aupres",
+      "aussi",
+      "aussitot",
+      "autant",
+      "autour"
+    ],
+    "mode": "gap",
+    "sentence": true,
+    "choices": 3
+  }
+}

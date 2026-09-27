@@ -1,0 +1,26 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s1-4",
+  "title": "Série 1 : à un accent près",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Reconnaître l'orthographe exacte des mots de la série 1 à un accent ou une lettre près, sans phrase.",
+  "rounds": 8,
+  "params": {
+    "words": [
+      "afin",
+      "alors",
+      "apres",
+      "assez",
+      "aujourdhui"
+    ],
+    "mode": "pick",
+    "sentence": false,
+    "choices": 4,
+    "closeness": 3
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

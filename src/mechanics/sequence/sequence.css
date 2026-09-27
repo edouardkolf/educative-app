@@ -64,6 +64,14 @@
   line-height: 1;
 }
 
+.seq-number {
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink, #3d2c1e);
+  font-variant-numeric: tabular-nums;
+}
+
 .seq-choices {
   display: flex;
   flex-wrap: wrap;

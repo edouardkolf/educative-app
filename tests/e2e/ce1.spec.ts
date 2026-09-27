@@ -256,13 +256,13 @@ test('ce1-compare-01 (compare) : une manche jusqu’aux étoiles, sans défileme
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
 });
 
-test('ce1-mots-01 (spelling, pick) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
+test('ce1-mots-s1-1 (spelling, pick) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Zoé');
   await page.getByTestId('back-to-game').click();
   await chooseProfile(page, 'Zoé');
-  await unlockLevel(page, 'Zoé', 'ce1-mots-01');
+  await unlockLevel(page, 'Zoé', 'ce1-mots-s1-1');
   await chooseProfile(page, 'Zoé');
-  await openLevelHash(page, 'ce1-mots-01');
+  await openLevelHash(page, 'ce1-mots-s1-1');
 
   await expect(page.locator('.spl-choices')).toBeVisible();
   await assertNoHorizontalOverflow(page);
@@ -275,13 +275,13 @@ test('ce1-mots-01 (spelling, pick) : une manche jusqu’aux étoiles, sans défi
   await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
 });
 
-test('ce1-mots-02 (spelling, lettres manquantes) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
+test('ce1-mots-s1-2 (spelling, lettres manquantes) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Noé');
   await page.getByTestId('back-to-game').click();
   await chooseProfile(page, 'Noé');
-  await unlockLevel(page, 'Noé', 'ce1-mots-02');
+  await unlockLevel(page, 'Noé', 'ce1-mots-s1-2');
   await chooseProfile(page, 'Noé');
-  await openLevelHash(page, 'ce1-mots-02');
+  await openLevelHash(page, 'ce1-mots-s1-2');
 
   await expect(page.locator('.spl-gap-hole')).toBeVisible();
   await assertNoHorizontalOverflow(page);
@@ -299,7 +299,7 @@ test('ce1-mots-02 (spelling, lettres manquantes) : une manche jusqu’aux étoil
   expect(await currentRoundIndex(page), 'la manche suivante ne doit pas arriver avant ~2,5 s').toBe(indexBefore);
   await waitForRoundAdvance(page, indexBefore);
 
-  for (let i = 1; i < 5; i += 1) {
+  for (let i = 1; i < 6; i += 1) {
     await answerByDirectChoice(page);
   }
   await waitForLevelEndButtons(page);
@@ -346,6 +346,33 @@ test('ce1-lire-07 (Lis et montre, 2 phrases) : 4 images lisibles, sans défileme
     expect(box, 'une image dépasse en bas de l’écran').toBeLessThanOrEqual(640);
   }
   await page.screenshot({ path: shot('ce1-read-2-phrases.png') });
+
+  for (let i = 0; i < 8; i += 1) {
+    await answerByDirectChoice(page);
+  }
+  await waitForLevelEndButtons(page);
+  await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
+});
+
+test('ce1-suite-12 (suite de nombres, 3 chiffres) : les nombres tiennent dans leurs cases sur petit téléphone', async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 360, height: 640 });
+  await onboardWithCe1Child(page, 'Ana');
+  await page.getByTestId('back-to-game').click();
+  await chooseProfile(page, 'Ana');
+  await unlockLevel(page, 'Ana', 'ce1-suite-12');
+  await chooseProfile(page, 'Ana');
+  await openLevelHash(page, 'ce1-suite-12');
+
+  await expect(page.locator('.seq-number').first()).toBeVisible();
+  await expect(page.locator('[data-choice]')).toHaveCount(4);
+  await assertNoHorizontalOverflow(page);
+  // Chaque nombre tient dans sa case (pas de débordement du texte, même à trois chiffres).
+  const overflowing = await page.locator('.seq-cell .seq-number').evaluateAll((els) =>
+    els.filter((el) => el.scrollWidth > (el.parentElement?.clientWidth ?? 0)).map((el) => el.textContent),
+  );
+  expect(overflowing, 'un nombre dépasse de sa case').toEqual([]);
+  await page.screenshot({ path: shot('ce1-suite-nombres.png') });
 
   for (let i = 0; i < 8; i += 1) {
     await answerByDirectChoice(page);

@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s4-3",
+  "title": "Série 4 : fautes proches",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Reconnaître les mots de la série 4 parmi 4 propositions aux fautes plus proches du bon mot, dans une phrase.",
+  "rounds": 6,
+  "params": {
+    "words": [
+      "bien",
+      "bientot",
+      "car",
+      "ceci",
+      "cela"
+    ],
+    "mode": "pick",
+    "sentence": true,
+    "choices": 4,
+    "closeness": 2
+  }
+}

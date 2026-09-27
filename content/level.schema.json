@@ -110,11 +110,23 @@
     "sequenceParams": {
       "type": "object",
       "description": "Compléter une suite.",
-      "required": ["pattern", "vary", "length", "blank", "choices"],
+      "required": ["vary", "length", "blank", "choices"],
       "additionalProperties": false,
       "properties": {
-        "pattern": { "type": "string", "pattern": "^[A-D]{2,6}$", "description": "Motif répété ; chaque lettre = un élément distinct (AB, AAB, ABB, ABC, AABB…)." },
-        "vary": { "enum": ["color", "shape", "both", "object"], "description": "Ce qui distingue les éléments du motif. object = émojis (animaux, plantes…) plutôt que forme/couleur." },
+        "pattern": { "type": "string", "pattern": "^[A-D]{2,6}$", "description": "Motif répété ; chaque lettre = un élément distinct (AB, AAB, ABB, ABC, AABB…). Requis sauf si vary = number." },
+        "vary": { "enum": ["color", "shape", "both", "object", "number"], "description": "Ce qui distingue les éléments du motif. object = émojis (animaux, plantes…) plutôt que forme/couleur ; number = suite de nombres (de 2 en 2, de 10 en 10, à rebours…)." },
+        "start": { "$ref": "#/definitions/intRange", "description": "vary = number : plage du premier nombre de la suite." },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "description": "vary = number : pas possibles, un par manche. Un entier (2 : de 2 en 2 ; -3 : à rebours de 3 en 3) ou un cycle de pas ([2, 1] : +2, +1, +2…).",
+          "items": {
+            "oneOf": [
+              { "type": "integer", "minimum": -100, "maximum": 100, "not": { "const": 0 } },
+              { "type": "array", "minItems": 2, "maxItems": 3, "items": { "type": "integer", "minimum": -100, "maximum": 100, "not": { "const": 0 } } }
+            ]
+          }
+        },
         "colors": { "type": "array", "items": { "$ref": "#/definitions/color" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de couleurs (requis si vary ≠ object)." },
         "shapes": { "type": "array", "items": { "$ref": "#/definitions/shape" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir de formes (requis si vary ≠ object)." },
         "objects": { "type": "array", "items": { "$ref": "#/definitions/objectId" }, "minItems": 1, "uniqueItems": true, "description": "Réservoir d'objets (requis, et utilisé uniquement, si vary = object)." },
@@ -125,8 +137,15 @@
       "allOf": [
         {
           "if": { "properties": { "vary": { "const": "object" } } },
-          "then": { "required": ["objects"] },
-          "else": { "required": ["colors", "shapes"] }
+          "then": { "required": ["pattern", "objects"] }
+        },
+        {
+          "if": { "properties": { "vary": { "const": "number" } } },
+          "then": { "required": ["start", "steps"] }
+        },
+        {
+          "if": { "properties": { "vary": { "enum": ["color", "shape", "both"] } } },
+          "then": { "required": ["pattern", "colors", "shapes"] }
         }
       ]
     },
@@ -219,7 +238,7 @@
     },
     "compareForm": {"enum": ["numbers", "sum-vs-number", "sums"]},
     "intRange": {"type": "object", "required": ["min", "max"], "additionalProperties": false, "properties": {"min": {"type": "integer", "minimum": 0, "maximum": 999}, "max": {"type": "integer", "minimum": 0, "maximum": 999}}},
-    "wordId": {"enum": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois"]},
+    "wordId": {"enum": ["apres", "aupres", "aussi", "aussitot", "assez", "afin", "aujourdhui", "autour", "autant", "autrefois", "alors", "autrement", "avant", "avec", "beaucoup", "bien", "bientot", "car", "ceci", "cela"]},
     "compareParams": {
       "type": "object",
       "description": "Comparer deux quantités écrites et taper <, = ou >.",

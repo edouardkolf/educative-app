@@ -1,0 +1,40 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-revision",
+  "title": "Les 20 mots : la lettre piège",
+  "skill": "spelling",
+  "objective": "Repérer, pour chacun des 20 mots des séries 1 à 4, la bonne graphie de sa difficulté (ss, è, ô, eau…) parmi 4 propositions.",
+  "mechanic": "spelling",
+  "rounds": 10,
+  "params": {
+    "words": [
+      "afin",
+      "alors",
+      "apres",
+      "assez",
+      "aujourdhui",
+      "aupres",
+      "aussi",
+      "aussitot",
+      "autant",
+      "autour",
+      "autrefois",
+      "autrement",
+      "avant",
+      "avec",
+      "beaucoup",
+      "bien",
+      "bientot",
+      "car",
+      "ceci",
+      "cela"
+    ],
+    "mode": "gap",
+    "sentence": false,
+    "choices": 4
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 3
+  }
+}

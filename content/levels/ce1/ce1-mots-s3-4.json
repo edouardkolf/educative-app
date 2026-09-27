@@ -1,0 +1,31 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-mots-s3-4",
+  "title": "Série 3 : à un accent près (+ révision série 2)",
+  "skill": "spelling",
+  "mechanic": "spelling",
+  "objective": "Reconnaître l'orthographe exacte des mots de la série 3, et revoir ceux de la série 2, à un accent ou une lettre près, sans phrase.",
+  "rounds": 8,
+  "params": {
+    "words": [
+      "autrefois",
+      "autrement",
+      "avant",
+      "avec",
+      "beaucoup",
+      "aupres",
+      "aussi",
+      "aussitot",
+      "autant",
+      "autour"
+    ],
+    "mode": "pick",
+    "sentence": false,
+    "choices": 4,
+    "closeness": 3
+  },
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 2
+  }
+}

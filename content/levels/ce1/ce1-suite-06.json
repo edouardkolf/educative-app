@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-suite-06",
+  "title": "De 2 en 2 ou de 10 en 10, trou au milieu",
+  "skill": "patterns",
+  "objective": "Trouver le nombre manquant au milieu d'une suite, en repérant d'abord le pas (2 ou 10).",
+  "mechanic": "sequence",
+  "rounds": 6,
+  "params": {
+    "vary": "number",
+    "start": {
+      "min": 0,
+      "max": 40
+    },
+    "steps": [
+      2,
+      10
+    ],
+    "length": 7,
+    "blank": "middle",
+    "choices": 3
+  }
+}

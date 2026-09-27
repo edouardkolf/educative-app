@@ -1,4 +1,4 @@
-// Catalogue des 10 mots invariables du CE1. Contenu pédagogique : relire avec soin (voir rapport).
+// Catalogue des mots invariables du CE1 (séries 1 à 4 de la liste de la classe). Contenu pédagogique : relire avec soin (voir rapport).
 import type { WordId } from '../../engine/types';
 import type { WordEntry } from './types';
 
@@ -120,5 +120,116 @@ export const WORDS: Record<WordId, WordEntry> = {
       "Il n'y avait pas de voitures ___.",
       'On écrivait ___ des lettres à la main.',
     ],
+  },
+  alors: {
+    text: 'alors',
+    misspellings: { 1: ['alaure', 'allaur'], 2: ['allors', 'alore'], 3: ['alor', 'alort'] },
+    gaps: [
+      { before: 'al', missing: 'o', after: 'rs', distractors: ['au', 'eau', 'ô'] },
+      { before: 'alor', missing: 's', after: '', distractors: ['t', 'd', 'x'] },
+    ],
+    sentences: [
+      'Il pleut, ___ je prends mon parapluie.',
+      'Tu as fini ? ___ viens jouer !',
+      'Le chat a eu peur, ___ il s’est sauvé.',
+    ],
+  },
+  autrement: {
+    text: 'autrement',
+    misspellings: { 1: ['otreman', 'autreuman'], 2: ['otrement', 'autremant'], 3: ['autremen', 'autrements'] },
+    gaps: [
+      { before: '', missing: 'au', after: 'trement', distractors: ['o', 'eau', 'ô'] },
+      { before: 'autrem', missing: 'en', after: 't', distractors: ['an', 'em', 'am'] },
+    ],
+    sentences: [
+      'Mets ton manteau, ___ tu auras froid.',
+      'Dépêche-toi, ___ nous serons en retard.',
+      'Essaie de faire ___, ce sera plus facile.',
+    ],
+  },
+  avant: {
+    text: 'avant',
+    misspellings: { 1: ['avhan', 'havand'], 2: ['avand', 'avans'], 3: ['avan', 'avants'] },
+    gaps: [
+      { before: 'av', missing: 'an', after: 't', distractors: ['en', 'em', 'am'] },
+      { before: 'avan', missing: 't', after: '', distractors: ['d', 's', 'x'] },
+    ],
+    sentences: [
+      'Je me lave les mains ___ de manger.',
+      'Il arrive toujours ___ moi.',
+      'Range ta chambre ___ le dîner.',
+    ],
+  },
+  avec: {
+    text: 'avec',
+    misspellings: { 1: ['avèque', 'aveck'], 2: ['aveque', 'avek'], 3: ['avecq', 'avèc'] },
+    gaps: [
+      { before: 'av', missing: 'e', after: 'c', distractors: ['è', 'é', 'ai'] },
+      { before: 'ave', missing: 'c', after: '', distractors: ['k', 'que', 'q'] },
+    ],
+    sentences: ['Je joue ___ mon frère.', 'Elle mange sa soupe ___ une cuillère.', 'Viens ___ nous au parc !'],
+  },
+  beaucoup: {
+    text: 'beaucoup',
+    misspellings: { 1: ['bokou', 'baucou'], 2: ['bocoup', 'beaucout'], 3: ['beaucou', 'beaucoups'] },
+    gaps: [
+      { before: 'b', missing: 'eau', after: 'coup', distractors: ['o', 'au', 'ô'] },
+      { before: 'beaucou', missing: 'p', after: '', distractors: ['t', 's', 'd'] },
+    ],
+    sentences: [
+      'Il y a ___ de monde au marché.',
+      "J'aime ___ les crêpes.",
+      'Merci ___ pour ton cadeau !',
+    ],
+  },
+  bien: {
+    text: 'bien',
+    misspellings: { 1: ['bein', 'biain'], 2: ['biin', 'byen'], 3: ['bient', 'bienn'] },
+    gaps: [{ before: 'bi', missing: 'en', after: '', distractors: ['in', 'ein', 'ain'] }],
+    sentences: ['Je dors ___ dans mon lit.', 'Elle chante très ___.', 'Tu as ___ travaillé.'],
+  },
+  bientot: {
+    text: 'bientôt',
+    misspellings: { 1: ['biintô', 'bientau'], 2: ['biento', 'bientaut'], 3: ['bientot', 'bientôts'] },
+    gaps: [
+      { before: 'bient', missing: 'ô', after: 't', distractors: ['o', 'au', 'eau'] },
+      { before: 'bi', missing: 'en', after: 'tôt', distractors: ['in', 'ain', 'an'] },
+    ],
+    sentences: ['Ce sera ___ les vacances !', 'À ___, les amis !', 'Le bus va arriver ___.'],
+  },
+  car: {
+    text: 'car',
+    misspellings: { 1: ['kar', 'quare'], 2: ['care', 'quar'], 3: ['card', 'carr'] },
+    gaps: [
+      { before: '', missing: 'c', after: 'ar', distractors: ['k', 'qu', 'q'] },
+      { before: 'ca', missing: 'r', after: '', distractors: ['re', 'rt', 'rd'] },
+    ],
+    sentences: [
+      'Je mets un pull ___ il fait froid.',
+      'Elle rit ___ le clown est drôle.',
+      'Il dort ___ il est fatigué.',
+    ],
+  },
+  ceci: {
+    text: 'ceci',
+    misspellings: { 1: ['sessi', 'ceussi'], 2: ['cessi', 'sesi'], 3: ['ceçi', 'seci'] },
+    gaps: [
+      { before: '', missing: 'c', after: 'eci', distractors: ['s', 'ss', 'ç'] },
+      { before: 'ce', missing: 'c', after: 'i', distractors: ['s', 'ss', 'ç'] },
+    ],
+    sentences: [
+      "Regarde ___ : c'est un nid d'oiseau.",
+      "Prends ___, c'est pour toi.",
+      'Lis ___ avant de commencer.',
+    ],
+  },
+  cela: {
+    text: 'cela',
+    misspellings: { 1: ['sella', 'ceulas'], 2: ['sela', 'cella'], 3: ['celà', 'çela'] },
+    gaps: [
+      { before: '', missing: 'c', after: 'ela', distractors: ['s', 'ss', 'ç'] },
+      { before: 'cel', missing: 'a', after: '', distractors: ['à', 'as', 'ah'] },
+    ],
+    sentences: ['Tout ___ est à moi.', 'Je ne veux pas ___ !', 'Qui a fait ___ ?'],
   },
 };
