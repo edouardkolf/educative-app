@@ -10,8 +10,8 @@ export const SPACING_JITTER = 0.15;
 export const BORDER_SPACING = 224;
 export const TOP_PAD = 120;
 export const BOTTOM_PAD = 140;
-/** Largeur visible du chemin (bordure comprise). */
-export const PATH_WIDTH = 56;
+/** Largeur visible du chemin (bordure comprise) : un sentier, plus étroit que les niveaux posés dessus. */
+export const PATH_WIDTH = 38;
 
 /** Nombre de niveaux d'un monde avant de changer d'univers. */
 export const LEVELS_PER_WORLD = 16;
@@ -440,4 +440,63 @@ export function backdropDecor(world: WorldId): Decor[] {
     }
   }
   return placed.sort((a, b) => a.y - b.y).map(({ radius: _r, ...d }) => d);
+}
+
+/** Un caillou posé sur le sentier (ellipse, en pixels de la carte). */
+export interface PathStone {
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+  /** Rotation en degrés. */
+  rotate: number;
+  /** 0, 1 ou 2 : trois teintes de pierre pour éviter l'effet tampon. */
+  tone: 0 | 1 | 2;
+}
+
+/** Distance minimale entre un groupe de cailloux et un niveau ou un passage (pont, ponton, col). */
+const STONE_CLEAR_NODE = NODE_SIZE / 2 + 18;
+const STONE_CLEAR_PASSAGE = PASSAGE_HALF + 16;
+/** Un groupe de cailloux tous les ~STONE_EVERY échantillons du chemin, en moyenne. */
+const STONE_EVERY = 5;
+
+/**
+ * Petits groupes de cailloux (1 à 3) semés sur le sentier, jamais sous un niveau ni sur un passage.
+ * Déterministe : la même carte donne toujours les mêmes cailloux.
+ */
+export function pathStones(samples: readonly Point[], avoid: readonly Point[], passageCenters: readonly Point[]): PathStone[] {
+  const out: PathStone[] = [];
+  const half = PATH_WIDTH / 2;
+  for (let i = 1; i < samples.length - 1; i += 1) {
+    if (hash01(i * 7 + 3) > 1 / STONE_EVERY) continue;
+    const p = samples[i] as Point;
+    if (avoid.some((n) => Math.hypot(n.x - p.x, n.y - p.y) < STONE_CLEAR_NODE)) continue;
+    if (passageCenters.some((c) => Math.hypot(c.x - p.x, c.y - p.y) < STONE_CLEAR_PASSAGE)) continue;
+    const prev = samples[i - 1] as Point;
+    const next = samples[i + 1] as Point;
+    const len = Math.hypot(next.x - prev.x, next.y - prev.y) || 1;
+    // Normale au chemin : les cailloux s'écartent de l'axe, plutôt vers les bords (moins foulés).
+    const nx = -(next.y - prev.y) / len;
+    const ny = (next.x - prev.x) / len;
+    const tx = (next.x - prev.x) / len;
+    const ty = (next.y - prev.y) / len;
+    const count = 2 + Math.floor(hash01(i * 13 + 1) * 3);
+    const side = hash01(i * 17 + 5) < 0.5 ? -1 : 1;
+    for (let k = 0; k < count; k += 1) {
+      const seed = i * 31 + k * 101;
+      const rx = (k === 0 ? 4.5 : 2.8) + hash01(seed) * 2.5;
+      const ry = rx * (0.6 + hash01(seed + 1) * 0.25);
+      const across = side * (half * 0.12 + hash01(seed + 2) * half * 0.38);
+      const along = (k - (count - 1) / 2) * 9 + (hash01(seed + 3) - 0.5) * 4;
+      out.push({
+        x: p.x + nx * across + tx * along,
+        y: p.y + ny * across + ty * along,
+        rx,
+        ry,
+        rotate: Math.round(hash01(seed + 4) * 180),
+        tone: Math.floor(hash01(seed + 5) * 3) as 0 | 1 | 2,
+      });
+    }
+  }
+  return out;
 }

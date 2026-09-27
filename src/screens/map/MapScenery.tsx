@@ -9,6 +9,7 @@ import {
   PATH_WIDTH,
   buildRoute,
   passages,
+  pathStones,
   placeDecor,
   samplePath,
   signPosition,
@@ -16,6 +17,7 @@ import {
   trackHeightFor,
   worldBands,
   type Passage,
+  type PathStone,
   type Decor,
   type Point,
   type WorldBand,
@@ -55,10 +57,24 @@ const BRIDGE_HALF = 36;
 /** Demi-largeur des ouvrages posés sur le chemin (pont, ponton, marches). */
 const DECK_HALF = PATH_WIDTH / 2 + 3;
 
-/** Chemin crème, identique dans tous les mondes : le repère qui ne change pas. */
-const PATH_EDGE = '#dcc796';
-const PATH_FILL = '#f5e9c8';
-const PATH_SHINE = '#fbf4e0';
+/** Sentier de terre battue, identique dans tous les mondes : le repère qui ne change pas. Bord plus
+ * sombre, milieu tassé plus clair par endroits (tirets irréguliers), quelques cailloux. */
+const PATH_EDGE = '#cfb47f';
+const PATH_FILL = '#e9d4a2';
+const PATH_WORN = '#f4e6c0';
+const PATH_SPECK = '#d6bd8a';
+const STONE_TONES = ['#b9b2a3', '#a69e8f', '#cac3b4'] as const;
+
+function Stone({ stone }: { stone: PathStone }) {
+  const { x, y, rx, ry, rotate, tone } = stone;
+  return (
+    <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotate})`}>
+      <ellipse cx="0.6" cy="1" rx={rx} ry={ry} fill="rgba(90, 70, 30, 0.22)" />
+      <ellipse cx="0" cy="0" rx={rx} ry={ry} fill={STONE_TONES[tone]} />
+      <ellipse cx={-rx * 0.3} cy={-ry * 0.35} rx={rx * 0.45} ry={ry * 0.35} fill="#ffffff" opacity="0.35" />
+    </g>
+  );
+}
 
 const FLOWER_COLORS = ['#ff8fab', '#ffd23f', '#ffffff', '#b48cf2'];
 
@@ -459,11 +475,13 @@ export function MapScenery({ count, width }: Props) {
         decor: placeDecor(band, width, samples, [...nodes, sign]),
       };
     });
+    const passageList = passages(count, width);
     return {
       height,
       d: smoothPathD(route.points),
       bands,
-      passages: passages(count, width),
+      passages: passageList,
+      stones: pathStones(samples, nodes, passageList),
     };
   }, [count, width]);
 
@@ -502,10 +520,14 @@ export function MapScenery({ count, width }: Props) {
         return <River key={key} passage={passage} width={width} below={below} />;
       })}
 
+      <path d={d} class="map-scenery__path" stroke="rgba(90, 70, 30, 0.1)" stroke-width={PATH_WIDTH + 6} />
       <path d={d} class="map-scenery__path" stroke={PATH_EDGE} stroke-width={PATH_WIDTH} />
-      <path d={d} class="map-scenery__path" stroke={PATH_FILL} stroke-width={PATH_WIDTH - 10} />
-      <path d={d} class="map-scenery__path" stroke={PATH_SHINE} stroke-width={PATH_WIDTH - 34} />
-      <path d={d} class="map-scenery__path map-scenery__pebbles" stroke={PATH_EDGE} stroke-width="4" />
+      <path d={d} class="map-scenery__path" stroke={PATH_FILL} stroke-width={PATH_WIDTH - 6} />
+      <path d={d} class="map-scenery__path map-scenery__path--worn" stroke={PATH_WORN} stroke-width={PATH_WIDTH - 20} />
+      <path d={d} class="map-scenery__path map-scenery__path--specks" stroke={PATH_SPECK} stroke-width="2.2" />
+      {scene.stones.map((stone, i) => (
+        <Stone key={i} stone={stone} />
+      ))}
 
       {scene.passages.map((passage) => {
         const key = `passage-${passage.worldIndex}`;

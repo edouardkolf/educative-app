@@ -16,6 +16,7 @@ import {
   pointBetweenNodes,
   pointOnSegment,
   pathWaypoints,
+  pathStones,
   backdropDecor,
   placeDecor,
   samplePath,
@@ -211,5 +212,30 @@ describe('backdropDecor', () => {
     const ys = backdropDecor('forest').map((d) => d.y);
     expect(Math.min(...ys)).toBeLessThan(BACKDROP_HEIGHT * 0.2);
     expect(Math.max(...ys)).toBeGreaterThan(BACKDROP_HEIGHT * 0.8);
+  });
+});
+
+describe('cailloux du sentier', () => {
+  const count = LEVELS_PER_WORLD * 2 + 4;
+  const route = buildRoute(count, WIDTH);
+  const samples = samplePath(route.points);
+  const nodes = route.nodeAt.map((k) => route.points[k] as { x: number; y: number });
+  const crossings = passages(count, WIDTH);
+  const stones = pathStones(samples, nodes, crossings);
+
+  it('sème des cailloux, de façon déterministe', () => {
+    expect(stones.length).toBeGreaterThan(20);
+    expect(pathStones(samples, nodes, crossings)).toEqual(stones);
+  });
+
+  it('restent sur le sentier, jamais sous un niveau ni sur un passage', () => {
+    const fine = samplePath(route.points, 60);
+    for (const stone of stones) {
+      const toPath = Math.min(...fine.map((p) => Math.hypot(p.x - stone.x, p.y - stone.y)));
+      expect(toPath + stone.rx).toBeLessThanOrEqual(PATH_WIDTH / 2);
+      const toNode = Math.min(...nodes.map((p) => Math.hypot(p.x - stone.x, p.y - stone.y)));
+      expect(toNode).toBeGreaterThan(NODE_SIZE / 2);
+      for (const c of crossings) expect(Math.hypot(c.x - stone.x, c.y - stone.y)).toBeGreaterThan(PASSAGE_HALF);
+    }
   });
 });
