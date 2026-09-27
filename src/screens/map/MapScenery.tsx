@@ -8,6 +8,7 @@ import {
   PASSAGE_HALF,
   PATH_WIDTH,
   buildRoute,
+  hash01,
   passages,
   pathStones,
   placeDecor,
@@ -58,20 +59,97 @@ const BRIDGE_HALF = 36;
 const DECK_HALF = PATH_WIDTH / 2 + 3;
 
 /** Sentier de terre battue, identique dans tous les mondes : le repère qui ne change pas. Bord plus
- * sombre, milieu tassé plus clair par endroits (tirets irréguliers), quelques cailloux. */
+ * sombre, milieu tassé plus clair par endroits (tirets irréguliers), cailloux, tas de gravillons, dalles. */
 const PATH_EDGE = '#cfb47f';
 const PATH_FILL = '#e9d4a2';
 const PATH_WORN = '#f4e6c0';
 const PATH_SPECK = '#d6bd8a';
-const STONE_TONES = ['#b9b2a3', '#a69e8f', '#cac3b4'] as const;
+/** Caillou taillé : corps, facette éclairée (pas de reflet brillant, sinon on lit une olive). */
+const ROCK_TONES = [
+  ['#c6ad86', '#dcc8a4'],
+  ['#b39b77', '#cbb591'],
+  ['#d2bd98', '#e6d6b6'],
+] as const;
+/** Grains des tas : les tons du chemin, un cran plus soutenus pour rester lisibles. */
+const GRAVEL_TONES = ['#b89a63', '#c9ad76', '#a88a55', '#d8c08e', '#bfa36c'] as const;
+const GRAVEL_MOUND = '#d2b77f';
+const SLAB_FILL = '#dcc79a';
+const SLAB_EDGE = '#bfa36c';
+const STONE_SHADOW = 'rgba(110, 80, 35, 0.22)';
+
+/** Contour irrégulier de `n` sommets autour de (cx, cy), aplati en hauteur (vue de trois quarts).
+ * Le sommet le plus éloigné est à r × (1 + jitter / 2). */
+function blobD(cx: number, cy: number, r: number, seed: number, n: number, jitter: number): string {
+  let d = '';
+  for (let i = 0; i < n; i += 1) {
+    const a = (i / n) * Math.PI * 2 + hash01(seed + i) * 0.5;
+    const rr = r * (1 - jitter / 2 + hash01(seed + i * 3 + 1) * jitter);
+    d += `${i ? 'L' : 'M'}${(cx + Math.cos(a) * rr).toFixed(1)} ${(cy + Math.sin(a) * rr * 0.72).toFixed(1)}`;
+  }
+  return `${d}Z`;
+}
+
+function Rock({ rx, tone, seed }: PathStone) {
+  const r = rx / 1.225;
+  const [body, facet] = ROCK_TONES[tone];
+  return (
+    <>
+      <path d={blobD(0.8, 1.2, r, seed, 6, 0.45)} fill={STONE_SHADOW} />
+      <path d={blobD(0, 0, r, seed, 6, 0.45)} fill={body} />
+      <path d={blobD(-r * 0.2, -r * 0.22, r * 0.55, seed, 6, 0.45)} fill={facet} />
+    </>
+  );
+}
+
+function Heap({ rx, seed }: PathStone) {
+  const r = rx / 1.2;
+  const grains: { x: number; y: number; k: number }[] = [];
+  const n = Math.round(r * 2.6);
+  for (let k = 0; k < n; k += 1) {
+    const u = hash01(seed + k * 3);
+    const v = hash01(seed + k * 3 + 1);
+    grains.push({ x: (u * 2 - 1) * r * (1 - v * 0.55), y: r * 0.25 - v * r * 0.95, k });
+  }
+  // Du bas vers le haut : les grains du sommet recouvrent ceux de la base.
+  grains.sort((a, b) => b.y - a.y);
+  return (
+    <>
+      <ellipse cx="0.8" cy={r * 0.35} rx={r * 1.15} ry={r * 0.45} fill={STONE_SHADOW} />
+      <path d={`M ${-r * 1.1} ${r * 0.3} Q 0 ${-r * 1.1} ${r * 1.1} ${r * 0.3} Z`} fill={GRAVEL_MOUND} />
+      {grains.map(({ x, y, k }) => (
+        <path
+          key={k}
+          d={blobD(x, y, 0.7 + hash01(seed + k * 7) * 1.1, seed + k * 11, 5, 0.5)}
+          fill={GRAVEL_TONES[Math.floor(hash01(seed + k * 5) * GRAVEL_TONES.length)]}
+        />
+      ))}
+      {[0, 1, 2].map((k) => {
+        const a = hash01(seed + 90 + k) * Math.PI * 2;
+        const dist = r * 1.1 + hash01(seed + 95 + k) * (rx - r * 1.1 - 0.7);
+        return (
+          <circle key={`e${k}`} cx={Math.cos(a) * dist} cy={Math.sin(a) * dist * 0.5} r="0.7" fill={GRAVEL_TONES[0]} />
+        );
+      })}
+    </>
+  );
+}
+
+function Slab({ rx, seed }: PathStone) {
+  const r = (rx - 0.6) / 1.15;
+  return (
+    <>
+      <path d={blobD(0, 0, r, seed, 8, 0.3)} fill={SLAB_FILL} stroke={SLAB_EDGE} stroke-width="1.2" stroke-linejoin="round" />
+      <path d={`M ${-r * 0.5} ${r * 0.15} l ${r * 0.5} ${-r * 0.15}`} stroke={SLAB_EDGE} stroke-width="0.9" stroke-linecap="round" opacity="0.6" />
+    </>
+  );
+}
 
 function Stone({ stone }: { stone: PathStone }) {
-  const { x, y, rx, ry, rotate, tone } = stone;
+  const { x, y, rotate, kind } = stone;
+  const turn = kind === 'heap' ? '' : ` rotate(${rotate})`;
   return (
-    <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotate})`}>
-      <ellipse cx="0.6" cy="1" rx={rx} ry={ry} fill="rgba(90, 70, 30, 0.22)" />
-      <ellipse cx="0" cy="0" rx={rx} ry={ry} fill={STONE_TONES[tone]} />
-      <ellipse cx={-rx * 0.3} cy={-ry * 0.35} rx={rx * 0.45} ry={ry * 0.35} fill="#ffffff" opacity="0.35" />
+    <g transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})${turn}`}>
+      {kind === 'rock' ? <Rock {...stone} /> : kind === 'heap' ? <Heap {...stone} /> : <Slab {...stone} />}
     </g>
   );
 }

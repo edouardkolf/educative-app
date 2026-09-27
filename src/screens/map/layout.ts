@@ -34,7 +34,7 @@ export const BORDER_HALF = 30;
 export const PASSAGE_HALF = 44;
 
 /** Hasard déterministe indexé (sans état) : même carte à chaque visite, quel que soit l'ordre des appels. */
-function hash01(n: number): number {
+export function hash01(n: number): number {
   let h = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b);
   h ^= h >>> 13;
   h = Math.imul(h, 0xc2b2ae35);
@@ -442,27 +442,41 @@ export function backdropDecor(world: WorldId): Decor[] {
   return placed.sort((a, b) => a.y - b.y).map(({ radius: _r, ...d }) => d);
 }
 
-/** Un caillou posé sur le sentier (ellipse, en pixels de la carte). */
+/**
+ * Un élément minéral posé sur le sentier (en pixels de la carte) :
+ * - `rock` : caillou taillé à facettes (le plus fréquent) ;
+ * - `heap` : petit tas de gravillons aux tons du chemin (rare) ;
+ * - `slab` : dalle plate enfoncée au ras du sol (très rare).
+ * `rx` est le rayon d'emprise : tout le dessin tient dans ce disque.
+ */
 export interface PathStone {
+  kind: 'rock' | 'heap' | 'slab';
   x: number;
   y: number;
   rx: number;
-  ry: number;
-  /** Rotation en degrés. */
+  /** Rotation en degrés (ignorée pour un tas, toujours posé droit). */
   rotate: number;
-  /** 0, 1 ou 2 : trois teintes de pierre pour éviter l'effet tampon. */
+  /** 0, 1 ou 2 : trois teintes pour éviter l'effet tampon. */
   tone: 0 | 1 | 2;
+  /** Graine du dessin (contour irrégulier, grains du tas). */
+  seed: number;
 }
 
 /** Distance minimale entre un groupe de cailloux et un niveau ou un passage (pont, ponton, col). */
 const STONE_CLEAR_NODE = NODE_SIZE / 2 + 18;
 const STONE_CLEAR_PASSAGE = PASSAGE_HALF + 16;
-/** Un groupe de cailloux tous les ~STONE_EVERY échantillons du chemin, en moyenne. */
+/** Un groupe tous les ~STONE_EVERY échantillons du chemin, en moyenne. */
 const STONE_EVERY = 5;
+/** Part des groupes qui deviennent une dalle, puis un tas ; le reste, des cailloux. */
+const SLAB_SHARE = 0.07;
+const HEAP_SHARE = 0.22;
+/** Marge entre l'emprise d'un élément et le bord du sentier. */
+const STONE_EDGE_MARGIN = 1.5;
 
 /**
- * Petits groupes de cailloux (1 à 3) semés sur le sentier, jamais sous un niveau ni sur un passage.
- * Déterministe : la même carte donne toujours les mêmes cailloux.
+ * Cailloux taillés (1 à 3), de loin en loin un petit tas de gravillons, très rarement une dalle,
+ * semés sur le sentier, jamais sous un niveau ni sur un passage.
+ * Déterministe : la même carte donne toujours les mêmes éléments.
  */
 export function pathStones(samples: readonly Point[], avoid: readonly Point[], passageCenters: readonly Point[]): PathStone[] {
   const out: PathStone[] = [];
@@ -475,26 +489,34 @@ export function pathStones(samples: readonly Point[], avoid: readonly Point[], p
     const prev = samples[i - 1] as Point;
     const next = samples[i + 1] as Point;
     const len = Math.hypot(next.x - prev.x, next.y - prev.y) || 1;
-    // Normale au chemin : les cailloux s'écartent de l'axe, plutôt vers les bords (moins foulés).
+    // Normale au chemin : les éléments s'écartent de l'axe, plutôt vers les bords (moins foulés).
     const nx = -(next.y - prev.y) / len;
     const ny = (next.x - prev.x) / len;
     const tx = (next.x - prev.x) / len;
     const ty = (next.y - prev.y) / len;
-    const count = 2 + Math.floor(hash01(i * 13 + 1) * 3);
     const side = hash01(i * 17 + 5) < 0.5 ? -1 : 1;
+    const roll = hash01(i * 7919 + 4242);
+    const kind: PathStone['kind'] = roll < SLAB_SHARE ? 'slab' : roll < SLAB_SHARE + HEAP_SHARE ? 'heap' : 'rock';
+    const count = kind === 'rock' ? 1 + Math.floor(hash01(i * 13 + 1) * 3) : 1;
     for (let k = 0; k < count; k += 1) {
       const seed = i * 31 + k * 101;
-      const rx = (k === 0 ? 4.5 : 2.8) + hash01(seed) * 2.5;
-      const ry = rx * (0.6 + hash01(seed + 1) * 0.25);
-      const across = side * (half * 0.12 + hash01(seed + 2) * half * 0.38);
+      const rx =
+        kind === 'slab'
+          ? 5.5 + hash01(seed) * 2.5
+          : kind === 'heap'
+            ? 5 + hash01(seed) * 4.5
+            : (k === 0 ? 5 : 3.2) + hash01(seed) * 2.8;
+      const wanted = half * 0.1 + hash01(seed + 2) * half * 0.42;
+      const across = side * Math.min(wanted, half - STONE_EDGE_MARGIN - rx);
       const along = (k - (count - 1) / 2) * 9 + (hash01(seed + 3) - 0.5) * 4;
       out.push({
+        kind,
         x: p.x + nx * across + tx * along,
         y: p.y + ny * across + ty * along,
         rx,
-        ry,
         rotate: Math.round(hash01(seed + 4) * 180),
         tone: Math.floor(hash01(seed + 5) * 3) as 0 | 1 | 2,
+        seed,
       });
     }
   }

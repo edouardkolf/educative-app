@@ -228,6 +228,13 @@ describe('cailloux du sentier', () => {
     expect(pathStones(samples, nodes, crossings)).toEqual(stones);
   });
 
+  it('mêle surtout des cailloux, quelques tas, de rares dalles', () => {
+    const n = (kind: string) => stones.filter((s) => s.kind === kind).length;
+    expect(n('rock')).toBeGreaterThan(n('heap'));
+    expect(n('heap')).toBeGreaterThan(0);
+    expect(n('heap')).toBeGreaterThanOrEqual(n('slab'));
+  });
+
   it('restent sur le sentier, jamais sous un niveau ni sur un passage', () => {
     const fine = samplePath(route.points, 60);
     for (const stone of stones) {
