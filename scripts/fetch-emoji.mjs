@@ -40,6 +40,8 @@ export const CONTENT_EMOJIS = [
   '👆',
   // src/screens/SagaMap.tsx (soleil de l'anneau de temps)
   '☀️',
+  // src/games/dictation/DictationScreen.tsx (réécouter la phrase)
+  '💬',
   // ⭐ : utilisé comme émoji de contenu (confettis, particules montagne), en plus de son usage
   // texte inchangé dans StarRow (picto d'interface, non touché par ce module).
   '⭐',
