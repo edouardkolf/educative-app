@@ -36,7 +36,10 @@ export function ColoringSettings({ value, onChange }: GameSettingsProps<Coloring
           </button>
         ))}
       </div>
-      <p class="pa-muted">« Automatique » suit la réussite de l'enfant (docs/specs/COLORIAGE.md §3.4).</p>
+      <p class="pa-muted">
+        « Automatique » suit la réussite de l'enfant : le code se complique après 3 dessins bien réussis, et se
+        simplifie après 2 dessins difficiles.
+      </p>
     </div>
   );
 }
