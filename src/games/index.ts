@@ -3,6 +3,7 @@
 import type { GameRouteName, Route } from '../app/routes';
 import { getTrackOrDefault } from '../engine';
 import type { GameRecordBase, GameStoreName, Profile } from '../storage/types';
+import { checkDictationAvailability } from './dictation/availability';
 
 export type GameId = GameRouteName;
 
@@ -32,7 +33,7 @@ export const GAMES: readonly GameDefinition[] = [
     tileLabel: 'Dictée',
     defaultTracks: ['ce1'],
     store: 'dictations',
-    // checkAvailability : ajouté par la tâche « dictée » (docs/specs/DICTEE.md §6.1), bâti sur checkVoice().
+    checkAvailability: checkDictationAvailability,
   },
   {
     id: 'coloring',

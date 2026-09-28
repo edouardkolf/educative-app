@@ -1,0 +1,344 @@
+/* Écran de la dictée quotidienne (docs/specs/DICTEE.md §2). Classes préfixées dict-. Tient en
+   360 × 640 et 412 × 839 sans défilement horizontal ; clavier et ✓ visibles sans défiler. */
+
+.screen--dictation {
+  justify-content: flex-start;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+/* ---------- Choix de la série (§2.1) ---------- */
+
+.dict-series-list {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.dict-series-card {
+  width: 100%;
+  min-height: 88px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  border: 4px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.dict-series-card__number {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff3e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dict-series-card__words {
+  flex: 1;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--ink);
+  text-align: left;
+}
+
+.dict-series-card__world {
+  flex: none;
+}
+
+.dict-series-card--current {
+  border-color: var(--accent);
+  animation: dict-pulse-border 1.6s ease-in-out infinite;
+}
+
+/* ---------- Écrire un mot (§2.2) ---------- */
+
+.dict-play {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.dict-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.dict-replay {
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dict-replay--word {
+  width: 72px;
+  height: 72px;
+}
+
+.dict-replay--sentence {
+  width: 56px;
+  height: 56px;
+  font-size: 26px;
+}
+
+.dict-replay--word[data-speaking] {
+  animation: dict-pulse-scale 0.8s ease-in-out infinite;
+}
+
+.dict-input-row {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.dict-field {
+  flex: 1;
+  min-height: 72px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: inset 0 2px 6px rgba(61, 44, 30, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: 3px solid transparent;
+  overflow: hidden;
+}
+
+.dict-field--empty {
+  border-color: var(--accent);
+  animation: dict-pulse-border 1.2s ease-in-out infinite;
+}
+
+.dict-field--solved {
+  background: #e3f5e1;
+}
+
+.dict-word {
+  font-family: var(--font-body);
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.dict-ok {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  border: none;
+  border-radius: 20px;
+  background: var(--success, #3ca35a);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dict-ok:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dict-ok:not(:disabled).dict-ok--idle {
+  animation: dict-pulse-scale 1.4s ease-in-out infinite;
+}
+
+/* ---------- Correction et réécriture (§2.4) ---------- */
+
+.dict-copy-panel {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  padding: 10px 14px;
+  animation: dict-slide-in 200ms ease-out;
+}
+
+.dict-copy-panel__attempt {
+  margin: 0 0 6px;
+  font-size: 24px;
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.dict-copy-panel__model {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.dict-mark--wrong {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.dict-mark--fix {
+  color: var(--success, #3ca35a);
+  background: #e3f5e1;
+  border-radius: 6px;
+}
+
+.dict-mark--next {
+  animation: dict-pulse-scale 1s ease-in-out infinite;
+}
+
+/* ---------- Fin de dictée (§2.5) ---------- */
+
+.dict-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.dict-end__score {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.dict-end__words {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 24px;
+  width: 100%;
+}
+
+.dict-end__word {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.dict-end__dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.dict-end__actions {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+/* ---------- Voix indisponible (§2.6) ---------- */
+
+.dict-unavailable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.dict-unavailable__line {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* ---------- Statistiques parent (§5.3) ---------- */
+
+.dict-stats__voice--problem {
+  color: var(--pa-warning, #b5563f);
+}
+
+.dict-stats__fragile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dict-stats__pill {
+  background: #fff3e6;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+.dict-stats__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.dict-stats__table th,
+.dict-stats__table td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--pa-border, #e8dfcf);
+}
+
+@keyframes dict-pulse-border {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 179, 71, 0);
+  }
+}
+
+@keyframes dict-pulse-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes dict-slide-in {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dict-series-card--current,
+  .dict-replay--word[data-speaking],
+  .dict-field--empty,
+  .dict-ok--idle,
+  .dict-mark--next {
+    animation: none;
+  }
+}

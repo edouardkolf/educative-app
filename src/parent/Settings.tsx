@@ -126,7 +126,7 @@ export function ParentSettings() {
           </span>
           <div className="pa-section__grow">
             <h2 className="pa-section__title">Son</h2>
-            <p className="pa-muted">Voix, bruitages et musique du jeu.</p>
+            <p className="pa-muted">Voix, bruitages et musique du jeu. La dictée a besoin du son.</p>
           </div>
           {settings && (
             <button
