@@ -418,7 +418,7 @@ export function DictationScreen() {
 
       {state.phase === 'copy' && (
         <div class="dict-copy-panel">
-          <p class="dict-copy-panel__attempt" data-testid="dictation-attempt">
+          <p class="dict-copy-panel__attempt" data-testid="dictation-attempt" data-faded={typedLen > 0 ? 'true' : undefined}>
             {attempt.typed.map((m, i) => (
               <span key={i} class={m.ok ? '' : 'dict-mark--wrong'}>
                 {m.char}

@@ -68,3 +68,28 @@ plusieurs poses.
 
 **À observer dans les statistiques** : un taux de réussite au premier coup sous 50 % sur deux parties signale une marche trop haute.
 Deux corrections possibles : ajouter un niveau intermédiaire (du JSON) ou rebloquer temporairement le niveau depuis l'espace parent.
+
+## Jeu libre : le coloriage magique (hors carte)
+
+Accessible depuis le hub, en illimité (dans la limite du minuteur et du quota) : il ne donne ni étoile, ni niveau.
+Elle peint les figures du constructeur (fusée, château, maison…) avec trois gouttes primaires. Un petit récipient
+mélange deux gouttes au plus, comme le laboratoire des couleurs : le jeu entraîne le mélange sans tableau à lire.
+
+Le **code magique** se complique par paliers ; aucun code n'est en couleur au-delà du palier 1 :
+
+| Palier | Code dans la case | Légende | Cases par dessin |
+|---|---|---|---|
+| 1 Goutte | la couleur à obtenir, comme au labo | non | 6 à 9 |
+| 2 Objet | un objet du labo en gris : se souvenir de sa couleur (la carotte est orange) | non | 9 à 13 |
+| 3 Formes | rond, carré, triangle, étoile, cœur, losange | forme → goutte | 9 à 13 |
+| 4 Dé | constellation de 1 à 6, comme dans « compter » | constellation → goutte | 12 à 17 |
+
+- **Passage automatique**, sans texte : **montée** après 3 dessins si au moins 80 % des cases sont justes du premier coup,
+  **descente** après 2 dessins sous 50 %. Chaque changement remet le compte à zéro.
+- L'espace parent peut **forcer un palier** (fiche de l'enfant). Les dessins joués à un palier forcé ne comptent pas
+  dans le calcul automatique.
+- 12 dessins en V1. Les dessins finis vont sur le frigo ; un dessin interrompu reprend là où elle s'est arrêtée.
+- **À observer dans les statistiques** : la réussite du premier coup et les recettes de couleurs ratées. Une recette
+  ratée souvent (le violet, par exemple) se retravaille au labo, sur la carte.
+
+Détails : `docs/specs/COLORIAGE.md`. Contenu : `docs/CONTENU.md`.

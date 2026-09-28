@@ -315,8 +315,10 @@ test('mot juste : le suivant est lu ; mot faux : modèle affiché, touche fausse
   await page.locator(`[data-key="${wrongChar}"]`).click();
   await expect(word).toHaveText('');
 
-  // La réécriture guidée mène au mot suivant.
-  await typeChars(page, second);
+  // La réécriture guidée mène au mot suivant ; la saisie fausse s'efface dès la première lettre réécrite.
+  await typeChars(page, second.slice(0, 1));
+  await expect(page.getByTestId('dictation-attempt')).toHaveAttribute('data-faded', 'true');
+  await typeChars(page, second.slice(1));
   await expect
     .poll(
       async () => {

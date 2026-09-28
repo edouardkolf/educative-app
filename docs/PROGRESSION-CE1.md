@@ -158,3 +158,24 @@ réponse avant même que les images n'apparaissent.
 
 Les sujets et les familles de mots qui se ressemblent sont dans `src/mechanics/read/catalog.ts`.
 
+
+## Jeu libre : la dictée quotidienne (hors carte)
+
+Accessible depuis le hub, en illimité (dans la limite du minuteur et du quota) : il ne donne ni étoile, ni niveau.
+La carte entraîne à **reconnaître** l'orthographe ; la dictée entraîne à l'**écrire**, comme en classe.
+
+- **Elle choisit sa série** (les mots de la série sont montrés sur chaque carte). La série de la dernière dictée est
+  proposée par défaut.
+- **Tirage** : les 5 mots de la série choisie et 5 mots au hasard dans les séries précédentes, tout mélangé. Série 1 :
+  5 mots seulement ; série 2 : les 10 mots de s1 et s2.
+- **Déroulé** : la voix du téléphone dit le mot, une phrase qui le contient, puis le mot. La phrase n'est jamais
+  affichée : c'est elle qui départagera les homophones (ver, vers, verre, vert). Réécoute illimitée.
+- Elle écrit avec un **clavier intégré** en ordre alphabétique, accents compris (à, â, ç, é, è, ê, î, ô, ù).
+- **Correction immédiate** : juste, le mot suivant arrive ; faux, elle voit sa saisie barrée et le mot juste, puis
+  le **réécrit lettre à lettre**, guidée. Sa saisie fausse s'efface dès la première lettre réécrite.
+- Séries disponibles : s1 à s4, les mêmes mots que les mondes de la carte. **Les séries 5 à 8 attendent la liste
+  exacte de la classe** (période 2, de « cependant » à « envers »).
+- **À observer dans les statistiques** : les mots fragiles (dernière tentative fausse, ou 2 fausses sur les 3
+  dernières), avec les graphies qu'elle a écrites.
+
+Détails : `docs/specs/DICTEE.md`. Contenu : `docs/CONTENU.md`.

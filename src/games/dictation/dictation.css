@@ -184,6 +184,12 @@
   font-size: 24px;
   color: var(--ink-soft);
   text-decoration: line-through;
+  transition: opacity 300ms ease-out;
+}
+
+/* Dès la première lettre réécrite, la saisie fausse s'efface : moins d'exposition aux formes fautives. */
+.dict-copy-panel__attempt[data-faded] {
+  opacity: 0;
 }
 
 .dict-copy-panel__model {
@@ -342,5 +348,9 @@
   .dict-ok--idle,
   .dict-mark--next {
     animation: none;
+  }
+
+  .dict-copy-panel__attempt {
+    transition: none;
   }
 }

@@ -339,3 +339,35 @@ En cas d'erreur, le message affiche le nom du fichier fautif. Corriger le JSON e
 ## Progression
 
 Voir `docs/PROGRESSION-MS.md` (moyenne section) et `docs/PROGRESSION-CE1.md` (CE1). Le parcours d'un enfant se choisit dans l'espace parent, fiche de l'enfant.
+
+## Contenu des jeux libres (hors parcours)
+
+Les deux jeux libres du hub ne sont pas des niveaux : leur contenu est en TypeScript, et `npm run validate:content`
+le vérifie aussi (`content.test` et `catalog.test`). Un contenu invalide fait échouer le build, comme un niveau.
+
+### Dictée quotidienne : ajouter une série
+
+Les mots sont dans `src/games/dictation/words.ts` (les 20 mots du parcours viennent de
+`src/mechanics/spelling/words.ts`, les autres de `EXTRA_WORDS`), les séries dans `src/games/dictation/series.ts`.
+
+1. Écrire les mots dans `EXTRA_WORDS` : orthographe exacte en minuscules, et au moins 3 phrases par mot, avec `___`
+   une seule fois à la place du mot (14 mots au plus, ni chiffre, ni parenthèse, ni guillemet, point final). Les
+   phrases ne sont jamais affichées : la voix les dit, elles doivent donc rendre le mot non ambigu à l'oral.
+2. Ajouter `{ id: 'sN', number: N, words }` à `DICTATION_SERIES` : 4 à 6 mots, qu'aucune autre série n'utilise.
+3. Lancer `npm run validate:content` : identifiants, caractères tapables au clavier, phrases, homophones, séries.
+4. Faire une dictée de la série sur le téléphone, puis ajouter une prononciation forcée (`say`, dans `OVERRIDES`) là
+   où la voix se trompe.
+
+Les **homophones** (ver, vers, verre, vert) sont des mots distincts, reliés par la même clé `homophones` : chaque
+phrase d'un membre ne doit contenir que lui. Détails : `docs/specs/DICTEE.md` §4.
+
+### Coloriage magique : ajouter un dessin
+
+Un dessin est un fichier `src/games/coloring/catalog/<id>.ts`, écrit avec les aides de `catalog/build.ts` (`rect`,
+`circle`, `ellipse`, `poly`, `zone`, `blank`, `ink`) dans un repère 100 × 100, puis ajouté à `DRAWINGS` dans
+`catalog/index.ts`. Chaque case déclare le niveau de détail où elle apparaît, sa palette (la première couleur est la
+couleur naturelle) et l'ancre de son code. `npm run validate:content` dit quelle règle casse : ancre dans sa case,
+écart entre deux codes, nombre de cases par niveau, palettes, pièces fidèles aux figures du constructeur.
+
+**Ne jamais renommer l'id d'une case publiée** : un dessin en cours ne serait plus reprenable. Détails :
+`docs/specs/COLORIAGE.md` §4.
