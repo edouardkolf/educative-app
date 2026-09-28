@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { resetStorageForTests } from './test-helpers';
-import { addActiveSeconds, exportAll, getUsage, grantExtraMinutes } from './index';
+import { addActiveSeconds, exportAll, getUsage, grantExtraMinutes, listUsage } from './index';
 
 beforeEach(async () => {
   await resetStorageForTests();
@@ -43,5 +43,36 @@ describe('usage', () => {
     expect((await getUsage('p1', '2026-09-25')).activeSeconds).toBe(10);
     expect((await getUsage('p1', '2026-09-26')).activeSeconds).toBe(20);
     expect((await getUsage('p2', '2026-09-25')).activeSeconds).toBe(30);
+  });
+
+  it('addActiveSeconds ventile aussi par activité quand elle est fournie', async () => {
+    const created = await addActiveSeconds('p1', '2026-09-25', 10, 'hub');
+    expect(created.activeSeconds).toBe(10);
+    expect(created.activitySeconds).toEqual({ hub: 10 });
+
+    const incremented = await addActiveSeconds('p1', '2026-09-25', 5, 'hub');
+    expect(incremented.activeSeconds).toBe(15);
+    expect(incremented.activitySeconds).toEqual({ hub: 15 });
+
+    const other = await addActiveSeconds('p1', '2026-09-25', 7, 'dictation');
+    expect(other.activeSeconds).toBe(22);
+    expect(other.activitySeconds).toEqual({ hub: 15, dictation: 7 });
+  });
+
+  it('addActiveSeconds sans activité ne touche pas activitySeconds', async () => {
+    await addActiveSeconds('p1', '2026-09-25', 10, 'hub');
+    const updated = await addActiveSeconds('p1', '2026-09-25', 5);
+    expect(updated.activeSeconds).toBe(15);
+    expect(updated.activitySeconds).toEqual({ hub: 10 });
+  });
+
+  it('listUsage renvoie les jours d\'un profil triés par jour croissant', async () => {
+    await addActiveSeconds('p1', '2026-09-26', 10);
+    await addActiveSeconds('p1', '2026-09-24', 20);
+    await addActiveSeconds('p2', '2026-09-25', 30);
+
+    const days = await listUsage('p1');
+    expect(days.map((d) => d.day)).toEqual(['2026-09-24', '2026-09-26']);
+    expect(await listUsage('inconnu')).toEqual([]);
   });
 });

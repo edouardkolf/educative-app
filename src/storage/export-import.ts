@@ -1,10 +1,13 @@
 // Export / import complet : la sauvegarde JSON déclenchée par le parent.
 // L'import valide TOUT d'abord (sans écrire), puis remplace toutes les données en une transaction.
+import { isColoringRecord, isColoringSettings, type ColoringRecord } from './colorings';
 import { getDB } from './db';
+import { isDictationRecord, type DictationRecord } from './dictations';
 import { DEFAULT_SETTINGS } from './settings';
 import {
   EXPORT_FORMAT,
   EXPORT_VERSION,
+  SUPPORTED_IMPORT_VERSIONS,
   type AppSettings,
   type EndReason,
   type ExportBundle,
@@ -16,14 +19,17 @@ import {
   type RunStatus,
   type UsageDay,
 } from './types';
+import { isFiniteNumber, isNonEmptyString, isPlainObject } from './validate';
 
 export async function exportAll(): Promise<ExportBundle> {
   const db = await getDB();
-  const [profiles, allRuns, allOverrides, allUsage, settings] = await Promise.all([
+  const [profiles, allRuns, allOverrides, allUsage, allDictations, allColorings, settings] = await Promise.all([
     db.getAll('profiles'),
     db.getAll('runs'),
     db.getAll('overrides'),
     db.getAll('usage'),
+    db.getAll('dictations'),
+    db.getAll('colorings'),
     db.get('settings', 'app'),
   ]);
   // F2 : ne jamais exporter les lignes orphelines (parties/réglages/temps d'un enfant supprimé,
@@ -32,6 +38,8 @@ export async function exportAll(): Promise<ExportBundle> {
   const runs = allRuns.filter((run) => profileIds.has(run.profileId));
   const overrides = allOverrides.filter((override) => profileIds.has(override.profileId));
   const usage = allUsage.filter((day) => profileIds.has(day.profileId));
+  const dictations = allDictations.filter((record) => profileIds.has(record.profileId));
+  const colorings = allColorings.filter((record) => profileIds.has(record.profileId));
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
@@ -40,9 +48,8 @@ export async function exportAll(): Promise<ExportBundle> {
     runs,
     overrides,
     usage,
-    // Provisoire (contrat v2) : la tâche « stockage v2 » exporte les parties de jeu (docs/specs/HUB.md §5.3).
-    dictations: [],
-    colorings: [],
+    dictations,
+    colorings,
     settings: { soundOn: (settings ?? DEFAULT_SETTINGS).soundOn },
   };
 }
@@ -52,18 +59,6 @@ export async function exportAll(): Promise<ExportBundle> {
 const BAD_FORMAT = "Ce fichier n'est pas une sauvegarde Petits Malins.";
 const BAD_VERSION = "Cette sauvegarde vient d'une autre version de l'application.";
 const BAD_SHAPE = 'Ce fichier de sauvegarde est incomplet ou abîmé.';
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0;
-}
 
 /** F11 : une limite de temps importée est soit absente (illimité), soit un entier de 1 à 600 minutes. */
 function isLimitMinutes(value: unknown): value is number | null {
@@ -111,6 +106,16 @@ function isProfile(value: unknown): value is Profile {
   if (value.seenWorld !== undefined && !(Number.isInteger(value.seenWorld) && (value.seenWorld as number) >= 0)) {
     return false;
   }
+  if (value.games !== undefined) {
+    if (!Array.isArray(value.games) || value.games.length > 16) return false;
+    if (!value.games.every((id) => isNonEmptyString(id) && id.length <= 32)) return false;
+    if (new Set(value.games).size !== value.games.length) return false;
+  }
+  if (value.gameSettings !== undefined) {
+    if (!isPlainObject(value.gameSettings)) return false;
+    const { coloring } = value.gameSettings as Record<string, unknown>;
+    if (coloring !== undefined && !isColoringSettings(coloring)) return false;
+  }
   return true;
 }
 
@@ -143,6 +148,10 @@ function isUsageDay(value: unknown): value is UsageDay {
   if (!isDayString(value.day)) return false;
   if (!isFiniteNumber(value.activeSeconds)) return false;
   if (!isFiniteNumber(value.extraMinutes)) return false;
+  if (value.activitySeconds !== undefined) {
+    if (!isPlainObject(value.activitySeconds)) return false;
+    if (!Object.values(value.activitySeconds).every((n) => isFiniteNumber(n) && n >= 0)) return false;
+  }
   return true;
 }
 
@@ -163,6 +172,8 @@ interface ValidatedBundle {
   runs: Run[];
   overrides: LevelOverride[];
   usage: UsageDay[];
+  dictations: DictationRecord[];
+  colorings: ColoringRecord[];
   soundOn: boolean;
   /** F2 : nombre de lignes ignorées parce qu'elles référencent un enfant absent de la sauvegarde. */
   skipped: number;
@@ -172,9 +183,10 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
   if (!isPlainObject(data) || data.format !== EXPORT_FORMAT) {
     return { error: BAD_FORMAT };
   }
-  if (data.version !== EXPORT_VERSION) {
+  if (!SUPPORTED_IMPORT_VERSIONS.includes(data.version as number)) {
     return { error: BAD_VERSION };
   }
+  const isV1 = data.version === 1;
 
   const { profiles, runs, overrides, usage, settings } = data;
   if (!Array.isArray(profiles) || !profiles.every(isProfile)) return { error: BAD_SHAPE };
@@ -187,23 +199,54 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
   if (!isPlainObject(settings) || typeof settings.soundOn !== 'boolean') return { error: BAD_SHAPE };
   const soundOn = settings.soundOn;
 
+  // v1 : pas de parties de jeu dans le fichier, tableaux lus comme vides. v2 : tableaux obligatoires.
+  let dictations: DictationRecord[] = [];
+  let colorings: ColoringRecord[] = [];
+  if (!isV1) {
+    const { dictations: rawDictations, colorings: rawColorings } = data;
+    if (!Array.isArray(rawDictations) || !rawDictations.every(isDictationRecord)) return { error: BAD_SHAPE };
+    if (!Array.isArray(rawColorings) || !rawColorings.every(isColoringRecord)) return { error: BAD_SHAPE };
+    if (!hasUniqueIds(rawDictations, (r) => r.id)) return { error: BAD_SHAPE };
+    if (!hasUniqueIds(rawColorings, (r) => r.id)) return { error: BAD_SHAPE };
+    dictations = rawDictations;
+    colorings = rawColorings;
+  }
+
   // F2 : une ligne dont l'enfant est absent de la sauvegarde (parties/réglages/temps écrits via un
   // profil resté en mémoire après suppression) est ignorée plutôt que de faire échouer tout l'import.
   const profileIds = new Set(profiles.map((profile) => profile.id));
   const keptRuns = runs.filter((run) => profileIds.has(run.profileId));
   const keptOverrides = overrides.filter((override) => profileIds.has(override.profileId));
   const keptUsage = usage.filter((day) => profileIds.has(day.profileId));
+  const keptDictations = dictations.filter((record) => profileIds.has(record.profileId));
+  const keptColorings = colorings.filter((record) => profileIds.has(record.profileId));
   const skipped =
-    runs.length - keptRuns.length + (overrides.length - keptOverrides.length) + (usage.length - keptUsage.length);
+    runs.length -
+    keptRuns.length +
+    (overrides.length - keptOverrides.length) +
+    (usage.length - keptUsage.length) +
+    (dictations.length - keptDictations.length) +
+    (colorings.length - keptColorings.length);
 
-  return { bundle: { profiles, runs: keptRuns, overrides: keptOverrides, usage: keptUsage, soundOn, skipped } };
+  return {
+    bundle: {
+      profiles,
+      runs: keptRuns,
+      overrides: keptOverrides,
+      usage: keptUsage,
+      dictations: keptDictations,
+      colorings: keptColorings,
+      soundOn,
+      skipped,
+    },
+  };
 }
 
 /**
  * Valide `data` (format, version, forme des enregistrements) puis REMPLACE toutes les données
- * (profils, parties, réglages de niveaux, temps de jeu) en une seule transaction. Les lignes
- * orphelines sont ignorées (F2), jamais réécrites. Conserve le code parent. En cas d'erreur de
- * format/version/forme, rien n'est modifié.
+ * (profils, parties, réglages de niveaux, temps de jeu, parties de jeu) en une seule transaction.
+ * Les lignes orphelines sont ignorées (F2), jamais réécrites. Conserve le code parent. En cas
+ * d'erreur de format/version/forme, rien n'est modifié.
  */
 export async function importAll(data: unknown): Promise<ImportResult> {
   const validation = validateImportData(data);
@@ -213,19 +256,33 @@ export async function importAll(data: unknown): Promise<ImportResult> {
   const { bundle } = validation;
 
   const db = await getDB();
-  const tx = db.transaction(['profiles', 'runs', 'overrides', 'usage', 'settings'], 'readwrite');
+  const tx = db.transaction(
+    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'settings'],
+    'readwrite',
+  );
   const profiles = tx.objectStore('profiles');
   const runs = tx.objectStore('runs');
   const overrides = tx.objectStore('overrides');
   const usage = tx.objectStore('usage');
+  const dictations = tx.objectStore('dictations');
+  const colorings = tx.objectStore('colorings');
   const settings = tx.objectStore('settings');
 
-  await Promise.all([profiles.clear(), runs.clear(), overrides.clear(), usage.clear()]);
+  await Promise.all([
+    profiles.clear(),
+    runs.clear(),
+    overrides.clear(),
+    usage.clear(),
+    dictations.clear(),
+    colorings.clear(),
+  ]);
   await Promise.all([
     ...bundle.profiles.map((profile) => profiles.put(profile)),
     ...bundle.runs.map((run) => runs.put(run)),
     ...bundle.overrides.map((override) => overrides.put(override)),
     ...bundle.usage.map((day) => usage.put(day)),
+    ...bundle.dictations.map((record) => dictations.put(record)),
+    ...bundle.colorings.map((record) => colorings.put(record)),
   ]);
 
   const existingSettings = (await settings.get('app')) ?? DEFAULT_SETTINGS;
@@ -243,7 +300,7 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     ok: true,
     profiles: bundle.profiles.length,
     runs: bundle.runs.length,
-    gameRecords: 0, // provisoire (contrat v2) : voir docs/specs/HUB.md §5.3
+    gameRecords: bundle.dictations.length + bundle.colorings.length,
     skipped: bundle.skipped,
   };
 }

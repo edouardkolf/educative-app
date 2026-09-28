@@ -1,8 +1,11 @@
 // CONTRAT — parties du coloriage magique (store "colorings"). Voir docs/specs/COLORIAGE.md §5.
 // Les types font foi ; les corps sont écrits par la tâche « stockage v2 » (bâtis sur game-records.ts).
 // Les fonctions sont des déclarations `function` (hissées) : game-records.ts les importe en retour.
-import type { Color } from '../engine/types';
+import { COLORS, type Color } from '../engine/types';
+import { mixColors } from '../mechanics/color-mix/generate';
+import { finishGameRecord, isGameRecordBase, listGameRecords, startGameRecord, updateGameRecord } from './game-records';
 import type { GameEndReason, GameRecordBase } from './types';
+import { isFiniteNumber, isNonEmptyString, isPlainObject } from './validate';
 
 /** Palier du code magique : 1 goutte, 2 objet gris, 3 formes + légende, 4 dé + légende. */
 export type ColoringTier = 1 | 2 | 3 | 4;
@@ -51,26 +54,33 @@ export interface ColoringRecord extends GameRecordBase {
 export type ColoringInit = Omit<ColoringRecord, keyof GameRecordBase | 'attempts'>;
 
 /** Crée la partie à la première case peinte de la séance : `in_progress`, `attempts: []`. */
-export async function startColoring(_profileId: string, _init: ColoringInit): Promise<ColoringRecord> {
-  throw new Error('startColoring : à implémenter (docs/specs/COLORIAGE.md §5.2)');
+export async function startColoring(profileId: string, init: ColoringInit): Promise<ColoringRecord> {
+  return startGameRecord('colorings', profileId, { ...init, attempts: [] });
 }
 
 /** Ajoute l'essai et met à jour `activeMs`. Partie `in_progress` seulement. */
-export async function recordPaint(_id: string, _attempt: PaintAttempt, _activeMs: number): Promise<void> {
-  throw new Error('recordPaint : à implémenter (docs/specs/COLORIAGE.md §5.2)');
+export async function recordPaint(id: string, attempt: PaintAttempt, activeMs: number): Promise<void> {
+  await updateGameRecord('colorings', id, (record) => ({
+    ...record,
+    attempts: [...record.attempts, attempt],
+    activeMs,
+  }));
 }
 
-export async function completeColoring(_id: string, _activeMs: number): Promise<void> {
-  throw new Error('completeColoring : à implémenter (docs/specs/COLORIAGE.md §5.2)');
+export async function completeColoring(id: string, activeMs: number): Promise<void> {
+  await finishGameRecord('colorings', id, { status: 'completed' }, (record) => ({ ...record, activeMs }));
 }
 
-export async function abandonColoring(_id: string, _reason: GameEndReason, _activeMs: number): Promise<void> {
-  throw new Error('abandonColoring : à implémenter (docs/specs/COLORIAGE.md §5.2)');
+export async function abandonColoring(id: string, reason: GameEndReason, activeMs: number): Promise<void> {
+  await finishGameRecord('colorings', id, { status: 'abandoned', endReason: reason }, (record) => ({
+    ...record,
+    activeMs,
+  }));
 }
 
 /** Parties de coloriage d'un profil, triées par `startedAt` croissant. */
-export async function listColorings(_profileId: string): Promise<ColoringRecord[]> {
-  return [];
+export async function listColorings(profileId: string): Promise<ColoringRecord[]> {
+  return listGameRecords('colorings', profileId);
 }
 
 /** Toutes les cases sont dans `paintedAtStart` ou peintes par un essai (sert à la clôture au lancement). */
@@ -83,9 +93,65 @@ export function isColoringFinished(record: ColoringRecord): boolean {
   return record.zones.every((zone) => painted.has(zone.id));
 }
 
+const PRIMARY_COLORS: readonly Color[] = ['red', 'yellow', 'blue'];
+
+function isColor(value: unknown): value is Color {
+  return typeof value === 'string' && (COLORS as readonly string[]).includes(value);
+}
+
+function isZone(value: unknown): value is { id: string; target: Color } {
+  return isPlainObject(value) && isNonEmptyString(value.id) && isColor(value.target);
+}
+
+function isLegend(value: unknown): value is Partial<Record<Color, string>> | null {
+  if (value === null) return true;
+  if (!isPlainObject(value)) return false;
+  return Object.entries(value).every(([key, val]) => isColor(key) && isNonEmptyString(val));
+}
+
 /** Validation à l'import (docs/specs/COLORIAGE.md §5.3). */
-export function isColoringRecord(_value: unknown): _value is ColoringRecord {
-  return false;
+export function isColoringRecord(value: unknown): value is ColoringRecord {
+  if (!isGameRecordBase(value)) return false;
+  const v = value as unknown as Record<string, unknown>;
+  if (!isNonEmptyString(v.drawingId)) return false;
+  if (v.tier !== 1 && v.tier !== 2 && v.tier !== 3 && v.tier !== 4) return false;
+  if (v.detail !== 1 && v.detail !== 2 && v.detail !== 3) return false;
+  if (!Number.isInteger(v.variantSeed)) return false;
+  if (v.resumedFrom !== undefined && !isNonEmptyString(v.resumedFrom)) return false;
+  if (!Array.isArray(v.zones) || v.zones.length === 0 || !v.zones.every(isZone)) return false;
+  const zones = v.zones as { id: string; target: Color }[];
+  const zoneIds = new Set(zones.map((zone) => zone.id));
+  if (zoneIds.size !== zones.length) return false;
+  if (!isLegend(v.legend)) return false;
+
+  if (!Array.isArray(v.paintedAtStart)) return false;
+  const paintedSeen = new Set<string>();
+  for (const id of v.paintedAtStart) {
+    if (typeof id !== 'string' || !zoneIds.has(id) || paintedSeen.has(id)) return false;
+    paintedSeen.add(id);
+  }
+
+  if (!isPlainObject(v.missesAtStart)) return false;
+  for (const [id, count] of Object.entries(v.missesAtStart)) {
+    if (!zoneIds.has(id) || !Number.isInteger(count) || (count as number) < 0) return false;
+  }
+
+  if (!Array.isArray(v.attempts)) return false;
+  for (const attempt of v.attempts) {
+    if (!isPlainObject(attempt)) return false;
+    if (typeof attempt.zoneId !== 'string' || !zoneIds.has(attempt.zoneId)) return false;
+    if (!isColor(attempt.paint)) return false;
+    if (!Array.isArray(attempt.drops) || (attempt.drops.length !== 1 && attempt.drops.length !== 2)) return false;
+    if (!attempt.drops.every((d: unknown) => isColor(d) && PRIMARY_COLORS.includes(d))) return false;
+    const drops = attempt.drops as Color[];
+    const expectedPaint = drops.length === 1 ? drops[0] : mixColors(drops[0] as Color, drops[1] as Color);
+    if (attempt.paint !== expectedPaint) return false;
+    if (typeof attempt.fresh !== 'boolean') return false;
+    if (attempt.help !== 0 && attempt.help !== 1 && attempt.help !== 2) return false;
+    if (!isFiniteNumber(attempt.at) || (attempt.at as number) < 0) return false;
+  }
+
+  return true;
 }
 
 /** Validation de `Profile.gameSettings.coloring` : `tier` absent, ou de 1 à 4. */

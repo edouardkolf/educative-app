@@ -1,5 +1,6 @@
 // Profils enfants : CRUD + suppression en cascade.
 import { getDB } from './db';
+import { GAME_STORES } from './game-records';
 import type { Profile } from './types';
 
 export async function listProfiles(): Promise<Profile[]> {
@@ -34,7 +35,10 @@ export async function saveProfile(
  */
 export async function deleteProfile(id: string): Promise<void> {
   const db = await getDB();
-  const tx = db.transaction(['profiles', 'runs', 'overrides', 'usage', 'settings'], 'readwrite');
+  const tx = db.transaction(
+    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'settings'],
+    'readwrite',
+  );
   const profiles = tx.objectStore('profiles');
   const runs = tx.objectStore('runs');
   const overrides = tx.objectStore('overrides');
@@ -51,6 +55,12 @@ export async function deleteProfile(id: string): Promise<void> {
 
   const usageKeys = await usage.index('profileId').getAllKeys(id);
   await Promise.all(usageKeys.map((key) => usage.delete(key)));
+
+  for (const store of GAME_STORES) {
+    const gameStore = tx.objectStore(store);
+    const keys = await gameStore.index('profileId').getAllKeys(id);
+    await Promise.all(keys.map((key) => gameStore.delete(key)));
+  }
 
   const currentSettings = await settings.get('app');
   if (currentSettings) {

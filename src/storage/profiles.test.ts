@@ -7,11 +7,15 @@ import {
   getProfile,
   getSettings,
   getUsage,
+  listColorings,
+  listDictations,
   listOverrides,
   listProfiles,
   listRuns,
   saveProfile,
   setOverride,
+  startColoring,
+  startDictation,
   startRun,
   updateSettings,
 } from './index';
@@ -68,6 +72,17 @@ describe('deleteProfile : suppression en cascade', () => {
     await startRun({ profileId: profile.id, levelId: 'ms-suite-01', trackId: 'ms', replay: false });
     await setOverride(profile.id, 'ms-suite-02', 'unlocked');
     await addActiveSeconds(profile.id, '2026-09-25', 120);
+    await startDictation(profile.id, { seriesId: 's1', seed: 1, words: [{ wordId: 'chat', seriesId: 's1', sentenceIndex: 0 }] });
+    await startColoring(profile.id, {
+      drawingId: 'house',
+      tier: 1,
+      detail: 1,
+      variantSeed: 1,
+      zones: [{ id: 'z1', target: 'red' }],
+      legend: null,
+      paintedAtStart: [],
+      missesAtStart: {},
+    });
     const otherSession = { profileId: other.id, startedAt: Date.now(), activeSeconds: 0, lastActiveAt: Date.now() };
     await updateSettings({
       sessions: {
@@ -78,6 +93,11 @@ describe('deleteProfile : suppression en cascade', () => {
     });
 
     const otherRun = await startRun({ profileId: other.id, levelId: 'ms-suite-01', trackId: 'ms', replay: false });
+    const otherDictation = await startDictation(other.id, {
+      seriesId: 's1',
+      seed: 2,
+      words: [{ wordId: 'chien', seriesId: 's1', sentenceIndex: 0 }],
+    });
 
     await deleteProfile(profile.id);
 
@@ -85,6 +105,8 @@ describe('deleteProfile : suppression en cascade', () => {
     expect(await listRuns(profile.id)).toEqual([]);
     expect(await listOverrides(profile.id)).toEqual([]);
     expect((await getUsage(profile.id, '2026-09-25')).activeSeconds).toBe(0);
+    expect(await listDictations(profile.id)).toEqual([]);
+    expect(await listColorings(profile.id)).toEqual([]);
 
     const settings = await getSettings();
     expect(settings.sessions[profile.id]).toBeUndefined();
@@ -95,6 +117,7 @@ describe('deleteProfile : suppression en cascade', () => {
     // Le profil non concerné garde ses données.
     expect(await getProfile(other.id)).toEqual(other);
     expect(await listRuns(other.id)).toEqual([otherRun]);
+    expect(await listDictations(other.id)).toEqual([otherDictation]);
   });
 
   it('ne remet pas lock à null s\'il concerne un autre profil', async () => {
