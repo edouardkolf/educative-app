@@ -1,9 +1,10 @@
 /* Clavier intégré de la dictée (docs/specs/DICTEE.md §2.2 et §4.4). 7 colonnes : à 412 px de large,
-   (412 − 2 × 12 − 6 × 4) / 7 = 52 px par touche. Aucun son de touche, pour que la voix reste audible. */
+   (412 − 2 × 12 − 6 × 4) / 7 = 52 px par touche ; à 360 px, 44,6 px. Les 12 px de marge latérale sont
+   ceux de l'écran (.dict-play) : le clavier n'en ajoute pas. Aucun son de touche, pour que la voix reste audible. */
 
 .dict-keyboard {
   width: 100%;
-  padding: 0 12px;
+  padding: 0;
   margin-top: auto;
   box-sizing: border-box;
 }
