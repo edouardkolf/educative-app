@@ -219,7 +219,9 @@ test('quota du jour épuisé : le profil apparaît estompé et non sélectionnab
   page,
 }) => {
   test.slow();
-  await page.clock.install();
+  // Heure de départ fixée en milieu de journée : les 30 min simulées ne doivent jamais passer minuit,
+  // sinon le temps se répartit sur deux jours locaux et le quota du jour n'est jamais atteint.
+  await page.clock.install({ time: new Date('2026-09-28T10:00:00') });
   await onboardWithChild(page, 'Lina');
   await enterMap(page, 'Lina');
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
