@@ -1,6 +1,18 @@
 // Logique pure du minuteur de session et du quota quotidien (docs/ARCHITECTURE.md §8).
 // Aucune dépendance au DOM ni au stockage : testable directement (session.test.ts).
 import type { Profile, SessionState, UsageDay } from '../storage/types';
+import { isGameRoute, type GameRouteName, type Route } from './routes';
+
+/** Activité à laquelle le temps actif est imputé (UsageDay.activitySeconds, docs/specs/HUB.md §5.4). */
+export type ActivityId = 'hub' | 'map' | GameRouteName;
+
+/** hub → hub ; carte et parties de niveaux → map ; route de jeu → le jeu ; autres écrans → null (pas compté). */
+export function activityForRoute(name: Route['name']): ActivityId | null {
+  if (name === 'hub') return 'hub';
+  if (name === 'map' || name === 'play') return 'map';
+  if (isGameRoute(name)) return name;
+  return null;
+}
 
 export interface TimeStatus {
   /** Secondes restantes avant la limite de session ; null = pas de limite. */

@@ -1,5 +1,7 @@
 // CONTRAT — données persistées localement (IndexedDB). Aucune donnée ne quitte le téléphone,
 // sauf via l'export JSON déclenché par le parent.
+import type { ColoringRecord, ColoringSettings } from './colorings';
+import type { DictationRecord } from './dictations';
 
 export type AvatarId = string; // un emoji d'animal, ex. "🦊" (liste dans src/ui/avatars.ts)
 
@@ -23,6 +25,18 @@ export interface Profile {
    * Absent : jamais mesuré (profil créé avant les mondes) ; fixé sans animation à la première visite.
    */
   seenWorld?: number;
+  /**
+   * Jeux libres visibles sur le hub (GameId, src/games/index.ts). Absent : défaut du parcours.
+   * [] : aucun jeu. Un id inconnu est toléré et ignoré à l'affichage (docs/specs/HUB.md §4.3).
+   */
+  games?: string[];
+  /** Réglages propres à chaque jeu. Absent : réglages par défaut. */
+  gameSettings?: GameSettingsMap;
+}
+
+/** Réglages par jeu (docs/specs/README.md, arbitrage A6). V1 : seul le coloriage a un réglage. */
+export interface GameSettingsMap {
+  coloring?: ColoringSettings;
 }
 
 /** Résultat d'une manche dans une partie. */
@@ -79,6 +93,35 @@ export interface UsageDay {
   activeSeconds: number;
   /** Minutes supplémentaires accordées ce jour-là par le parent. */
   extraMinutes: number;
+  /**
+   * Secondes actives du jour par activité (`ActivityId` de src/app/session.ts : hub, map, dictation,
+   * coloring). Absent pour les jours d'avant la v2 ; la somme peut être inférieure à `activeSeconds`.
+   */
+  activitySeconds?: Record<string, number>;
+}
+
+// ---------- Jeux hors parcours (docs/specs/HUB.md §5.2) ----------
+
+/** Stores IndexedDB des parties de jeu (un par jeu). */
+export type GameStoreName = 'dictations' | 'colorings';
+
+/** Pourquoi une partie de jeu s'est arrêtée avant la fin : pas de vies dans ces jeux, donc jamais "out-of-lives". */
+export type GameEndReason = 'quit' | 'closed' | 'time-up';
+
+/**
+ * Champs communs à toutes les parties de jeu (DictationRecord, ColoringRecord les étendent).
+ * Une partie close ne se rouvre jamais : seules les parties "in_progress" sont modifiées (F6).
+ */
+export interface GameRecordBase {
+  id: string;
+  profileId: string;
+  /** Création de l'enregistrement : premier mot validé, première case peinte (arbitrage A9). */
+  startedAt: number;
+  endedAt: number | null;
+  status: RunStatus;
+  endReason: GameEndReason | null;
+  /** Temps actif dans l'écran de jeu (ms), page visible, hors écrans de choix et de fin (F10). */
+  activeMs: number;
 }
 
 /** Session en cours (persistée pour qu'un rechargement ne remette pas le minuteur à zéro). */
@@ -107,7 +150,10 @@ export interface AppSettings {
 }
 
 export const EXPORT_FORMAT = 'petits-malins-export';
-export const EXPORT_VERSION = 1;
+/** Version écrite par l'export. v2 : parties de jeu (dictations, colorings). */
+export const EXPORT_VERSION = 2;
+/** Versions acceptées à l'import : v1 (sans parties de jeu, tableaux lus comme vides) et v2. */
+export const SUPPORTED_IMPORT_VERSIONS: readonly number[] = [1, 2];
 
 /** Fichier d'export. Ne contient ni le code parent ni l'état de session. */
 export interface ExportBundle {
@@ -118,9 +164,12 @@ export interface ExportBundle {
   runs: Run[];
   overrides: LevelOverride[];
   usage: UsageDay[];
+  dictations: DictationRecord[];
+  colorings: ColoringRecord[];
   settings: { soundOn: boolean };
 }
 
 export type ImportResult =
-  | { ok: true; profiles: number; runs: number; skipped: number }
+  /** `gameRecords` : dictées + parties de coloriage importées. */
+  | { ok: true; profiles: number; runs: number; gameRecords: number; skipped: number }
   | { ok: false; error: string };

@@ -16,16 +16,34 @@ export async function getUsage(profileId: string, day: string): Promise<UsageDay
   return existing ?? emptyUsage(profileId, day);
 }
 
-export async function addActiveSeconds(profileId: string, day: string, seconds: number): Promise<UsageDay> {
+/**
+ * Ajoute `seconds` au temps actif du jour et, si `activity` est donnée (ActivityId : hub, map, dictation,
+ * coloring), à `activitySeconds[activity]`, dans la même transaction (docs/specs/HUB.md §5.4).
+ */
+export async function addActiveSeconds(
+  profileId: string,
+  day: string,
+  seconds: number,
+  activity?: string,
+): Promise<UsageDay> {
   const db = await getDB();
   const tx = db.transaction('usage', 'readwrite');
-  const existing = await tx.store.get([profileId, day]);
-  const updated: UsageDay = existing
-    ? { ...existing, activeSeconds: existing.activeSeconds + seconds }
-    : { ...emptyUsage(profileId, day), activeSeconds: seconds };
+  const existing = (await tx.store.get([profileId, day])) ?? emptyUsage(profileId, day);
+  const updated: UsageDay = { ...existing, activeSeconds: existing.activeSeconds + seconds };
+  if (activity !== undefined) {
+    const byActivity = existing.activitySeconds ?? {};
+    updated.activitySeconds = { ...byActivity, [activity]: (byActivity[activity] ?? 0) + seconds };
+  }
   await tx.store.put(updated);
   await tx.done;
   return updated;
+}
+
+/** Tous les jours enregistrés d'un profil, triés par jour croissant. */
+export async function listUsage(profileId: string): Promise<UsageDay[]> {
+  const db = await getDB();
+  const days = await db.getAllFromIndex('usage', 'profileId', profileId);
+  return days.sort((a, b) => a.day.localeCompare(b.day));
 }
 
 export async function grantExtraMinutes(profileId: string, day: string, minutes: number): Promise<UsageDay> {

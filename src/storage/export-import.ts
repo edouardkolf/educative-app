@@ -40,6 +40,9 @@ export async function exportAll(): Promise<ExportBundle> {
     runs,
     overrides,
     usage,
+    // Provisoire (contrat v2) : la tâche « stockage v2 » exporte les parties de jeu (docs/specs/HUB.md §5.3).
+    dictations: [],
+    colorings: [],
     settings: { soundOn: (settings ?? DEFAULT_SETTINGS).soundOn },
   };
 }
@@ -236,5 +239,11 @@ export async function importAll(data: unknown): Promise<ImportResult> {
   await settings.put(nextSettings, 'app');
 
   await tx.done;
-  return { ok: true, profiles: bundle.profiles.length, runs: bundle.runs.length, skipped: bundle.skipped };
+  return {
+    ok: true,
+    profiles: bundle.profiles.length,
+    runs: bundle.runs.length,
+    gameRecords: 0, // provisoire (contrat v2) : voir docs/specs/HUB.md §5.3
+    skipped: bundle.skipped,
+  };
 }

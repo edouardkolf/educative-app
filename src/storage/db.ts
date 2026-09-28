@@ -1,10 +1,13 @@
-// Connexion IndexedDB : schéma typé (base "petits-malins", version 1), ouverture paresseuse,
+// Connexion IndexedDB : schéma typé (base "petits-malins", version 2), ouverture paresseuse,
 // connexion mise en cache. `__resetForTests` ferme et oublie cette connexion (utilisé par les tests).
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { ColoringRecord } from './colorings';
+import type { DictationRecord } from './dictations';
 import type { AppSettings, LevelOverride, Profile, Run, UsageDay } from './types';
 
 export const DB_NAME = 'petits-malins';
-const DB_VERSION = 1;
+/** v2 : parties des jeux hors parcours (stores "dictations" et "colorings", docs/specs/HUB.md §5.1). */
+export const DB_VERSION = 2;
 
 export interface StorageSchema extends DBSchema {
   profiles: {
@@ -37,6 +40,20 @@ export interface StorageSchema extends DBSchema {
     key: string; // toujours "app" : un seul enregistrement, clé hors-ligne (pas de keyPath)
     value: AppSettings;
   };
+  dictations: {
+    key: string; // DictationRecord['id']
+    value: DictationRecord;
+    indexes: {
+      profileId: string;
+    };
+  };
+  colorings: {
+    key: string; // ColoringRecord['id']
+    value: ColoringRecord;
+    indexes: {
+      profileId: string;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<StorageSchema>> | null = null;
@@ -63,6 +80,11 @@ export function getDB(): Promise<IDBPDatabase<StorageSchema>> {
           usage.createIndex('profileId', 'profileId');
 
           db.createObjectStore('settings');
+        }
+        if (oldVersion < 2) {
+          // Nouveaux stores, nés vides : aucune donnée existante n'est migrée.
+          db.createObjectStore('dictations', { keyPath: 'id' }).createIndex('profileId', 'profileId');
+          db.createObjectStore('colorings', { keyPath: 'id' }).createIndex('profileId', 'profileId');
         }
       },
       // F5 : cette connexion (plus ancienne) bloque la mise à niveau demandée par une autre fenêtre

@@ -31,7 +31,21 @@ export { startRun, recordRound, completeRun, abandonRun, closeStaleRuns, listRun
 export { listOverrides, setOverride } from './overrides';
 
 // ---------- Temps de jeu ----------
-export { getUsage, addActiveSeconds, grantExtraMinutes } from './usage';
+export { getUsage, addActiveSeconds, grantExtraMinutes, listUsage } from './usage';
+
+// ---------- Parties de jeu (dictée, coloriage) : socle commun, puis un module par jeu ----------
+export {
+  GAME_STORES,
+  startGameRecord,
+  updateGameRecord,
+  finishGameRecord,
+  listGameRecords,
+  closeStaleGameRecords,
+  isGameRecordBase,
+} from './game-records';
+export type { GameRecordByStore, GameOutcome } from './game-records';
+export * from './dictations';
+export * from './colorings';
 
 // ---------- Export / import ----------
 export { exportAll, importAll } from './export-import';
