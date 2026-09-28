@@ -72,15 +72,17 @@ Nouvelles routes (`src/app/routes.ts`, fichier CONTRAT) :
 - `DB_VERSION` passe à 2, avec un seul bloc `if (oldVersion < 2)` qui crée les stores `dictations` et `colorings`
   (clé `id`, index `profileId`). HUB.md spécifie la migration et l'export v2 : l'import accepte v1 (tableaux absents,
   donc vides) et v2, et ignore les lignes orphelines comme aujourd'hui.
-- Chaque spec de jeu définit le type de ses enregistrements, leur validation à l'import et la clôture des parties
-  restées `in_progress` au lancement suivant (comme `closeStaleRuns`).
+- Chaque spec de jeu définit le type de ses enregistrements, dans `src/storage/<store>.ts`, en étendant
+  `GameRecordBase` (HUB.md §5.2). Elle définit aussi leur validation à l'import, et dit quand une partie restée
+  `in_progress` est en fait finie (la clôture au lancement est générique).
 - Tout nouveau champ de `Profile` reste **optionnel** : les profils et les exports v1 doivent rester valides.
 
 ### 3.5 Cycle de vie d'une partie de jeu
 
 Même vocabulaire que les parties de niveaux, pour que les statistiques gardent les définitions d'ARCHITECTURE §7 :
 
-- une **partie** = une dictée (une dizaine de mots) ou un coloriage (un dessin) ;
+- une **partie** = une dictée (une dizaine de mots), ou une séance sur un dessin. Un dessin interrompu se poursuit
+  dans une **nouvelle** partie liée à la précédente : une partie close ne se rouvre jamais ;
 - `status : 'in_progress' | 'completed' | 'abandoned'` ;
 - `endReason : 'quit' | 'closed' | 'time-up' | null` (pas de vies dans ces jeux, donc pas de `out-of-lives`) ;
 - `quit`/`closed` = **abandon** ; `time-up` = **interruption**, ce n'est pas un abandon.
@@ -128,3 +130,23 @@ Dense et précise : une spec doit pouvoir être implémentée par un agent `impl
    les dépendances entre tâches.
 10. **Questions ouvertes pour le PM**, chacune avec une recommandation.
 11. **Hors périmètre / V2.**
+
+## 5. Arbitrages entre specs (orchestrateur, 28/09/2026)
+
+Les trois specs ont été écrites en parallèle. Leurs sections « À arbitrer entre specs » sont tranchées ici. Les specs
+ont été alignées sur ces décisions ; en cas d'écart restant, ce tableau fait foi.
+
+| # | Sujet | Décision | Pourquoi |
+|---|---|---|---|
+| A1 | Types des jeux | `DictationRecord` et `ColoringRecord` étendent `GameRecordBase`, dans `src/storage/dictations.ts` et `src/storage/colorings.ts`. `storage/types.ts` ne reçoit que le socle (HUB.md §5.2). | Un seul propriétaire par fichier ; `types.ts` reste petit. |
+| A2 | Reprise d'un coloriage | Une partie close ne se rouvre jamais. Reprendre un dessin crée une nouvelle partie, avec `resumedFrom` et le tirage figé recopié. Elle porte aussi `paintedAtStart` et `missesAtStart`, et reste donc lisible seule. | Garde l'invariant F6 (on n'écrit que sur une partie `in_progress`). Les indicateurs communs restent justes par séance. |
+| A3 | Clôture au lancement | Générique : `closeStaleGameRecords`. Chaque store fournit `isFinished(record)` : tous les mots validés, ou toutes les cases peintes. Une partie finie passe `completed` (comme F7), sinon `abandoned` (`time-up` ou `closed`). | Une seule règle ; pas de `closeStaleDictations` ni de `closeStaleColorings`. |
+| A4 | Fin douce | `useSoftEnd` (HUB.md §4.4) pour les deux jeux. `checkpoint()` est appelé au **début** d'une unité, jamais avant de créer l'enregistrement : l'unité en cours se termine et s'enregistre, quitte à créer la partie. | Le premier mot ou la première case ne se perdent pas. |
+| A5 | Jeu indisponible | La tuile reste tapable, avec un badge `speaker-off` (`Icon`, ajouté par T3), et ouvre l'écran d'explication du jeu. Le registre expose `checkAvailability?: () => Promise<Availability>`, avec un `parentHint` pour la fiche enfant. | Une enfant de CE1 lit « Le téléphone ne peut pas parler », ce qu'une tuile morte qui tremble ne lui dit pas. |
+| A6 | Réglages par jeu | `Profile.gameSettings.coloring = { tier?: ColoringTier }`, réglé dans la fiche enfant par `ColoringSettings.tsx`. Pas de champ à plat, et aucun réglage de dictée en V1. | Un seul point d'extension du profil. |
+| A7 | Composants | `<Game>Screen.tsx` ; `<Game>Stats.tsx`, avec les props `{ profile, records }` ; `<Game>Settings.tsx` s'il y a des réglages. Maison : `data-testid="to-hub"`. Pictos des tuiles dans `src/ui/icons/GameIcon.tsx` (T3). | Montage uniforme dans ChildStats et ChildForm. |
+| A8 | Statistiques | ChildStats affiche les indicateurs communs de chaque jeu (HUB.md §5.5), et les blocs de jeu seulement les leurs. « Temps de jeu total » de l'en-tête = niveaux + Σ `activeMs` des jeux. | Aucun indicateur en double. |
+| A9 | `startedAt` | Le moment où l'enregistrement est créé : premier mot validé, première case peinte. | L'API générique reste simple. |
+| A10 | Documentation | T5 (HUB.md) tient `ARCHITECTURE.md`, `CONTENU.md` et les deux `PROGRESSION-*.md` pendant ce lot, y compris l'exception du clavier (§9). | Pas deux tâches sur un même fichier. |
+| A11 | E2E | Tous les nouveaux tests passent par `tests/e2e/nav.ts` (T3). | Une seule façon d'aller au hub. |
+| A12 | Contenu au build | T2 passe `validate:content` à `vitest run content.test catalog.test` (exception assumée à la règle « pas de `package.json` »). | Un mot ou un dessin invalide casse le build, comme un niveau. |
