@@ -1,0 +1,109 @@
+/* Écran du coloriage magique (docs/specs/COLORIAGE.md §2, §6). Sans texte, sans défilement. */
+
+.clr-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.clr-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  flex: 0 0 auto;
+}
+
+.clr-topbar__legend {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.clr-stage {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 0 12px 12px;
+}
+
+/* ---------- Écran de choix ---------- */
+
+.clr-choice-board {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100%;
+}
+
+.clr-choice-card {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 12px;
+  min-width: 128px;
+  min-height: 128px;
+  transition: transform 200ms ease;
+}
+
+.clr-choice-card:active {
+  transform: scale(0.97);
+}
+
+/* ---------- Frigo ---------- */
+
+.clr-fridge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.clr-fridge-tile {
+  position: relative;
+  border: none;
+  background: #eef6fb;
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.clr-fridge-magnet {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f77f00;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.clr-fridge-open {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  z-index: 10;
+}
