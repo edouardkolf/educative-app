@@ -539,6 +539,12 @@
   margin-top: 2px;
 }
 
+.pa-child-card__games {
+  color: var(--pa-muted);
+  font-size: 15px;
+  margin-top: 2px;
+}
+
 .pa-child-card__actions {
   display: flex;
   gap: 8px;
@@ -770,6 +776,23 @@
   font-weight: 700;
 }
 
+/* ---------- Jeux libres (ChildForm) ---------- */
+
+.pa-game-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pa-game-warning {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--pa-danger-bg);
+  color: var(--pa-danger);
+  font-size: 15px;
+}
+
 /* ---------- Statistiques ---------- */
 
 .pa-stats-header__avatar {
@@ -893,6 +916,40 @@
 
 .pa-stat-grid__item dd {
   margin: 0;
+  font-weight: 700;
+}
+
+/* ---------- Temps par activité ---------- */
+
+.pa-activity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pa-activity-table th,
+.pa-activity-table td {
+  text-align: left;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--pa-border);
+  font-weight: 400;
+}
+
+.pa-activity-table thead th {
+  color: var(--pa-muted);
+  font-weight: 600;
+}
+
+.pa-activity-table tbody th {
+  font-weight: 600;
+}
+
+.pa-activity-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+.pa-activity-table__total th,
+.pa-activity-table__total td {
+  border-bottom: none;
   font-weight: 700;
 }
 

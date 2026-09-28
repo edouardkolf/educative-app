@@ -14,10 +14,19 @@ export function parseImportFile(text: string): { data: unknown } | { error: stri
   }
 }
 
-/** Compte les enfants et parties d'une sauvegarde pas encore validée, pour l'étape de confirmation. */
+/** Longueur d'un tableau d'un champ de `data`, ou 0 si absent / pas un tableau. */
+function arrayLength(data: unknown, key: string): number {
+  return isPlainObject(data) && Array.isArray(data[key]) ? data[key].length : 0;
+}
+
+/**
+ * Compte les enfants et parties d'une sauvegarde pas encore validée, pour l'étape de confirmation.
+ * Les parties incluent celles des jeux libres (dictée, coloriage) : « partie » désigne aussi bien une
+ * partie de niveau qu'une partie de jeu (cadre §3.5).
+ */
 export function describeImportCounts(data: unknown): { profiles: number; runs: number } {
-  const profiles = isPlainObject(data) && Array.isArray(data.profiles) ? data.profiles.length : 0;
-  const runs = isPlainObject(data) && Array.isArray(data.runs) ? data.runs.length : 0;
+  const profiles = arrayLength(data, 'profiles');
+  const runs = arrayLength(data, 'runs') + arrayLength(data, 'dictations') + arrayLength(data, 'colorings');
   return { profiles, runs };
 }
 
@@ -30,10 +39,16 @@ export function formatImportConfirmation(counts: { profiles: number; runs: numbe
 
 /**
  * Message après un import réussi (F2) : mentionne les lignes orphelines ignorées (parties/réglages/
- * temps d'un enfant absent de la sauvegarde) seulement quand `skipped > 0`.
+ * temps d'un enfant absent de la sauvegarde) seulement quand `skipped > 0`. `runs` compte les parties
+ * de niveaux ; `gameRecords` les parties de jeux libres (dictée, coloriage) : la formulation ne change pas.
  */
-export function formatImportSuccess(result: { profiles: number; runs: number; skipped: number }): string {
-  const base = `Sauvegarde importée : ${result.profiles} enfant(s), ${result.runs} partie(s).`;
+export function formatImportSuccess(result: {
+  profiles: number;
+  runs: number;
+  gameRecords: number;
+  skipped: number;
+}): string {
+  const base = `Sauvegarde importée : ${result.profiles} enfant(s), ${result.runs + result.gameRecords} partie(s).`;
   if (result.skipped <= 0) return base;
   return `${base} ${result.skipped} enregistrement(s) sans enfant correspondant ont été ignorés.`;
 }

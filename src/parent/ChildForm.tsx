@@ -4,8 +4,12 @@ import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
 import { getTracks } from '../engine';
 import type { Track } from '../engine';
+import { GAMES, defaultGameIds, resolveAvailability } from '../games';
+import type { Availability, GameId } from '../games';
+import { ColoringSettings } from '../games/coloring/ColoringSettings';
+import type { ColoringSettings as ColoringSettingsValue } from '../storage/colorings';
 import { deleteProfile, getProfile, getSettings, saveProfile } from '../storage';
-import type { AvatarId, Profile, ProfileLimits } from '../storage';
+import type { AvatarId, GameSettingsMap, Profile, ProfileLimits } from '../storage';
 import { AVATARS, AVATAR_NAMES } from '../ui/avatars';
 import { Emoji } from '../ui/Emoji';
 import { Icon } from '../ui/icons/Icon';
@@ -23,6 +27,10 @@ import { describeError } from './util';
 
 const DEFAULT_LIMITS: ProfileLimits = { sessionMinutes: 15, dailyMinutes: 30 };
 const NAME_MAX_LENGTH = 20;
+
+function isGameId(value: string): value is GameId {
+  return GAMES.some((game) => game.id === value);
+}
 
 export type ChildFormProps = { mode: 'create' } | { mode: 'edit'; profileId: string };
 
@@ -42,6 +50,11 @@ export function ChildForm(props: ChildFormProps) {
   const [trackId, setTrackId] = useState('');
   const [sessionMinutes, setSessionMinutes] = useState<number | null>(DEFAULT_LIMITS.sessionMinutes);
   const [dailyMinutes, setDailyMinutes] = useState<number | null>(DEFAULT_LIMITS.dailyMinutes);
+  // null = « défaut du parcours » (docs/specs/HUB.md §6.4) : suit trackId en direct tant que le parent
+  // n'a pas basculé un jeu.
+  const [games, setGames] = useState<GameId[] | null>(null);
+  const [gameSettings, setGameSettings] = useState<GameSettingsMap | undefined>(undefined);
+  const [availability, setAvailability] = useState<Record<string, Availability>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -59,6 +72,18 @@ export function ChildForm(props: ChildFormProps) {
     } catch (err) {
       setTracksError(describeError(err));
     }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    for (const game of GAMES) {
+      void resolveAvailability(game).then((result) => {
+        if (!cancelled) setAvailability((prev) => ({ ...prev, [game.id]: result }));
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -80,6 +105,9 @@ export function ChildForm(props: ChildFormProps) {
         setTrackId(known ? profile.trackId : (getTracks()[0]?.id ?? profile.trackId));
         setSessionMinutes(profile.limits.sessionMinutes);
         setDailyMinutes(profile.limits.dailyMinutes);
+        // Un id inconnu (contenu changé depuis) est silencieusement laissé de côté, comme trackId ci-dessus.
+        setGames(profile.games !== undefined ? profile.games.filter(isGameId) : null);
+        setGameSettings(profile.gameSettings);
       })
       .catch((err) => {
         if (!cancelled) setLoadError(describeError(err));
@@ -91,6 +119,23 @@ export function ChildForm(props: ChildFormProps) {
       cancelled = true;
     };
   }, [profileId]);
+
+  // Jeux visibles affichés : la liste explicite du parent, ou le défaut du parcours choisi (suit trackId en direct).
+  const effectiveGames = games ?? defaultGameIds(trackId);
+
+  function toggleGame(id: GameId) {
+    const current = games ?? defaultGameIds(trackId);
+    setGames(current.includes(id) ? current.filter((g) => g !== id) : [...current, id]);
+  }
+
+  function handleColoringSettingsChange(next: ColoringSettingsValue | undefined) {
+    setGameSettings((prev) => {
+      const updated = { ...prev };
+      if (next === undefined) delete updated.coloring;
+      else updated.coloring = next;
+      return Object.keys(updated).length > 0 ? updated : undefined;
+    });
+  }
 
   async function handleSubmit(ev: Event) {
     ev.preventDefault();
@@ -125,9 +170,18 @@ export function ChildForm(props: ChildFormProps) {
           trackId,
           limits,
           ...(existing.seenWorld !== undefined ? { seenWorld: existing.seenWorld } : {}),
+          ...(games !== null ? { games } : {}),
+          ...(gameSettings !== undefined ? { gameSettings } : {}),
         });
       } else {
-        await saveProfile({ name: trimmed, avatar, trackId, limits });
+        await saveProfile({
+          name: trimmed,
+          avatar,
+          trackId,
+          limits,
+          ...(games !== null ? { games } : {}),
+          ...(gameSettings !== undefined ? { gameSettings } : {}),
+        });
       }
       navigate({ name: 'parent', path: [] });
     } catch (err) {
@@ -248,6 +302,52 @@ export function ChildForm(props: ChildFormProps) {
                 </button>
               ))}
             </div>
+          )}
+        </fieldset>
+
+        <fieldset className="pa-field">
+          <legend className="pa-field__label">Jeux libres</legend>
+          <p className="pa-muted">
+            Sur l'accueil de l'enfant, à côté de la carte. Sans limite de parties : seul le temps de jeu compte.
+          </p>
+          <div className="pa-track-list">
+            {GAMES.map((game) => {
+              const checked = effectiveGames.includes(game.id);
+              const gameAvailability = availability[game.id];
+              return (
+                <div key={game.id} className="pa-game-option">
+                  <button
+                    type="button"
+                    className={`pa-track-option${checked ? ' pa-track-option--selected' : ''}`}
+                    aria-pressed={checked}
+                    data-testid={`game-toggle-${game.id}`}
+                    onClick={() => toggleGame(game.id)}
+                  >
+                    {game.parentLabel}
+                  </button>
+                  {gameAvailability && !gameAvailability.available && (
+                    <p className="pa-game-warning" role="alert">
+                      {game.parentLabel} : {gameAvailability.parentHint}
+                    </p>
+                  )}
+                  {checked && game.id === 'coloring' && (
+                    <ColoringSettings value={gameSettings?.coloring} onChange={handleColoringSettingsChange} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {games === null ? (
+            <p className="pa-muted">Choix par défaut du parcours.</p>
+          ) : (
+            <button
+              type="button"
+              className="pa-button pa-button--ghost"
+              data-testid="games-default"
+              onClick={() => setGames(null)}
+            >
+              Revenir au choix par défaut
+            </button>
           )}
         </fieldset>
 

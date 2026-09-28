@@ -22,6 +22,11 @@ describe('describeImportCounts', () => {
     expect(describeImportCounts(data)).toEqual({ profiles: 2, runs: 3 });
   });
 
+  it('inclut les parties de jeux libres (dictée, coloriage) dans le compte de parties', () => {
+    const data = { profiles: [{}], runs: [{}], dictations: [{}, {}], colorings: [{}] };
+    expect(describeImportCounts(data)).toEqual({ profiles: 1, runs: 4 });
+  });
+
   it('renvoie zéro pour une forme inattendue', () => {
     expect(describeImportCounts(null)).toEqual({ profiles: 0, runs: 0 });
     expect(describeImportCounts('texte')).toEqual({ profiles: 0, runs: 0 });
@@ -52,14 +57,20 @@ describe('formatImportConfirmation', () => {
 
 describe('formatImportSuccess (F2 : lignes orphelines ignorées)', () => {
   it('ne mentionne rien de plus quand skipped est 0', () => {
-    expect(formatImportSuccess({ profiles: 1, runs: 3, skipped: 0 })).toBe(
+    expect(formatImportSuccess({ profiles: 1, runs: 3, gameRecords: 0, skipped: 0 })).toBe(
       'Sauvegarde importée : 1 enfant(s), 3 partie(s).',
     );
   });
 
   it('ajoute le nombre de lignes ignorées quand skipped > 0', () => {
-    expect(formatImportSuccess({ profiles: 2, runs: 5, skipped: 4 })).toBe(
+    expect(formatImportSuccess({ profiles: 2, runs: 5, gameRecords: 0, skipped: 4 })).toBe(
       'Sauvegarde importée : 2 enfant(s), 5 partie(s). 4 enregistrement(s) sans enfant correspondant ont été ignorés.',
+    );
+  });
+
+  it('compte les parties de niveaux et de jeux libres ensemble (cadre §3.5)', () => {
+    expect(formatImportSuccess({ profiles: 1, runs: 3, gameRecords: 7, skipped: 0 })).toBe(
+      'Sauvegarde importée : 1 enfant(s), 10 partie(s).',
     );
   });
 });

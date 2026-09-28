@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
 import { getTrack } from '../engine';
+import { getGame, visibleGameIds } from '../games';
 import { dayKey, getUsage, grantExtraMinutes, listProfiles } from '../storage';
 import type { Profile, UsageDay } from '../storage';
 import { Emoji } from '../ui/Emoji';
@@ -18,6 +19,14 @@ function trackTitle(trackId: string): string {
   } catch {
     return trackId;
   }
+}
+
+/** « Jeux libres : Dictée quotidienne » (ou « aucun ») pour la carte du tableau de bord. */
+function gamesLabel(profile: Profile): string {
+  const labels = visibleGameIds(profile)
+    .map((id) => getGame(id)?.parentLabel)
+    .filter((label): label is string => Boolean(label));
+  return `Jeux libres : ${labels.length > 0 ? labels.join(', ') : 'aucun'}`;
 }
 
 /** Part du temps du jour déjà utilisée (0–1), ou null si l'enfant n'a pas de limite quotidienne. */
@@ -88,6 +97,7 @@ export function Dashboard() {
                   <div className="pa-child-card__info">
                     <p className="pa-child-card__name">{profile.name}</p>
                     <p className="pa-child-card__track">{trackTitle(profile.trackId)}</p>
+                    <p className="pa-child-card__games">{gamesLabel(profile)}</p>
                   </div>
                 </div>
 

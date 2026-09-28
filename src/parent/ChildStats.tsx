@@ -1,16 +1,28 @@
-// Statistiques d'un enfant : résumé global, bilan par compétence ou par jeu, puis une carte par niveau du parcours (ARCHITECTURE §7).
+// Statistiques d'un enfant : résumé global, temps par activité, bilan de chaque jeu libre, puis la
+// carte du parcours (bilan par compétence ou par jeu, une carte par niveau — ARCHITECTURE §7, HUB.md §5.5/§6.4).
 import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { chanceOfFirstTry, computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelStats, LevelStatus, MechanicId, SkillId } from '../engine';
-import { getProfile, listOverrides, listRuns, setOverride } from '../storage';
-import type { LevelOverride, Profile } from '../storage';
+import { GAMES, visibleGameIds } from '../games';
+import { ColoringStats } from '../games/coloring/ColoringStats';
+import { DictationStats } from '../games/dictation/DictationStats';
+import { dayKey, getProfile, listColorings, listDictations, listOverrides, listRuns, listUsage, setOverride } from '../storage';
+import type { ColoringRecord, DictationRecord, GameRecordBase, LevelOverride, Profile, UsageDay } from '../storage';
 import { Emoji } from '../ui/Emoji';
 import { Icon } from '../ui/icons/Icon';
 import { BackToChildren } from './ParentShell';
 import { formatDateTime, formatDuration, formatPercentage } from './format';
-import { CHANCE_SCORE, MIN_ROUNDS_FOR_VERDICT, summarizeByGroup, summarizeRuns } from './stats';
-import type { GroupLevel, GroupSummary, RunsSummary, SkillVerdict } from './stats';
+import {
+  CHANCE_SCORE,
+  MIN_ROUNDS_FOR_VERDICT,
+  summarizeActivityTime,
+  summarizeByGroup,
+  summarizeGameRecords,
+  summarizeRuns,
+  totalActivitySeconds,
+} from './stats';
+import type { ActivityTotals, GroupLevel, GroupSummary, RunsSummary, SkillVerdict } from './stats';
 import { describeError } from './util';
 
 type OverrideState = LevelOverride['state'] | null;
@@ -88,13 +100,22 @@ interface StatsData {
   summary: RunsSummary;
   skills: GroupSummary<SkillId>[];
   games: GroupSummary<MechanicId>[];
+  dictations: DictationRecord[];
+  colorings: ColoringRecord[];
+  usageDays: UsageDay[];
 }
 
 async function loadStats(profileId: string): Promise<StatsData> {
   const profile = await getProfile(profileId);
   if (!profile) throw new Error('Cet enfant est introuvable.');
 
-  const [runs, overrides] = await Promise.all([listRuns(profileId), listOverrides(profileId)]);
+  const [runs, overrides, dictations, colorings, usageDays] = await Promise.all([
+    listRuns(profileId),
+    listOverrides(profileId),
+    listDictations(profileId),
+    listColorings(profileId),
+    listUsage(profileId),
+  ]);
 
   const track = getTrackOrDefault(profile.trackId); // F11 : parcours inconnu → premier disponible
   const trackTitle = track?.title ?? profile.trackId;
@@ -130,7 +151,23 @@ async function loadStats(profileId: string): Promise<StatsData> {
     summary: summarizeRuns(runs),
     skills: summarizeByGroup(runs, groupLevels((l) => l.skill)),
     games: summarizeByGroup(runs, groupLevels((l) => l.mechanic)),
+    dictations,
+    colorings,
+    usageDays,
   };
+}
+
+/** Libellé d'une ligne du tableau « Temps par activité » (HUB.md §6.4). */
+function activityRowLabel(id: string): string {
+  if (id === 'map') return 'Carte';
+  if (id === 'hub') return 'Accueil';
+  if (id === 'total') return 'Total';
+  return GAMES.find((game) => game.id === id)?.parentLabel ?? id;
+}
+
+/** Secondes de `id` dans `totals` ; le total additionne toutes les activités (§5.5 : = Σ activeSeconds). */
+function activitySeconds(totals: ActivityTotals, id: string): number {
+  return id === 'total' ? totalActivitySeconds(totals) : (totals[id] ?? 0);
 }
 
 export function ChildStats(props: { profileId: string }) {
@@ -187,11 +224,29 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
-  const { profile, trackTitle, levels, summary, skills, games } = data;
+  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, usageDays } = data;
   const groups: Array<{ key: string; label: string; testId: string; summary: GroupSummary }> =
     groupBy === 'skill'
       ? skills.map((g) => ({ key: g.group, label: SKILL_LABELS[g.group], testId: `skill-${g.group}`, summary: g }))
       : games.map((g) => ({ key: g.group, label: MECHANIC_LABELS[g.group], testId: `game-${g.group}`, summary: g }));
+
+  // Cadre A8 : « Temps de jeu total » = niveaux (summary.playTimeMs) + Σ activeMs des parties de jeu.
+  const freeGamesActiveMs = [...dictations, ...colorings].reduce((sum, r) => sum + r.activeMs, 0);
+
+  const activityTime = summarizeActivityTime(usageDays, dayKey());
+  const visibleGames = new Set(visibleGameIds(profile));
+  // Lignes du tableau : la carte, puis les jeux visibles ou joués cette semaine, l'accueil, le total.
+  const activityGameIds = GAMES.filter(
+    (game) => visibleGames.has(game.id) || (activityTime.week[game.id] ?? 0) > 0,
+  ).map((game) => game.id);
+  const activityRowIds = ['map', ...activityGameIds, 'hub', 'total'];
+
+  // Une section par jeu visible ou ayant au moins une partie (arbitrage A7/A8, HUB.md §6.4).
+  const gameSections = GAMES.flatMap((game) => {
+    const records: readonly GameRecordBase[] = game.id === 'dictation' ? dictations : colorings;
+    if (!visibleGames.has(game.id) && records.length === 0) return [];
+    return [{ game, records }];
+  });
 
   return (
     <div className="pa-space">
@@ -216,10 +271,82 @@ export function ChildStats(props: { profileId: string }) {
           <span className="pa-stat__label">Réussite au 1er coup</span>
         </div>
         <div className="pa-stat">
-          <span className="pa-stat__value">{formatDuration(summary.playTimeMs)}</span>
+          <span className="pa-stat__value">{formatDuration(summary.playTimeMs + freeGamesActiveMs)}</span>
           <span className="pa-stat__label">Temps de jeu total</span>
         </div>
       </section>
+
+      <section className="pa-section" data-testid="activity-time">
+        <h2 className="pa-section__title">Temps par activité</h2>
+        <table className="pa-activity-table">
+          <thead>
+            <tr>
+              <th scope="col">Activité</th>
+              <th scope="col">Aujourd'hui</th>
+              <th scope="col">7 derniers jours</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activityRowIds.map((id) => (
+              <tr key={id} className={id === 'total' ? 'pa-activity-table__total' : undefined}>
+                <th scope="row">{activityRowLabel(id)}</th>
+                <td data-testid={`activity-${id}-today`}>
+                  {formatDuration(activitySeconds(activityTime.today, id) * 1000)}
+                </td>
+                <td data-testid={`activity-${id}-week`}>
+                  {formatDuration(activitySeconds(activityTime.week, id) * 1000)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      {gameSections.map(({ game, records }) => {
+        const gameSummary = summarizeGameRecords(records, Date.now());
+        return (
+          <section key={game.id} className="pa-section" data-testid={`game-stats-${game.id}`}>
+            <h2 className="pa-section__title">{game.parentLabel}</h2>
+            <dl className="pa-stat-grid">
+              <div className="pa-stat-grid__item">
+                <dt>Parties</dt>
+                <dd>{gameSummary.total}</dd>
+              </div>
+              <div className="pa-stat-grid__item">
+                <dt>Terminées</dt>
+                <dd>{gameSummary.completed}</dd>
+              </div>
+              <div className="pa-stat-grid__item">
+                <dt>Abandons</dt>
+                <dd>{gameSummary.abandoned}</dd>
+              </div>
+              <div className="pa-stat-grid__item">
+                <dt>Interruptions</dt>
+                <dd>{gameSummary.interrupted}</dd>
+              </div>
+              <div className="pa-stat-grid__item">
+                <dt>Temps de jeu</dt>
+                <dd>{formatDuration(gameSummary.activeMs)}</dd>
+              </div>
+              <div className="pa-stat-grid__item">
+                <dt>Jours joués (7 j)</dt>
+                <dd>{gameSummary.daysPlayedInWeek}</dd>
+              </div>
+              <div className="pa-stat-grid__item">
+                <dt>Dernière partie</dt>
+                <dd>{formatDateTime(gameSummary.lastPlayedAt)}</dd>
+              </div>
+            </dl>
+            {game.id === 'dictation' ? (
+              <DictationStats profile={profile} records={records as DictationRecord[]} />
+            ) : (
+              <ColoringStats profile={profile} records={records as ColoringRecord[]} />
+            )}
+          </section>
+        );
+      })}
+
+      <h2 className="pa-section__title">Carte du parcours</h2>
 
       <section className="pa-section" data-testid="skill-stats">
         <h2 className="pa-section__title">Points forts et points à travailler</h2>
@@ -381,6 +508,24 @@ export function ChildStats(props: { profileId: string }) {
           </li>
           <li>
             <strong>Temps de jeu</strong> : le temps passé activement à jouer les manches de ce niveau.
+          </li>
+          <li>
+            <strong>Temps par activité</strong> : le temps compté par les minuteurs, réparti par écran (Accueil,
+            Carte, Dictée, Coloriage), aujourd'hui et sur les 7 derniers jours. Le temps d'avant l'ajout des jeux
+            libres reste compté dans « Carte ».
+          </li>
+          <li>
+            Pour chaque jeu libre : <strong>Parties</strong> compte tous les lancements, y compris en cours.
+            <strong> Terminées</strong>, <strong>Abandons</strong> et <strong>Interruptions</strong> ont le même sens
+            que pour les niveaux. <strong>Temps de jeu</strong> ne compte que le jeu lui-même, pas les écrans de
+            choix : il est donc un peu plus petit que son temps dans le tableau ci-dessus.
+          </li>
+          <li>
+            <strong>Jours joués (7 jours)</strong> : le nombre de jours différents, cette semaine, où l'enfant a
+            lancé au moins une partie de ce jeu — un repère de régularité plutôt que de performance.
+          </li>
+          <li>
+            <strong>Dernière partie</strong> : la date de la partie la plus récente sur ce jeu.
           </li>
         </ul>
       </section>
