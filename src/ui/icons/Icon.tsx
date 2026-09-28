@@ -16,6 +16,7 @@ export type IconName =
   | 'star'
   | 'star-empty'
   | 'speaker'
+  | 'speaker-off'
   | 'check'
   | 'back'
   // Espace parent
@@ -140,6 +141,13 @@ const DRAWINGS: Record<IconName, () => JSX.Element> = {
       <path d="M9 19.5H15L23 12.5V35.5L15 28.5H9Z" fill="#6b4f3a" stroke="#6b4f3a" stroke-width="3" stroke-linejoin="round" />
       <path d="M29 18.5Q33 24 29 29.5" fill="none" stroke="#f59f00" stroke-width="3.6" stroke-linecap="round" />
       <path d="M34 13.5Q41.5 24 34 34.5" fill="none" stroke="#f59f00" stroke-width="3.6" stroke-linecap="round" />
+    </>
+  ),
+  // Le téléphone ne peut pas parler (dictée sans voix) : le même haut-parleur, barré, sans ondes.
+  'speaker-off': () => (
+    <>
+      <path d="M9 19.5H15L23 12.5V35.5L15 28.5H9Z" fill="#a6978a" stroke="#a6978a" stroke-width="3" stroke-linejoin="round" />
+      <path d="M29 18L39 30M39 18L29 30" fill="none" stroke="#e63946" stroke-width="3.6" stroke-linecap="round" />
     </>
   ),
   check: () => (
