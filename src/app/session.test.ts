@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeTime, remainingRatio, resumeOrCreateSession, shouldResumeSession } from './session';
+import { activityForRoute, computeTime, remainingRatio, resumeOrCreateSession, shouldResumeSession } from './session';
 import type { Profile, SessionState, UsageDay } from '../storage/types';
 
 function profile(sessionMinutes: number | null, dailyMinutes: number | null): Profile {
@@ -179,5 +179,27 @@ describe('resumeOrCreateSession (F3 : une session par enfant)', () => {
       activeSeconds: 0,
       lastActiveAt: now,
     });
+  });
+});
+
+describe('activityForRoute', () => {
+  it('hub → hub', () => {
+    expect(activityForRoute('hub')).toBe('hub');
+  });
+
+  it('map et play → map', () => {
+    expect(activityForRoute('map')).toBe('map');
+    expect(activityForRoute('play')).toBe('map');
+  });
+
+  it('une route de jeu → le jeu lui-même', () => {
+    expect(activityForRoute('dictation')).toBe('dictation');
+    expect(activityForRoute('coloring')).toBe('coloring');
+  });
+
+  it('les autres routes ne comptent pas', () => {
+    expect(activityForRoute('profiles')).toBeNull();
+    expect(activityForRoute('locked')).toBeNull();
+    expect(activityForRoute('parent')).toBeNull();
   });
 });

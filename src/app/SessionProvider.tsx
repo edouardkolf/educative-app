@@ -4,10 +4,10 @@ import { createContext } from 'preact';
 import type { ComponentChildren } from 'preact';
 import { useContext, useEffect, useRef, useState } from 'preact/hooks';
 import type { Route } from './routes';
-import { navigate } from './routes';
+import { isChildRoute, isSoftEndRoute, navigate } from './routes';
 import { useProfile } from './context';
-import { computeTime, remainingRatio as computeRemainingRatio, resumeOrCreateSession } from './session';
-import type { TimeStatus } from './session';
+import { activityForRoute, computeTime, remainingRatio as computeRemainingRatio, resumeOrCreateSession } from './session';
+import type { ActivityId, TimeStatus } from './session';
 import { addActiveSeconds, dayKey, getSettings, getUsage, updateSettings } from '../storage';
 import type { Profile, SessionState } from '../storage';
 
@@ -17,12 +17,12 @@ export interface SessionInfo extends TimeStatus {
   /** Miroir de `timeUp` en ref : à lire dans les callbacks différés (setTimeout) qui capturent un ancien rendu. */
   timeUpRef: { readonly current: TimeStatus['timeUp'] };
   /**
-   * F1 : fin douce RÉELLEMENT en cours (verrou déclenché pendant une partie, manche en cours pas
-   * encore terminée par LevelPlayer). Sert de garde-fou de route précis — jamais « un profil est en
+   * F1 : fin douce RÉELLEMENT en cours (verrou déclenché en partie ou en jeu, unité en cours — manche,
+   * mot, case — pas encore terminée). Sert de garde-fou de route précis — jamais « un profil est en
    * mémoire », qui reste vrai bien après la fin douce et laisserait un retour Android relancer une partie.
    */
   softEndActive: boolean;
-  /** À appeler par LevelPlayer dès qu'il bascule vers l'écran de fin (§8) : la fin douce est traitée. */
+  /** À appeler par LevelPlayer ou `useSoftEnd` dès que l'unité en cours est traitée (§8) : la fin douce est close. */
   clearSoftEnd: () => void;
 }
 
@@ -57,6 +57,8 @@ export function SessionProvider({ route, children }: { route: Route; children: C
   const lockedRef = useRef(false);
   const lastTickRef = useRef(Date.now());
   const timeUpRef = useRef<TimeStatus['timeUp']>(null);
+  /** Activité à laquelle imputer le temps actif (HUB.md §5.4, §6.1) : capturée au début de `flushElapsed`. */
+  const activityRef = useRef<ActivityId | null>(null);
 
   useEffect(() => {
     profileRef.current = profile;
@@ -74,23 +76,22 @@ export function SessionProvider({ route, children }: { route: Route; children: C
   async function triggerLock(reason: 'session' | 'daily', profileId: string) {
     if (lockedRef.current) return;
     lockedRef.current = true;
+    // `soft` est posé AVANT l'écriture du verrou : la garde de route (AppShell) lit `softEndActive`
+    // en continu, donc il ne doit jamais y avoir de fenêtre où elle verrait le verrou sans encore
+    // savoir que l'unité en cours (manche, mot, case) doit se terminer.
+    const soft = isSoftEndRoute(routeNameRef.current);
+    if (soft) setSoftEndActive(true);
     try {
       await updateSettings({ lock: { reason, profileId, lockedAt: Date.now() } });
     } catch (err) {
       console.error('updateSettings(lock) failed', err);
     }
-    // Hors partie : direction l'écran de fin tout de suite. En partie (route "play"), c'est
-    // LevelPlayer qui gère la fin douce (manche en cours) puis navigue lui-même : le drapeau
-    // `softEndActive` (F1) autorise la garde de route (AppShell) à laisser cette manche se terminer
-    // au lieu de couper la partie immédiatement.
-    if (routeNameRef.current === 'play') {
-      setSoftEndActive(true);
-    } else {
-      navigate({ name: 'locked' }, { replace: true });
-    }
+    // Hors partie et hors jeu : direction l'écran de fin tout de suite. En partie ou en jeu, c'est
+    // LevelPlayer (ou `useSoftEnd`) qui gère la fin douce (unité en cours) puis navigue lui-même.
+    if (!soft) navigate({ name: 'locked' }, { replace: true });
   }
 
-  /** F1 : LevelPlayer appelle ceci juste avant de naviguer vers l'écran de fin — la fin douce est traitée. */
+  /** F1 : LevelPlayer et `useSoftEnd` appellent ceci juste avant de naviguer vers l'écran de fin — la fin douce est traitée. */
   function clearSoftEnd() {
     setSoftEndActive(false);
   }
@@ -99,13 +100,16 @@ export function SessionProvider({ route, children }: { route: Route; children: C
    * F9 : ajoute au profil actif le temps actif écoulé depuis `lastTickRef`, borné à `MAX_TICK_SEC`
    * (pour ne pas compter une mise en veille comme du temps de jeu), AVANT toute réinitialisation de
    * `lastTickRef`. Partagée par la boucle de 5 s, le passage en arrière-plan et la synchro de route
-   * (carte ↔ partie) : ces trois points remettaient auparavant `lastTickRef` à `now` sans jamais
+   * (écrans de l'enfant : hub, carte, partie, jeux) : ces trois points remettaient auparavant `lastTickRef` à `now` sans jamais
    * reporter l'écart, sous-comptant jusqu'à quelques secondes de jeu actif à chaque fois.
    * `requireVisible: false` sert au relevé pris au passage en `hidden` : à cet instant précis
    * `document.visibilityState` vaut déjà « hidden », mais l'écart à reporter était bien du temps où
    * l'app était visible, donc il doit compter quand même.
    */
   async function flushElapsed(now: number, { requireVisible = true }: { requireVisible?: boolean } = {}) {
+    // Capturée en premier, de façon synchrone : l'activité à laquelle imputer l'écart est celle de
+    // l'écran quitté, pas celle déjà posée par la synchro de route qui a pu tourner avant cet `await`.
+    const activity = activityRef.current;
     const activeProfile = profileRef.current;
     const session = sessionRef.current;
     if (!activeProfile || !session || lockedRef.current || (requireVisible && document.visibilityState !== 'visible')) {
@@ -125,7 +129,7 @@ export function SessionProvider({ route, children }: { route: Route; children: C
     sessionsRef.current = nextSessions;
     try {
       const [usage] = await Promise.all([
-        addActiveSeconds(activeProfile.id, dayKey(), elapsed),
+        addActiveSeconds(activeProfile.id, dayKey(), elapsed, activity ?? undefined),
         updateSettings({ sessions: nextSessions }),
       ]);
       const result = computeTime(activeProfile, usage, updatedSession);
@@ -136,23 +140,27 @@ export function SessionProvider({ route, children }: { route: Route; children: C
     }
   }
 
-  // À la sélection d'un profil et à chaque entrée sur la carte/en partie : reprend la session en
+  // À la sélection d'un profil et à chaque entrée sur un écran de l'enfant : reprend la session en
   // cours de CET enfant (shouldResumeSession) ou en ouvre une nouvelle, et resynchronise depuis le
   // stockage — un rechargement ou l'écran de fin (espace parent) a pu changer le verrou ou le temps
   // restant pendant que ce composant ne comptait pas.
   useEffect(() => {
     let cancelled = false;
-    if (!profile || (route.name !== 'map' && route.name !== 'play')) {
+    setSoftEndActive(false); // F1 : une fin douce ne survit jamais à un changement d'écran.
+    if (!profile || !isChildRoute(route.name)) {
       sessionRef.current = null;
       lockedRef.current = false;
-      setSoftEndActive(false); // F1 : hors carte/partie, plus de fin douce à laisser continuer.
+      activityRef.current = null;
       applyStatus(EMPTY_STATUS, null);
       return undefined;
     }
     (async () => {
-      // F9 : un changement de route carte ↔ partie (même profil) ne doit pas faire perdre l'écart
-      // encore en attente depuis le dernier relevé de la boucle de 5 s.
-      await flushElapsed(Date.now(), { requireVisible: false });
+      // F9 : un changement de route (hub, carte, partie, jeu) ne doit pas faire perdre l'écart encore
+      // en attente depuis le dernier relevé de la boucle de 5 s. L'écart est imputé à l'activité
+      // quittée (capturée par `flushElapsed` avant qu'on ne pose la nouvelle ci-dessous).
+      const flushing = flushElapsed(Date.now(), { requireVisible: false });
+      activityRef.current = activityForRoute(route.name);
+      await flushing;
       if (cancelled) return;
       const settings = await getSettings();
       if (cancelled) return;
