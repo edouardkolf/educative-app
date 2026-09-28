@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { computeLevelStates, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelState, MechanicId } from '../engine/types';
 import { listOverrides, listRuns, saveProfile } from '../storage';
-import { navigate } from '../app/routes';
+import { navigate, returnTo } from '../app/routes';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
 import { StarRow } from '../ui/StarRow';
-import { LongPressButton } from '../ui/LongPressButton';
 import { Emoji } from '../ui/Emoji';
 import { Icon } from '../ui/icons/Icon';
+import { IconButton } from '../ui/IconButton';
 import { MechanicIcon } from '../ui/icons/MechanicIcon';
+import { TimeRing } from '../ui/TimeRing';
 import { MapScenery } from './map/MapScenery';
 import {
   NODE_SIZE,
@@ -51,30 +52,6 @@ interface WorldArrival {
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-}
-
-/** Indicateur discret (§8) : un soleil entouré d'un anneau qui se vide selon le temps restant. */
-function TimeRing({ ratio }: { ratio: number }) {
-  const radius = 16;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - Math.max(0, Math.min(1, ratio)));
-  return (
-    <div class="map-time-ring" aria-hidden="true">
-      <svg class="map-time-ring__ring" viewBox="0 0 40 40" width={40} height={40}>
-        <circle class="map-time-ring__track" cx="20" cy="20" r={radius} />
-        <circle
-          class="map-time-ring__progress"
-          cx="20"
-          cy="20"
-          r={radius}
-          style={{ strokeDasharray: circumference, strokeDashoffset: offset }}
-        />
-      </svg>
-      <span class="map-time-ring__sun">
-        <Emoji char="☀️" />
-      </span>
-    </div>
-  );
 }
 
 export function SagaMap() {
@@ -224,16 +201,6 @@ export function SagaMap() {
     setArrival((cur) => (cur ? { ...cur, phase: 'banner' } : cur));
   };
 
-  const backToProfiles = () => {
-    setProfile(null);
-    navigate({ name: 'profiles' });
-  };
-
-  // Raccourci parent : même geste que sur l'écran des profils (appui long de 2 s, jamais un tap bref).
-  // Le profil actif n'est pas vidé ici (la garde de route renverrait aussitôt vers les profils) :
-  // l'espace parent ramène toujours aux profils, qui le re-sélectionnent.
-  const openParent = () => navigate({ name: 'parent', path: [] });
-
   const tapLocked = (levelId: string) => {
     setShakeId(levelId);
     window.setTimeout(() => setShakeId((cur) => (cur === levelId ? null : cur)), 400);
@@ -252,19 +219,11 @@ export function SagaMap() {
 
   return (
     <div class="screen screen--map">
-      <button type="button" class="map-back-avatar" onClick={backToProfiles} aria-label="Retour aux profils">
-        <Emoji char={profile.avatar} />
-      </button>
-      <LongPressButton
-        class="lock-button"
-        durationMs={2000}
-        size={56}
-        onLongPress={openParent}
-        aria-label="Espace parent"
-        data-testid="parent-access"
-      >
-        <Icon name="lock" size={34} />
-      </LongPressButton>
+      <div class="map-home">
+        <IconButton size={56} onClick={() => returnTo('hub')} aria-label="Retour à l'accueil" data-testid="to-hub">
+          <Icon name="home" size={36} />
+        </IconButton>
+      </div>
       {remainingRatio !== null && <TimeRing ratio={remainingRatio} />}
       {(arrival?.phase === 'travel' || hop) && (
         <div class="map-travel-shield" onClick={skipTravel} aria-hidden="true" data-testid="map-travel-shield" />

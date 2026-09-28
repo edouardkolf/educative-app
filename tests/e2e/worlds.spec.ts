@@ -2,6 +2,7 @@
 // La progression est injectée directement dans IndexedDB : rejouer 16 niveaux n'apporterait rien ici.
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
+import { backToHub, enterMap } from './nav';
 
 const PARENT_PIN = '1234';
 const SHOTS_DIR = '/tmp/claude-0/-home-user-educative-app/007564ed-74b0-55f0-83b0-41f952e2f0cb/scratchpad/shots';
@@ -88,7 +89,7 @@ test('arrivée dans la mer : trajet de l’avatar, panneau, puis plus jamais', a
   const firstSeaLevel = TRACK.levels[LEVELS_PER_WORLD]!;
 
   await onboardWithChild(page, 'Lou');
-  await page.getByRole('button', { name: /Lou/ }).click();
+  await enterMap(page, 'Lou');
   // Première visite : calibrage silencieux sur la forêt, aucune fête.
   await expect(page.locator(`[data-level="${TRACK.levels[0]}"]`)).toHaveAttribute('data-status', 'unlocked');
   await page.waitForTimeout(300);
@@ -96,7 +97,7 @@ test('arrivée dans la mer : trajet de l’avatar, panneau, puis plus jamais', a
 
   await completeFirstLevels(page, LEVELS_PER_WORLD);
   await page.reload();
-  await page.getByRole('button', { name: /Lou/ }).click();
+  await enterMap(page, 'Lou');
 
   // Trajet puis panneau de la mer.
   await expect(page.locator('.map-traveller')).toBeVisible();
@@ -113,9 +114,13 @@ test('arrivée dans la mer : trajet de l’avatar, panneau, puis plus jamais', a
   await expect(node).toHaveAttribute('data-world', 'sea');
   await expect(node.locator('.map-node__avatar')).toBeVisible();
 
+  // La tuile carte du hub montre elle aussi le monde déjà fêté (HUB.md §2.1, §3 règle 4).
+  await backToHub(page);
+  await expect(page.getByTestId('hub-tile-map')).toHaveAttribute('data-world', 'sea');
+
   // Déjà vue : ne se rejoue pas.
   await page.reload();
-  await page.getByRole('button', { name: /Lou/ }).click();
+  await enterMap(page, 'Lou');
   await expect(node).toBeVisible();
   await page.waitForTimeout(1500);
   await expect(page.getByTestId('world-banner')).toHaveCount(0);

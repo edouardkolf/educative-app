@@ -6,6 +6,7 @@
 // progression repose sur `requestAnimationFrame`, également piloté par l'horloge simulée une fois installée).
 // Aides et sélecteurs repris de vertical-slice.spec.ts (non exportés de ce fichier).
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { enterMap, openMap, profileCard } from './nav';
 
 const PARENT_PIN = '1234';
 
@@ -58,14 +59,6 @@ async function onboardWithChild(page: Page, name: string): Promise<void> {
   await expect(page.getByText('Commencer : espace parent')).toHaveCount(0);
 }
 
-function profileCard(page: Page, name: string): Locator {
-  return page.getByRole('button', { name: new RegExp(name) });
-}
-
-async function chooseProfile(page: Page, name: string): Promise<void> {
-  await profileCard(page, name).click();
-}
-
 function mapNode(page: Page, levelId: string): Locator {
   return page.locator(`[data-level="${levelId}"]`);
 }
@@ -111,7 +104,7 @@ test('minuteur de session sur la carte : écran de fin, persiste au rechargement
   test.slow();
   await page.clock.install();
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
 
   await page.clock.runFor('15:05'); // dépasse les 15 min de session par défaut (fixées à la création de l'enfant)
@@ -124,7 +117,8 @@ test('minuteur de session sur la carte : écran de fin, persiste au rechargement
 
   await unlockAndTap(page, 'grant-5');
 
-  await expect(mapNode(page, 'ms-suite-01')).toBeVisible(); // déverrouillé, retour sur la carte
+  await expect(page.getByTestId('hub')).toBeVisible(); // déverrouillé, retour au hub (et non plus la carte)
+  await openMap(page);
   await openLevel(page, 'ms-suite-01');
   await expect(currentRound(page)).toBeVisible(); // l'enfant peut effectivement rejouer
 });
@@ -135,7 +129,7 @@ test('minuteur pendant une partie : la manche se termine puis écran de fin, com
   test.slow();
   await page.clock.install();
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   const round = currentRound(page);
   await expect(round).toBeVisible();
@@ -183,7 +177,7 @@ test('F1 : le bouton retour Android après l\'écran de fin reste bloqué, aucun
   test.slow();
   await page.clock.install();
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await expect(currentRound(page)).toBeVisible();
 
@@ -227,7 +221,7 @@ test('quota du jour épuisé : le profil apparaît estompé et non sélectionnab
   test.slow();
   await page.clock.install();
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
 
   // Une session de 15 min n'épuise que le minuteur de session : il en faut deux pour atteindre le
@@ -239,7 +233,7 @@ test('quota du jour épuisé : le profil apparaît estompé et non sélectionnab
   await expect(profileCard(page, 'Lina')).toBeVisible();
   await expect(profileCard(page, 'Lina')).not.toHaveAttribute('data-exhausted', 'true'); // quota pas encore épuisé
 
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
   await page.clock.runFor('15:05');
   await expect(page.getByTestId('lock-parent')).toBeVisible();
@@ -253,6 +247,6 @@ test('quota du jour épuisé : le profil apparaît estompé et non sélectionnab
   // Le taper déclenche un petit tremblement, rien d'autre (pas de retour sur la carte).
   await card.click();
   await expect(card).toHaveClass(/is-shaking/);
-  await expect(page).not.toHaveURL(/#\/map$/);
+  await expect(page).not.toHaveURL(/#\/(map|hub)$/);
   await expect(profileCard(page, 'Lina')).toBeVisible();
 });

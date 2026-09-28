@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { dayKey, getUsage, listProfiles } from '../storage';
 import type { Profile } from '../storage/types';
-import { navigate } from '../app/routes';
+import { markHistoryAnchor, navigate } from '../app/routes';
 import { useProfile } from '../app/context';
 import { computeTime } from '../app/session';
 import { applyPendingUpdateIfAny } from '../app/updates';
@@ -30,6 +30,11 @@ export function ProfilePicker() {
   // F12 : moment sûr pour appliquer une mise à jour de la PWA en attente (aucune partie en cours).
   useEffect(() => {
     applyPendingUpdateIfAny();
+  }, []);
+
+  // Retient l'entrée d'historique des profils : une nouvelle séance d'enfant commence (HUB.md §4.1).
+  useEffect(() => {
+    markHistoryAnchor('profiles');
   }, []);
 
   useEffect(() => {
@@ -70,7 +75,7 @@ export function ProfilePicker() {
       return;
     }
     setProfile(profile);
-    navigate({ name: 'map' });
+    navigate({ name: 'hub' });
   };
 
   if (profiles === null) {

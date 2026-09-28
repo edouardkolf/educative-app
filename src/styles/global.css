@@ -379,7 +379,9 @@ svg {
   overflow: hidden;
 }
 
-.map-back-avatar {
+/* Avatar du hub (docs/specs/HUB.md §2.1) : ramène aux profils. Auparavant sur la carte
+   (.map-back-avatar) ; le picto et la position n'ont pas changé, seul son écran a bougé. */
+.hub-avatar {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 12px);
   left: calc(env(safe-area-inset-left, 0px) + 12px);
@@ -394,10 +396,19 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: pop 360ms ease-out;
 }
 
-.map-back-avatar:active {
+.hub-avatar:active {
   transform: scale(0.94);
+}
+
+/* Maison de la carte (ramène au hub) : même emplacement que l'ancien avatar. */
+.map-home {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: calc(env(safe-area-inset-left, 0px) + 12px);
+  z-index: 10;
 }
 
 .map-scroll {
@@ -540,13 +551,13 @@ svg {
   }
 }
 
-/* ---------- Indicateur de temps restant (carte) ---------- */
+/* ---------- Indicateur de temps restant (hub et carte seulement, HUB.md §2.1) ---------- */
 
-.map-time-ring {
+.time-ring {
   position: absolute;
+  /* Zone sûre + 20px : le centre de l'ancien cadenas, retiré du hub et de la carte (HUB.md §10.1 Q1). */
   top: calc(env(safe-area-inset-top, 0px) + 20px);
-  /* À gauche du cadenas parent (56px + marge). */
-  right: calc(env(safe-area-inset-right, 0px) + 80px);
+  right: calc(env(safe-area-inset-right, 0px) + 20px);
   z-index: 10;
   width: 40px;
   height: 40px;
@@ -555,19 +566,19 @@ svg {
   justify-content: center;
 }
 
-.map-time-ring__ring {
+.time-ring__ring {
   position: absolute;
   inset: 0;
   transform: rotate(-90deg);
 }
 
-.map-time-ring__track {
+.time-ring__track {
   fill: none;
   stroke: rgba(61, 44, 30, 0.15);
   stroke-width: 3;
 }
 
-.map-time-ring__progress {
+.time-ring__progress {
   fill: none;
   stroke: var(--accent);
   stroke-width: 3;
@@ -575,7 +586,7 @@ svg {
   transition: stroke-dashoffset 1s linear;
 }
 
-.map-time-ring__sun {
+.time-ring__sun {
   position: relative;
   font-size: 18px;
   filter: drop-shadow(0 1px 2px rgba(61, 44, 30, 0.3));

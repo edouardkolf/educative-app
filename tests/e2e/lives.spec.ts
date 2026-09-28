@@ -2,6 +2,7 @@
 // d'échec (😢) avec rejouer / carte, sans relance automatique ; le niveau suivant reste verrouillé.
 // Aides et sélecteurs repris de session.spec.ts (non exportés de ce fichier).
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { enterMap } from './nav';
 
 const PARENT_PIN = '1234';
 
@@ -54,14 +55,6 @@ async function onboardWithChild(page: Page, name: string): Promise<void> {
   await expect(page.getByText('Commencer : espace parent')).toHaveCount(0);
 }
 
-function profileCard(page: Page, name: string): Locator {
-  return page.getByRole('button', { name: new RegExp(name) });
-}
-
-async function chooseProfile(page: Page, name: string): Promise<void> {
-  await profileCard(page, name).click();
-}
-
 function mapNode(page: Page, levelId: string): Locator {
   return page.locator(`[data-level="${levelId}"]`);
 }
@@ -102,7 +95,7 @@ test('plus de vies : écran triste, rejouer relance avec toutes les vies, la car
   page,
 }) => {
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await expect(currentRound(page)).toBeVisible();
 
@@ -131,7 +124,7 @@ test('plus de vies : écran triste, rejouer relance avec toutes les vies, la car
 
 test('une manche ratée ne coûte qu’une vie, et terminer avec des vies restantes donne les étoiles', async ({ page }) => {
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await expect(currentRound(page)).toBeVisible();
 

@@ -2,6 +2,7 @@
 // Helpers de navigation copiés de vertical-slice.spec.ts (non exportés là-bas).
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { backToProfiles, enterMap, profileCard } from './nav';
 
 const PARENT_PIN = '1234';
 
@@ -64,24 +65,12 @@ async function addChild(
   await expect(page.getByRole('heading', { name: 'Espace parent' })).toBeVisible();
 }
 
-function profileCard(page: Page, name: string): Locator {
-  return page.getByRole('button', { name: new RegExp(name) });
-}
-
-async function chooseProfile(page: Page, name: string): Promise<void> {
-  await profileCard(page, name).click();
-}
-
 function mapNode(page: Page, levelId: string): Locator {
   return page.locator(`[data-level="${levelId}"]`);
 }
 
 async function openLevel(page: Page, levelId: string): Promise<void> {
   await mapNode(page, levelId).click();
-}
-
-async function backToProfiles(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Retour aux profils' }).click();
 }
 
 async function longPress(page: Page, locator: Locator, ms: number): Promise<void> {
@@ -171,7 +160,7 @@ test('verrouiller puis débloquer un niveau change la carte de l’enfant', asyn
   await addChild(page, 'Yuna');
   await page.getByTestId('back-to-game').click();
 
-  await chooseProfile(page, 'Yuna');
+  await enterMap(page, 'Yuna');
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'unlocked');
   await backToProfiles(page);
 
@@ -191,7 +180,7 @@ test('verrouiller puis débloquer un niveau change la carte de l’enfant', asyn
   // ---- … et sur la carte du parcours vue par l'enfant ----
   await page.getByRole('button', { name: 'Retour aux enfants' }).click();
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Yuna');
+  await enterMap(page, 'Yuna');
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'locked');
 
   // ---- Débloquer explicitement : de nouveau recalculé aussitôt, des deux côtés ----
@@ -204,7 +193,7 @@ test('verrouiller puis débloquer un niveau change la carte de l’enfant', asyn
 
   await page.getByRole('button', { name: 'Retour aux enfants' }).click();
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Yuna');
+  await enterMap(page, 'Yuna');
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'unlocked');
 });
 
@@ -233,7 +222,7 @@ test('export puis import dans un contexte vierge restaure l’enfant et ses stat
     await addChild(pageA, 'Lina');
     await pageA.getByTestId('back-to-game').click();
 
-    await chooseProfile(pageA, 'Lina');
+    await enterMap(pageA, 'Lina');
     await openLevel(pageA, 'ms-suite-01');
     await playPerfectly(pageA, 4); // ms-suite-01.json : rounds = 4
     await waitForLevelEndButtons(pageA);
@@ -279,7 +268,7 @@ test('export puis import dans un contexte vierge restaure l’enfant et ses stat
       // La progression est recalculée à partir des parties importées : la carte le confirme aussi.
       await pageB.getByRole('button', { name: 'Retour aux enfants' }).click();
       await pageB.getByTestId('back-to-game').click();
-      await chooseProfile(pageB, 'Lina');
+      await enterMap(pageB, 'Lina');
       await expect(mapNode(pageB, 'ms-suite-01')).toHaveAttribute('data-status', 'completed');
     } finally {
       await contextB.close();
@@ -334,21 +323,23 @@ test('la suppression d’un enfant le retire du tableau de bord', async ({ page 
   await expect(page.getByText("Aucun enfant pour l'instant.")).toBeVisible();
 });
 
-// ==================== 7. Raccourci parent depuis la carte ====================
+// ==================== 7. Aucun raccourci parent hors des profils ====================
 
-test('le cadenas de la carte ouvre l’espace parent (appui long + code)', async ({ page }) => {
+test('ni le hub ni la carte n’ont de cadenas parent (accès uniquement depuis les profils, HUB.md §3.1)', async ({
+  page,
+}) => {
   await createParentCode(page);
   await addChild(page, 'Lina');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Lina');
-  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
+  await expect(page.getByTestId('parent-access')).toBeVisible();
 
-  // Un tap bref ne fait rien.
-  await page.getByTestId('parent-access').click();
-  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
+  await profileCard(page, 'Lina').click();
+  await expect(page.getByTestId('hub')).toBeVisible();
+  await expect(page.getByTestId('parent-access')).toHaveCount(0);
 
-  await openParentDashboard(page);
-  await expect(page.getByText('Lina')).toBeVisible();
+  await page.getByTestId('hub-tile-map').click();
+  await expect(page.locator('.screen--map')).toBeVisible();
+  await expect(page.getByTestId('parent-access')).toHaveCount(0);
 });
 
 // ==================== 8. Position du cadenas ====================
@@ -361,13 +352,9 @@ async function expectTopRight(page: Page, locator: Locator): Promise<void> {
   expect(viewport.width - (box.x + box.width)).toBeLessThan(40);
 }
 
-test('le cadenas parent est ancré en haut à droite (profils et carte)', async ({ page }) => {
+test('le cadenas parent est ancré en haut à droite (écran profils)', async ({ page }) => {
   await createParentCode(page);
   await addChild(page, 'Lina');
   await page.getByTestId('back-to-game').click();
-  await expectTopRight(page, page.getByTestId('parent-access'));
-
-  await chooseProfile(page, 'Lina');
-  await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
   await expectTopRight(page, page.getByTestId('parent-access'));
 });

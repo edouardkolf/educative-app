@@ -2,7 +2,7 @@
 // Bloquant même après rechargement (settings.lock persisté). Coin haut droit : appui long 2 s sur
 // le cadenas → code parent (PinGate) → panneau parent (+5 min / +15 min / Terminer).
 import { useEffect, useState } from 'preact/hooks';
-import { navigate } from '../app/routes';
+import { navigate, returnTo } from '../app/routes';
 import { useProfile } from '../app/context';
 import { computeTime } from '../app/session';
 import { getProfile, getSettings, getUsage, grantExtraMinutes, updateSettings, dayKey } from '../storage';
@@ -98,7 +98,7 @@ export function LockScreen() {
       await updateSettings({ lock: null, sessions: nextSessions });
       const fresh = await getProfile(profile.id);
       if (fresh) setProfile(fresh);
-      navigate({ name: 'map' });
+      returnTo('hub');
     } catch (err) {
       console.error('grant (écran de fin) failed', err);
     } finally {

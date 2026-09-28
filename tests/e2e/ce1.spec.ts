@@ -4,6 +4,7 @@
 // docs/ARCHITECTURE.md §8-9, src/mechanics/**). Aides de navigation copiées de parent.spec.ts /
 // mechanics.spec.ts (même convention : non partagées entre fichiers).
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { enterMap } from './nav';
 
 const PARENT_PIN = '1234';
 const SHOTS_DIR = 'test-results';
@@ -63,12 +64,9 @@ function mapNode(page: Page, levelId: string): Locator {
   return page.locator(`[data-level="${levelId}"]`);
 }
 
-function profileCard(page: Page, name: string): Locator {
-  return page.getByRole('button', { name: new RegExp(name) });
-}
-
+/** Profils → hub → carte : le hub garde le profil (§4.1 de HUB.md). */
 async function chooseProfile(page: Page, name: string): Promise<void> {
-  await profileCard(page, name).click();
+  await enterMap(page, name);
   await expect(page.locator('[data-level]').first()).toBeVisible(); // la carte a remplacé l'écran des profils
 }
 
@@ -221,7 +219,6 @@ test('ce1-add-01 (calc, choix) : une manche jusqu’aux étoiles, sans défileme
 test('ce1-add-03 (calc, pavé) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Noa');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Noa');
   await unlockLevel(page, 'Noa', 'ce1-add-03');
   await chooseProfile(page, 'Noa');
   await openLevelHash(page, 'ce1-add-03');
@@ -240,7 +237,6 @@ test('ce1-add-03 (calc, pavé) : une manche jusqu’aux étoiles, sans défileme
 test('ce1-compare-01 (compare) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Lina');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Lina');
   await unlockLevel(page, 'Lina', 'ce1-compare-01');
   await chooseProfile(page, 'Lina');
   await openLevelHash(page, 'ce1-compare-01');
@@ -259,7 +255,6 @@ test('ce1-compare-01 (compare) : une manche jusqu’aux étoiles, sans défileme
 test('ce1-mots-s1-1 (spelling, pick) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Zoé');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Zoé');
   await unlockLevel(page, 'Zoé', 'ce1-mots-s1-1');
   await chooseProfile(page, 'Zoé');
   await openLevelHash(page, 'ce1-mots-s1-1');
@@ -278,7 +273,6 @@ test('ce1-mots-s1-1 (spelling, pick) : une manche jusqu’aux étoiles, sans dé
 test('ce1-mots-s1-2 (spelling, lettres manquantes) : une manche jusqu’aux étoiles, sans défilement horizontal', async ({ page }) => {
   await onboardWithCe1Child(page, 'Noé');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Noé');
   await unlockLevel(page, 'Noé', 'ce1-mots-s1-2');
   await chooseProfile(page, 'Noé');
   await openLevelHash(page, 'ce1-mots-s1-2');
@@ -309,7 +303,6 @@ test('ce1-mots-s1-2 (spelling, lettres manquantes) : une manche jusqu’aux éto
 test('ce1-lire-01 (Lis et montre) : les images arrivent après le texte, une manche jusqu’aux étoiles', async ({ page }) => {
   await onboardWithCe1Child(page, 'Léa');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Léa');
   await unlockLevel(page, 'Léa', 'ce1-lire-01');
   await chooseProfile(page, 'Léa');
   await openLevelHash(page, 'ce1-lire-01');
@@ -334,7 +327,6 @@ test('ce1-lire-07 (Lis et montre, 2 phrases) : 4 images lisibles, sans défileme
   await page.setViewportSize({ width: 360, height: 640 });
   await onboardWithCe1Child(page, 'Lou');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Lou');
   await unlockLevel(page, 'Lou', 'ce1-lire-07');
   await chooseProfile(page, 'Lou');
   await openLevelHash(page, 'ce1-lire-07');
@@ -359,7 +351,6 @@ test('ce1-suite-12 (suite de nombres, 3 chiffres) : les nombres tiennent dans le
   await page.setViewportSize({ width: 360, height: 640 });
   await onboardWithCe1Child(page, 'Ana');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Ana');
   await unlockLevel(page, 'Ana', 'ce1-suite-12');
   await chooseProfile(page, 'Ana');
   await openLevelHash(page, 'ce1-suite-12');
@@ -384,7 +375,6 @@ test('ce1-suite-12 (suite de nombres, 3 chiffres) : les nombres tiennent dans le
 test('ce1-tables-01 : le quadrillage n’apparaît qu’après une mauvaise réponse', async ({ page }) => {
   await onboardWithCe1Child(page, 'Tom');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Tom');
   await unlockLevel(page, 'Tom', 'ce1-tables-01');
   await chooseProfile(page, 'Tom');
   await openLevelHash(page, 'ce1-tables-01');
@@ -407,7 +397,6 @@ test('ce1-tables-01 : le quadrillage n’apparaît qu’après une mauvaise rép
 test('ce1-add-03 (pavé) : un mauvais nombre validé ne fait pas avancer la manche, la bonne réponse passe', async ({ page }) => {
   await onboardWithCe1Child(page, 'Léo');
   await page.getByTestId('back-to-game').click();
-  await chooseProfile(page, 'Léo');
   await unlockLevel(page, 'Léo', 'ce1-add-03');
   await chooseProfile(page, 'Léo');
   await openLevelHash(page, 'ce1-add-03');

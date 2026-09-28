@@ -6,6 +6,7 @@
 // Aides de navigation copiées de vertical-slice.spec.ts (même convention : non partagées entre fichiers).
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page, type Locator } from '@playwright/test';
+import { backToProfiles, enterMap } from './nav';
 
 const PARENT_PIN = '1234';
 const SHOTS_DIR = '/tmp/claude-0/-home-user-educative-app/007564ed-74b0-55f0-83b0-41f952e2f0cb/scratchpad/shots';
@@ -100,10 +101,6 @@ function mapNode(page: Page, levelId: string): Locator {
 
 async function openLevel(page: Page, levelId: string): Promise<void> {
   await mapNode(page, levelId).click();
-}
-
-async function backToProfiles(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Retour aux profils' }).click();
 }
 
 async function longPress(page: Page, locator: Locator, ms: number): Promise<void> {
@@ -435,7 +432,7 @@ test('ms-suite-07 : trou au milieu d\'une suite AB', async ({ page }) => {
 test('progression sur la carte à 32 niveaux et tableau de bord parent', async ({ page }) => {
   test.slow();
   await onboardWithChild(page, 'Yanis', { sessionMinutes: '', dailyMinutes: '' });
-  await chooseProfile(page, 'Yanis');
+  await enterMap(page, 'Yanis');
 
   // Réussit les 3 premiers niveaux dans l'ordre (une mécanique de chacune) : la carte montre une
   // vraie progression avant la capture ("quelques niveaux réussis").
@@ -480,7 +477,7 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   test.slow();
   await page.clock.install(); // avant page.goto('/') : voir session.spec.ts pour l'explication complète
   await onboardWithChild(page, 'Suzon'); // limites par défaut (session 15 min) : on veut justement l'atteindre
-  await chooseProfile(page, 'Suzon');
+  await enterMap(page, 'Suzon');
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
 
   await page.clock.runFor('15:05'); // dépasse les 15 min de session par défaut

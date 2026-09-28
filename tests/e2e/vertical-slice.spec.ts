@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { EXPORT_FORMAT, type ExportBundle } from '../../src/storage/types';
+import { backToProfiles, enterMap, profileCard } from './nav';
 
 const PARENT_PIN = '1234';
 const SHOTS_DIR = '/tmp/claude-0/-home-user-educative-app/007564ed-74b0-55f0-83b0-41f952e2f0cb/scratchpad/shots';
@@ -84,24 +85,12 @@ async function onboardWithChild(page: Page, name: string): Promise<void> {
   await expect(page.getByText('Commencer : espace parent')).toHaveCount(0);
 }
 
-function profileCard(page: Page, name: string): Locator {
-  return page.getByRole('button', { name: new RegExp(name) });
-}
-
-async function chooseProfile(page: Page, name: string): Promise<void> {
-  await profileCard(page, name).click();
-}
-
 function mapNode(page: Page, levelId: string): Locator {
   return page.locator(`[data-level="${levelId}"]`);
 }
 
 async function openLevel(page: Page, levelId: string): Promise<void> {
   await mapNode(page, levelId).click();
-}
-
-async function backToProfiles(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Retour aux profils' }).click();
 }
 
 async function longPress(page: Page, locator: Locator, ms: number): Promise<void> {
@@ -202,7 +191,7 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
   test.slow(); // plusieurs niveaux joués + animations + appui long : plus que les 30 s par défaut.
 
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
 
   // ---- Carte : ms-suite-01 courant/débloqué, le 2e niveau (lu depuis content/tracks/ms.json) verrouillé ----
   await expect(mapNode(page, 'ms-suite-01')).toHaveAttribute('data-status', 'unlocked');
@@ -329,7 +318,7 @@ test('tranche verticale complète : jeu, étoiles, stats et export', async ({ pa
 
 test('« Suivant » : l’avatar avance sur la carte puis le niveau suivant s’ouvre', async ({ page }) => {
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await expect(page.getByTestId('world-backdrop')).toHaveAttribute('data-world', 'forest');
   await playPerfectly(page, 4);
@@ -350,7 +339,7 @@ test('« Suivant » : l’avatar avance sur la carte puis le niveau suivant s’
 
 test('le bouton retour Android pendant une partie compte comme abandon', async ({ page }) => {
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await expect(currentRound(page)).toBeVisible();
 
@@ -370,7 +359,7 @@ test('le bouton retour Android pendant une partie compte comme abandon', async (
 
 test('le profil et les étoiles survivent à un rechargement', async ({ page }) => {
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await playPerfectly(page, 4);
   await waitForLevelEndButtons(page);
@@ -382,7 +371,7 @@ test('le profil et les étoiles survivent à un rechargement', async ({ page }) 
   // Le profil actif n'est pas persisté (état en mémoire) : on revient à l'écran profils, où Lina
   // doit toujours apparaître — c'est la persistance qui compte, pas la route.
   await expect(profileCard(page, 'Lina')).toBeVisible();
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   const node = mapNode(page, 'ms-suite-01');
   await expect(node).toHaveAttribute('data-status', 'completed');
   await expect(node.locator('.star-row__star.is-filled')).toHaveCount(3);
@@ -392,7 +381,7 @@ test('le profil et les étoiles survivent à un rechargement', async ({ page }) 
 
 test('une app fermée pendant une partie compte comme abandon au redémarrage', async ({ page }) => {
   await onboardWithChild(page, 'Lina');
-  await chooseProfile(page, 'Lina');
+  await enterMap(page, 'Lina');
   await openLevel(page, 'ms-suite-01');
   await answerCorrectly(page); // joue 1 manche jusqu'au bout
 
