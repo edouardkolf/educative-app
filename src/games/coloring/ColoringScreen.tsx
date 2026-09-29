@@ -9,7 +9,7 @@ import { returnTo } from '../../app/routes';
 import { IconButton } from '../../ui/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 import { TutorialHand } from '../../ui/TutorialHand';
-import { playBoing, playDing, playDrain, playFanfare, playPour, playStar, playTap } from '../../ui/sound';
+import { playBoing, playBubble, playDing, playDrain, playFanfare, playPour, playStar, playTap } from '../../ui/sound';
 import { recipeFor } from '../../mechanics/color-mix/generate';
 import { DROP_D } from '../../mechanics/color-mix/parts';
 import { COLOR_HEX } from '../../ui/palette';
@@ -25,6 +25,7 @@ import {
   type PaintAttempt,
 } from '../../storage/colorings';
 import type { ColoringTier } from '../../storage/colorings';
+import type { GameEndReason } from '../../storage/types';
 import { DRAWINGS, findDrawing } from './catalog';
 import { DETAIL_FOR_TIER, type CodeSymbol, type Detail, type Drawing } from './model';
 import { applyPaint, helpFor, isComplete, stateFromRecord } from './rules';
@@ -48,6 +49,18 @@ const HINT_MS = 2500;
 const CELEBRATE_FIGURE_MS = 2600;
 const CELEBRATE_TOTAL_MS = 3600;
 const CELEBRATE_TOTAL_REDUCED_MS = 1200;
+const FLASK_PULSE_MS = 1200;
+
+/** Partie d'un dessin en cours d'enregistrement ; une par dessin commencé ou repris. */
+interface RecordSlot {
+  /** Arrive quand la création, mise en file au premier essai, est faite. */
+  id: string | null;
+  /** Close (sortie, fin douce) : plus rien ne s'y écrit, aucune partie n'est plus créée. */
+  closed: boolean;
+}
+
+/** Ce qui arrête le temps actif : page cachée, ou frigo ouvert pendant la peinture (§5.1). */
+type PauseReason = 'hidden' | 'fridge';
 
 interface Session {
   recordId: string | null;
@@ -106,17 +119,20 @@ export function ColoringScreen() {
   const [drag, setDrag] = useState<{ x: number; y: number; color: Color } | null>(null);
   const [fromPhaseBeforeFridge, setFromPhaseBeforeFridge] = useState<Phase>('choosing');
   const [sizePx, setSizePx] = useState(300);
+  const [flaskPulse, setFlaskPulse] = useState(false);
 
   const sessionRef = useRef<Session | null>(null);
   sessionRef.current = session;
-  const recordIdRef = useRef<string | null>(null);
+  const recordRef = useRef<RecordSlot>({ id: null, closed: false });
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
   const unmountedRef = useRef(false);
   const hasTappedRef = useRef(false);
   const paintedSinceTimeUpRef = useRef(false);
+  const flaskPulseKeyRef = useRef(0);
   const gameStartRef = useRef<number>(performance.now());
   const pausedMsRef = useRef(0);
-  const hiddenSinceRef = useRef<number | null>(document.visibilityState === 'hidden' ? performance.now() : null);
+  const pauseReasonsRef = useRef(new Set<PauseReason>(document.visibilityState === 'hidden' ? ['hidden'] : []));
+  const pauseSinceRef = useRef<number | null>(document.visibilityState === 'hidden' ? performance.now() : null);
   const drawingContainerRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const timersRef = useRef<number[]>([]);
@@ -128,8 +144,25 @@ export function ColoringScreen() {
   }
 
   function activeMs(): number {
-    const hiddenExtra = hiddenSinceRef.current !== null ? performance.now() - hiddenSinceRef.current : 0;
-    return Math.max(0, performance.now() - gameStartRef.current - pausedMsRef.current - hiddenExtra);
+    const pausedNow = pauseSinceRef.current !== null ? performance.now() - pauseSinceRef.current : 0;
+    return Math.max(0, performance.now() - gameStartRef.current - pausedMsRef.current - pausedNow);
+  }
+
+  /** Arrête le temps actif ; plusieurs raisons peuvent se chevaucher (frigo ouvert, puis écran éteint). */
+  function pauseClock(reason: PauseReason) {
+    const reasons = pauseReasonsRef.current;
+    if (reasons.has(reason)) return;
+    if (reasons.size === 0) pauseSinceRef.current = performance.now();
+    reasons.add(reason);
+  }
+
+  function resumeClock(reason: PauseReason) {
+    const reasons = pauseReasonsRef.current;
+    if (!reasons.delete(reason)) return;
+    if (reasons.size === 0 && pauseSinceRef.current !== null) {
+      pausedMsRef.current += performance.now() - pauseSinceRef.current;
+      pauseSinceRef.current = null;
+    }
   }
 
   useEffect(() => {
@@ -143,12 +176,8 @@ export function ColoringScreen() {
   // Pause du temps actif pendant que la page est cachée (docs/specs/COLORIAGE.md §6.2).
   useEffect(() => {
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        hiddenSinceRef.current = performance.now();
-      } else if (hiddenSinceRef.current !== null) {
-        pausedMsRef.current += performance.now() - hiddenSinceRef.current;
-        hiddenSinceRef.current = null;
-      }
+      if (document.visibilityState === 'hidden') pauseClock('hidden');
+      else resumeClock('hidden');
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -175,25 +204,27 @@ export function ColoringScreen() {
     return writeQueueRef.current;
   }
 
-  function ensureRecord(init: ColoringInit): Promise<string> {
-    // Le contrôle se refait DANS la tâche mise en file (pas seulement à l'appel) : deux essais très
-    // rapprochés, avant que le premier n'ait créé la partie, ne doivent créer qu'un seul enregistrement.
+  /**
+   * Clôt la partie du dessin en cours : `completed` si toutes les cases sont peintes, sinon abandonnée avec
+   * `reason`. Mise en file comme les essais : ceux mis en file avant (et la création de la partie)
+   * s'enregistrent d'abord ; ce qui arrive après ne s'écrit plus.
+   */
+  function closeRecord(reason: GameEndReason): Promise<void> {
+    const slot = recordRef.current;
+    const s = sessionRef.current;
+    const complete = Boolean(s && isComplete(s.zones.map((z) => z.id), s.painted));
     return enqueue(async () => {
-      if (recordIdRef.current) return;
-      if (!profile) return;
-      const created = await startColoring(profile.id, init);
-      recordIdRef.current = created.id;
-    }).then(() => recordIdRef.current as string);
+      slot.closed = true;
+      if (!slot.id) return;
+      if (complete) await completeColoring(slot.id, activeMs());
+      else await abandonColoring(slot.id, reason, activeMs());
+    });
   }
 
   const softEnd = useSoftEnd({
     busy: (phase === 'painting' && !(Boolean(timeUp) && paintedSinceTimeUpRef.current)) || phase === 'celebrating',
     onTimeUp: async () => {
-      const id = recordIdRef.current;
-      if (id) {
-        enqueue(() => abandonColoring(id, 'time-up', activeMs()));
-        await writeQueueRef.current;
-      }
+      await closeRecord('time-up');
     },
   });
 
@@ -201,11 +232,19 @@ export function ColoringScreen() {
   useEffect(() => {
     if (!profile) return undefined;
     let cancelled = false;
-    listColorings(profile.id).then((r) => {
-      if (cancelled) return;
-      setRecords(r);
-      enterFromRecords(r);
-    });
+    listColorings(profile.id)
+      .then((r) => {
+        if (cancelled) return;
+        setRecords(r);
+        enterFromRecords(r);
+      })
+      .catch((err) => {
+        console.error('coloring load failed', err);
+        if (cancelled) return;
+        // Base illisible : des dessins à choisir quand même (sans reprise), plutôt qu'un écran vide.
+        setChoices(buildChoiceCards([], null));
+        setPhase('choosing');
+      });
     return () => {
       cancelled = true;
     };
@@ -281,12 +320,13 @@ export function ColoringScreen() {
   function resetActiveClock() {
     gameStartRef.current = performance.now();
     pausedMsRef.current = 0;
-    hiddenSinceRef.current = document.visibilityState === 'hidden' ? performance.now() : null;
+    pauseReasonsRef.current.clear();
+    pauseSinceRef.current = null;
+    if (document.visibilityState === 'hidden') pauseClock('hidden');
   }
 
   function enterPainting(next: Session) {
-    recordIdRef.current = null;
-    writeQueueRef.current = Promise.resolve();
+    recordRef.current = { id: null, closed: false };
     hasTappedRef.current = false;
     paintedSinceTimeUpRef.current = false;
     setCup(EMPTY_CUP);
@@ -367,6 +407,12 @@ export function ColoringScreen() {
 
   function handleEmptyCupTap() {
     playTap();
+    // Les trois fioles pulsent deux fois : il faut d'abord verser (§2.3).
+    const key = ++flaskPulseKeyRef.current;
+    setFlaskPulse(true);
+    schedule(() => {
+      if (flaskPulseKeyRef.current === key) setFlaskPulse(false);
+    }, FLASK_PULSE_MS);
   }
 
   function finalizeAttempt(zoneId: string, outcome: 'painted' | 'missed', cupBefore: CupState) {
@@ -402,9 +448,14 @@ export function ColoringScreen() {
       missesAtStart: s.missesAtStart,
     };
     const nowComplete = outcome === 'painted' && isComplete(s.zones.map((z) => z.id), addTo(s.painted, zoneId));
-    ensureRecord(init).then((id) => {
-      enqueue(() => recordPaint(id, attempt, activeMs()));
-      if (nowComplete) enqueue(() => completeColoring(id, activeMs()));
+    // Une seule tâche : création au premier essai (deux essais rapprochés ne créent qu'une partie), essai,
+    // puis fin du dessin. Une clôture mise en file ensuite (sortie, fin douce) passe après elle.
+    const slot = recordRef.current;
+    enqueue(async () => {
+      if (slot.closed || !profile) return;
+      if (!slot.id) slot.id = (await startColoring(profile.id, init)).id;
+      await recordPaint(slot.id, attempt, activeMs());
+      if (nowComplete) await completeColoring(slot.id, activeMs());
     });
 
     if (outcome === 'painted') {
@@ -442,7 +493,13 @@ export function ColoringScreen() {
       if (unmountedRef.current) return;
       await writeQueueRef.current;
       if (!profile) return;
-      const fresh = await listColorings(profile.id);
+      let fresh: ColoringRecord[];
+      try {
+        fresh = await listColorings(profile.id);
+      } catch (err) {
+        console.error('coloring reload failed', err);
+        fresh = records;
+      }
       if (unmountedRef.current) return;
       setRecords(fresh);
       const resumable = resumableRecord(fresh, findDrawing);
@@ -473,16 +530,22 @@ export function ColoringScreen() {
   function handleFlaskTap(color: Color) {
     if (atelierAnim !== 'idle') return;
     hasTappedRef.current = true;
-    playPour();
     const wasFull = cup.drops.length >= 2;
     const next = pourFlask(cup, color);
     setCup(next);
     if (wasFull) {
+      // Récipient plein : rinçage, puis la goutte (§2.3).
+      playDrain();
+      schedule(() => playPour(), DRAIN_MS);
       setAtelierAnim('draining');
       schedule(() => setAtelierAnim('idle'), DRAIN_MS);
     } else if (next.drops.length === 2) {
+      playPour();
+      playBubble();
       setAtelierAnim('mixing');
       schedule(() => setAtelierAnim('idle'), MIX_MS);
+    } else {
+      playPour();
     }
   }
 
@@ -527,11 +590,16 @@ export function ColoringScreen() {
   }
 
   function openFridge() {
+    // Pendant la fin de dessin, l'écran ne réagit pas (§2.3) : le frigo attend l'écran de choix.
+    if (phase === 'celebrating') return;
+    // Le frigo n'est pas l'écran de peinture : son temps ne compte pas dans le temps actif (§5.1).
+    if (phase === 'painting') pauseClock('fridge');
     setFromPhaseBeforeFridge(phase === 'fridge' ? fromPhaseBeforeFridge : phase);
     setPhase('fridge');
   }
 
   function closeFridge() {
+    resumeClock('fridge');
     setPhase(fromPhaseBeforeFridge);
   }
 
@@ -539,21 +607,21 @@ export function ColoringScreen() {
   useEffect(() => {
     return () => {
       if (softEnd.endedRef.current) return;
-      const id = recordIdRef.current;
-      if (!id) return;
-      const s = sessionRef.current;
-      const reason = softEnd.exitReason();
-      if (s && isComplete(s.zones.map((z) => z.id), s.painted)) {
-        enqueue(() => completeColoring(id, activeMs()));
-      } else {
-        enqueue(() => abandonColoring(id, reason, activeMs()));
-      }
+      void closeRecord(softEnd.exitReason());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!profile || phase === 'loading') {
-    return <div class="screen clr-screen" data-testid="coloring" data-phase="loading" />;
+    return (
+      <div class="screen clr-screen" data-testid="coloring" data-phase="loading">
+        <div class="clr-topbar">
+          <IconButton size={56} onClick={goHome} aria-label="Retour à l'accueil" data-testid="to-hub">
+            <Icon name="home" size={36} />
+          </IconButton>
+        </div>
+      </div>
+    );
   }
 
   if (phase === 'fridge') {
@@ -646,6 +714,7 @@ export function ColoringScreen() {
           <Atelier
             cup={cup}
             busy={atelierAnim !== 'idle'}
+            pulseFlasks={flaskPulse}
             mixing={atelierAnim === 'mixing'}
             draining={atelierAnim === 'draining'}
             onFlaskTap={handleFlaskTap}

@@ -270,6 +270,12 @@
   height: 84px;
 }
 
+/* Case touchée avec le récipient vide : les trois fioles pulsent deux fois (§2.3). */
+.clr-atelier--pulse .clr-flasks .cmx-flask {
+  filter: drop-shadow(0 0 6px var(--accent));
+  animation: cmx-pulse 600ms ease-in-out 2;
+}
+
 .clr-cup {
   width: 88px;
   height: 100px;
@@ -303,7 +309,8 @@
   .clr-code--hint .clr-code__visual,
   .clr-legend__entry--hint,
   .clr-zone--spread,
-  .clr-zone--miss {
+  .clr-zone--miss,
+  .clr-atelier--pulse .clr-flasks .cmx-flask {
     animation: none;
   }
 }

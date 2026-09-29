@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DictationPlannedWord } from '../../storage/dictations';
-import { createInitialState, isComplete, step, unitInProgress } from './machine';
+import { createInitialState, isComplete, readyToComplete, step, unitInProgress } from './machine';
 
 const WORDS: DictationPlannedWord[] = [
   { wordId: 'apres', seriesId: 's1', sentenceIndex: 0 },
@@ -159,13 +159,29 @@ describe('copy : réécriture guidée', () => {
     expect(s.phase).toBe('solved');
   });
 
-  it("isComplete reste faux pendant la dernière réécriture, vrai une fois complète", () => {
-    let s = toCopy(0);
-    expect(isComplete(s)).toBe(false);
-    s = step(s, { type: 'key', char: 'a', now: 0 }).state;
-    expect(isComplete(s)).toBe(false);
-    for (const char of 'près') s = step(s, { type: 'key', char, now: 0 }).state;
-    // un seul mot dans cette dictée pour ce test
+  it('dernier mot faux : isComplete vrai pendant la réécriture (F7), readyToComplete une fois réécrit', () => {
+    let s = started(0).state;
+    s = type(s, 'après');
+    s = step(s, { type: 'validate', now: 0 }).state;
+    s = step(s, { type: 'next', now: 0 }).state;
+    s = type(s, 'alros');
+    s = step(s, { type: 'validate', now: 0 }).state;
+    expect(s.phase).toBe('copy');
+    expect(isComplete(s)).toBe(true); // une sortie maintenant clôt la dictée `completed`
+    expect(readyToComplete(s)).toBe(false); // mais l'enregistrer `completed` perdrait la réécriture
+    s = type(s, 'alors');
+    expect(s.phase).toBe('solved');
+    expect(s.items[1]?.copyDone).toBe(true);
+    expect(readyToComplete(s)).toBe(true);
+  });
+
+  it('readyToComplete : faux tant qu’un mot reste à écrire', () => {
+    let s = started(0).state;
+    expect(readyToComplete(s)).toBe(false);
+    s = type(s, 'après');
+    s = step(s, { type: 'validate', now: 0 }).state;
+    expect(s.phase).toBe('solved');
+    expect(readyToComplete(s)).toBe(false);
   });
 });
 
@@ -244,6 +260,20 @@ describe('visibility', () => {
     // 1000 (now) - 0 (shownAt) - 300 (pausedMs) = 700
     expect(saveEffect?.answerMs).toBe(700);
     expect(saveEffect?.durationMs).toBe(700);
+  });
+
+  it('mot suivant arrivé page cachée : le temps caché ne compte pas', () => {
+    let s = started(0).state;
+    s = type(s, 'après');
+    s = step(s, { type: 'validate', now: 0 }).state;
+    s = step(s, { type: 'visibility', hidden: true, now: 500 }).state;
+    s = step(s, { type: 'next', now: 1200 }).state; // minuterie du mot suivant, page toujours cachée
+    expect(s.unit.hiddenSince).toBe(1200);
+    s = step(s, { type: 'visibility', hidden: false, now: 61_200 }).state;
+    s = type(s, 'alors');
+    const { state } = step(s, { type: 'validate', now: 63_200 });
+    // 63 200 − 1 200 (shownAt) − 60 000 (caché) = 2 000
+    expect(state.items[1]?.durationMs).toBe(2000);
   });
 
   it('applicable à toutes les phases (choose incluse)', () => {

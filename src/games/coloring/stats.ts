@@ -84,7 +84,10 @@ export function summarizeColorings(records: readonly ColoringRecord[]): Coloring
   const byTierAttempts = new Map<ColoringTier, { completed: number; hits: number; total: number }>();
 
   for (const chain of chains) {
+    // Premier essai de chaque case, et l'essai qui l'a peinte (avec ou sans la main), sur toute la chaîne.
     const firstAttemptByZone = new Map<string, Color>();
+    const won = new Set<string>();
+    const wonWithHand = new Set<string>();
     for (const record of chain.records) {
       const targetOf = new Map(record.zones.map((z) => [z.id, z.target]));
       for (const attempt of record.attempts) {
@@ -96,24 +99,6 @@ export function summarizeColorings(records: readonly ColoringRecord[]): Coloring
           if (attempt.paint === target) stat.ok += 1;
           else stat.wrong.set(attempt.paint, (stat.wrong.get(attempt.paint) ?? 0) + 1);
         }
-      }
-    }
-    const zoneIds = chain.last.zones.map((z) => z.id);
-    for (const zoneId of zoneIds) {
-      const first = firstAttemptByZone.get(zoneId);
-      const target = chain.last.zones.find((z) => z.id === zoneId)?.target;
-      if (first === undefined || target === undefined) continue; // jamais peinte : ne compte pas
-      paintedZones += 1;
-      if (first === target) firstTryHits += 1;
-    }
-
-    // Aide de la main : parcourt tous les essais de la chaîne pour retrouver l'essai réussi de chaque case.
-    const wonWithHand = new Set<string>();
-    const won = new Set<string>();
-    for (const record of chain.records) {
-      const targetOf = new Map(record.zones.map((z) => [z.id, z.target]));
-      for (const attempt of record.attempts) {
-        const target = targetOf.get(attempt.zoneId);
         if (target !== undefined && attempt.paint === target && !won.has(attempt.zoneId)) {
           won.add(attempt.zoneId);
           if (attempt.help === 2) wonWithHand.add(attempt.zoneId);
@@ -125,12 +110,16 @@ export function summarizeColorings(records: readonly ColoringRecord[]): Coloring
     const tier = chain.last.tier;
     const entry = byTierAttempts.get(tier) ?? { completed: 0, hits: 0, total: 0 };
     if (chain.last.status === 'completed') entry.completed += 1;
-    for (const zoneId of zoneIds) {
-      const first = firstAttemptByZone.get(zoneId);
-      const target = chain.last.zones.find((z) => z.id === zoneId)?.target;
-      if (first === undefined || target === undefined) continue;
+    for (const zone of chain.last.zones) {
+      const first = firstAttemptByZone.get(zone.id);
+      // Une case jamais peinte ne compte pas (§5.4), même si elle a eu des essais ratés.
+      if (first === undefined || !won.has(zone.id)) continue;
+      paintedZones += 1;
       entry.total += 1;
-      if (first === target) entry.hits += 1;
+      if (first === zone.target) {
+        firstTryHits += 1;
+        entry.hits += 1;
+      }
     }
     byTierAttempts.set(tier, entry);
   }

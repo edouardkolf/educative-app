@@ -124,7 +124,8 @@ function startNextWord(s: DictationState, now: number): StepResult {
     index: finishedCount,
     typed: '',
     firstAttempt: null,
-    unit: freshUnit(now),
+    // Page encore cachée quand le mot arrive : son temps ne compte qu'à partir du retour.
+    unit: { ...freshUnit(now), hiddenSince: s.unit.hiddenSince === null ? null : now },
   };
   return { state, effects: [{ kind: 'speak', what: 'intro' }] };
 }
@@ -285,5 +286,8 @@ export function step(s: DictationState, a: DictationAction): StepResult {
   }
 }
 
+/** Tous les mots ont un item (vrai dès la dernière réécriture commencée : une sortie la clôt `completed`, F7). */
 export const isComplete = (s: DictationState): boolean => s.words.length > 0 && s.items.length === s.words.length;
+/** Tous les items sont définitifs : la dictée peut être close `completed` sans perdre la dernière réécriture. */
+export const readyToComplete = (s: DictationState): boolean => isComplete(s) && s.phase !== 'copy';
 export const unitInProgress = (s: DictationState): boolean => s.phase === 'word' || s.phase === 'copy';

@@ -14,12 +14,14 @@ export interface AtelierProps {
   busy: boolean;
   mixing: boolean;
   draining: boolean;
+  /** Case touchée avec le récipient vide : les trois fioles pulsent deux fois (§2.3). */
+  pulseFlasks?: boolean;
   onFlaskTap: (color: Color) => void;
   onCupTap: () => void;
   onCupPointerDown: (event: PointerEvent) => void;
 }
 
-export function Atelier({ cup, busy, mixing, draining, onFlaskTap, onCupTap, onCupPointerDown }: AtelierProps) {
+export function Atelier({ cup, busy, mixing, draining, pulseFlasks = false, onFlaskTap, onCupTap, onCupPointerDown }: AtelierProps) {
   const paint = paintOf(cup);
   const level: LiquidLevel = draining || cup.drops.length === 0 ? 'empty' : cup.drops.length === 1 ? 'half' : 'full';
   const liquidFill: LiquidFill =
@@ -28,7 +30,12 @@ export function Atelier({ cup, busy, mixing, draining, onFlaskTap, onCupTap, onC
       : { kind: 'solid', color: paint ? COLOR_HEX[paint] : 'transparent' };
 
   return (
-    <div class="clr-atelier" data-drops={cup.drops.join(',')} data-paint={paint ?? 'none'}>
+    <div
+      class={`clr-atelier${pulseFlasks ? ' clr-atelier--pulse' : ''}`}
+      data-drops={cup.drops.join(',')}
+      data-paint={paint ?? 'none'}
+      data-pulse={pulseFlasks ? 'true' : undefined}
+    >
       <div class="clr-flasks clr-flasks--left">
         <Flask color="red" poured={cup.drops.includes('red')} disabled={busy} onTap={onFlaskTap} />
         <Flask color="yellow" poured={cup.drops.includes('yellow')} disabled={busy} onTap={onFlaskTap} />

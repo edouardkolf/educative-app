@@ -24,6 +24,11 @@ interface ActiveSpeech {
 
 let active: ActiveSpeech | null = null;
 let visibilityListenerAttached = false;
+/**
+ * Incrémenté par `cancelSpeech()`, par toute lecture lancée hors séquence et par chaque nouvelle séquence.
+ * Une séquence qui le voit changer s'arrête, même pendant une pause où aucune lecture n'est en cours.
+ */
+let generation = 0;
 
 // ---------- Accès paresseux au moteur ----------
 
@@ -48,6 +53,22 @@ function safeGetVoices(synth: SpeechSynthesis): SpeechSynthesisVoice[] {
     return synth.getVoices?.() ?? [];
   } catch {
     return [];
+  }
+}
+
+function isSynthBusy(synth: SpeechSynthesis): boolean {
+  try {
+    return Boolean(synth.speaking || synth.pending);
+  } catch {
+    return false;
+  }
+}
+
+function isPageHidden(): boolean {
+  try {
+    return typeof document !== 'undefined' && document.hidden === true;
+  } catch {
+    return false;
   }
 }
 
@@ -174,8 +195,9 @@ function finishActive(result: SpeakResult): void {
   active.settle(result);
 }
 
-/** Coupe toute lecture en cours ; sa promesse résout 'interrupted'. */
+/** Coupe toute lecture en cours (sa promesse résout 'interrupted') et arrête la séquence en cours. */
 export function cancelSpeech(): void {
+  generation += 1;
   finishActive('interrupted');
   try {
     getSynth()?.cancel();
@@ -197,7 +219,13 @@ function ensureVisibilityListener(): void {
   }
 }
 
+/** Lecture seule, hors séquence : elle arrête aussi la séquence en cours (une réécoute n'est jamais recouverte). */
 export function speak(text: string, opts: { rate?: number } = {}): Promise<SpeakResult> {
+  generation += 1;
+  return speakNow(text, opts);
+}
+
+function speakNow(text: string, opts: { rate?: number }): Promise<SpeakResult> {
   try {
     ensureVisibilityListener();
 
@@ -207,12 +235,19 @@ export function speak(text: string, opts: { rate?: number } = {}): Promise<Speak
     const UtteranceCtor = getUtteranceCtor();
     if (!synth || !UtteranceCtor) return Promise.resolve('skipped');
 
-    // Coupe la lecture en cours : sa promesse résout 'interrupted'.
+    // Page cachée : rien n'est dit (§3.4), comme si la lecture avait été coupée.
+    if (isPageHidden()) return Promise.resolve('interrupted');
+
+    // Coupe la lecture en cours : sa promesse résout 'interrupted'. `cancel()` seulement s'il y a
+    // quelque chose à couper : sur certains Chrome Android, un `speak()` juste après `cancel()` se perd.
+    const busy = active !== null || isSynthBusy(synth);
     finishActive('interrupted');
-    try {
-      synth.cancel();
-    } catch {
-      // silencieux
+    if (busy) {
+      try {
+        synth.cancel();
+      } catch {
+        // silencieux
+      }
     }
     try {
       if (synth.paused) synth.resume();
@@ -275,17 +310,23 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Enchaîne des lectures et des pauses ; s'arrête au premier résultat ≠ 'ended'. */
+/**
+ * Enchaîne des lectures et des pauses ; s'arrête au premier résultat ≠ 'ended'. Résout 'interrupted' si
+ * `cancelSpeech()`, `speak()` ou une autre séquence arrive entre-temps, y compris pendant une pause.
+ */
 export async function speakSequence(steps: readonly SpeechStep[]): Promise<SpeakResult> {
+  generation += 1;
+  const own = generation;
   for (const step of steps) {
+    if (generation !== own) return 'interrupted';
     if ('pauseMs' in step) {
       await delay(step.pauseMs);
       continue;
     }
-    const result = await speak(step.text, { rate: step.rate });
+    const result = await speakNow(step.text, { rate: step.rate });
     if (result !== 'ended') return result;
   }
-  return 'ended';
+  return generation === own ? 'ended' : 'interrupted';
 }
 
 /** Réinitialise l'état interne du module entre deux tests. */

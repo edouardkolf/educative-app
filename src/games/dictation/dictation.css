@@ -108,6 +108,12 @@
   animation: dict-pulse-scale 0.8s ease-in-out infinite;
 }
 
+/* Champ resté vide après la lecture, ou voix refusée par Chrome : 🔊 invite à le toucher (§2.2, §3.4). */
+.dict-replay--word[data-hint] {
+  box-shadow: 0 0 0 4px var(--accent), var(--shadow-sm);
+  animation: dict-pulse-scale 1.4s ease-in-out infinite;
+}
+
 .dict-input-row {
   width: 100%;
   display: flex;
@@ -344,6 +350,7 @@
 @media (prefers-reduced-motion: reduce) {
   .dict-series-card--current,
   .dict-replay--word[data-speaking],
+  .dict-replay--word[data-hint],
   .dict-field--empty,
   .dict-ok--idle,
   .dict-mark--next {

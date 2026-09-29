@@ -186,12 +186,19 @@ test('erreur douce : une mauvaise couleur ne prend pas, le code reste, la bonne 
 
 // ==================== 3. Le récipient : deux gouttes au plus, rinçage ====================
 
-test('récipient : rouge, bleu, puis jaune rince et ne garde que le jaune ; un tap sur le récipient le vide', async ({
+test('récipient : vide, une case fait pulser les fioles ; rouge, bleu, puis jaune rince et ne garde que le jaune ; un tap le vide', async ({
   page,
 }) => {
   await onboardWithChild(page, 'Léa');
   await openColoring(page, 'Léa');
   const wait = realWait(page);
+
+  // Case touchée avec le récipient vide : rien ne se peint, les trois fioles pulsent (il faut verser d'abord).
+  const zoneCount = await codes(page).count();
+  await codes(page).first().click();
+  await expect(atelier(page)).toHaveAttribute('data-pulse', 'true');
+  await expect(codes(page)).toHaveCount(zoneCount);
+  await expect(atelier(page)).not.toHaveAttribute('data-pulse', 'true', { timeout: 3000 });
 
   await page.locator('[data-choice="red"]').click();
   await expect(atelier(page)).toHaveAttribute('data-drops', 'red');

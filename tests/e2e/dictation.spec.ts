@@ -220,6 +220,32 @@ async function answerWordWithMistakeThenCorrect(page: Page): Promise<string> {
   return before;
 }
 
+interface StoredDictation {
+  status: string;
+  endReason: string | null;
+  items: { index: number; firstTry: boolean; copyDone: boolean }[];
+}
+
+/** Lit le store `dictations` d'IndexedDB (base de l'app, déjà créée). */
+async function readDictations(page: Page): Promise<StoredDictation[]> {
+  return page.evaluate(
+    () =>
+      new Promise<StoredDictation[]>((resolve, reject) => {
+        const open = indexedDB.open('petits-malins');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const request = db.transaction('dictations', 'readonly').objectStore('dictations').getAll();
+          request.onsuccess = () => {
+            resolve(request.result as StoredDictation[]);
+            db.close();
+          };
+          request.onerror = () => reject(request.error);
+        };
+      }),
+  );
+}
+
 async function assertNoHorizontalScroll(page: Page): Promise<void> {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
@@ -353,6 +379,77 @@ test('dictée s1 jusqu’au bout : data-total="5" ; « encore », maison, puis s
 
   await page.getByTestId('hub-tile-dictation').click();
   await expect(page.locator('[data-series="s1"]')).toHaveAttribute('aria-current', 'true');
+});
+
+// ==================== 3 bis. Dernier mot faux : la réécriture est enregistrée avant la fin ====================
+
+test('dernier mot faux : la réécriture est enregistrée, puis la dictée est terminée', async ({ page }) => {
+  await installFakeVoice(page, 'fr');
+  await onboardWithChild(page, 'Alice');
+  await chooseProfile(page, 'Alice');
+  await page.getByTestId('hub-tile-dictation').click();
+  await page.locator('[data-series="s1"]').click();
+
+  for (let i = 0; i < 4; i += 1) {
+    await answerWordCorrectlyAndWait(page);
+  }
+  await answerWordWithMistakeThenCorrect(page);
+  await expect(page.getByTestId('dictation-end')).toBeVisible();
+
+  await expect.poll(async () => (await readDictations(page))[0]?.status, { timeout: 5000 }).toBe('completed');
+  const [dictation] = await readDictations(page);
+  expect(dictation?.items).toHaveLength(5);
+  const last = dictation?.items.find((item) => item.index === 4);
+  expect(last?.firstTry).toBe(false);
+  expect(last?.copyDone).toBe(true); // la réécriture du dernier mot n'est pas perdue
+});
+
+// ==================== 3 ter. Maison juste après un mot : plus rien n'est lu ====================
+
+test('maison juste après un mot juste : plus rien n’est lu une fois sur le hub', async ({ page }) => {
+  await installFakeVoice(page, 'fr');
+  await onboardWithChild(page, 'Alice');
+  await chooseProfile(page, 'Alice');
+  await page.getByTestId('hub-tile-dictation').click();
+  await page.locator('[data-series="s1"]').click();
+  await expect.poll(() => spokenCount(page), { timeout: 5000 }).toBeGreaterThanOrEqual(3);
+
+  const answer = await currentWord(page).getAttribute('data-answer');
+  if (!answer) throw new Error('Aucun mot affiché.');
+  await typeChars(page, answer);
+  await page.locator('[data-key="ok"]').click();
+  await page.getByTestId('to-hub').click(); // avant le mot suivant, prévu 1,2 s après la réussite
+  await expect(page.getByTestId('hub')).toBeVisible();
+
+  const spokenAtHub = await spokenCount(page);
+  await page.waitForTimeout(2500);
+  expect(await spokenCount(page), 'le mot suivant a été lu sur le hub').toBe(spokenAtHub);
+});
+
+// ==================== 3 quater. Repères sans texte : 🔊 et ✓ pulsent quand il le faut ====================
+
+test('repères : 🔊 pulse si le champ reste vide après la lecture ; ✓ pulse après 3 s sans frappe', async ({ page }) => {
+  await installFakeVoice(page, 'fr');
+  await onboardWithChild(page, 'Alice');
+  await chooseProfile(page, 'Alice');
+  await page.getByTestId('hub-tile-dictation').click();
+  await page.locator('[data-series="s1"]').click();
+  await expect.poll(() => spokenCount(page), { timeout: 5000 }).toBeGreaterThanOrEqual(3);
+
+  const replay = page.getByTestId('replay-word');
+  await expect(replay).not.toHaveAttribute('data-speaking', 'true');
+  await expect(replay).toHaveAttribute('data-hint', 'true', { timeout: 8000 }); // 5 s après la lecture
+
+  const answer = await currentWord(page).getAttribute('data-answer');
+  if (!answer) throw new Error('Aucun mot affiché.');
+  const ok = page.locator('[data-key="ok"]');
+  await typeChars(page, answer.slice(0, 1));
+  await expect(replay).not.toHaveAttribute('data-hint', 'true');
+  await expect(ok).not.toHaveClass(/dict-ok--idle/);
+  await expect(ok).toHaveClass(/dict-ok--idle/, { timeout: 6000 }); // 3 s sans frappe
+
+  await typeChars(page, answer.slice(1, 2));
+  await expect(ok).not.toHaveClass(/dict-ok--idle/); // une frappe remet le compte à zéro
 });
 
 // ==================== 4. Statistiques parent : terminée + abandon, mot fragile listé ====================

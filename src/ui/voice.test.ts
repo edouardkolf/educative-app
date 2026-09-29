@@ -195,6 +195,24 @@ describe('speak', () => {
     expect(results[0]).toBe('interrupted');
   });
 
+  it("n'appelle cancel() que s'il y a une lecture à couper", async () => {
+    const synth = installFakeVoiceApi([voice('Amélie', 'fr-FR')]);
+    const first = speak('un');
+    expect(synth.cancel).not.toHaveBeenCalled(); // rien en cours : pas de cancel() juste avant speak()
+    const second = speak('deux');
+    expect(synth.cancel).toHaveBeenCalledTimes(1); // « un » est en cours : il faut le couper
+    await expect(first).resolves.toBe('interrupted');
+    synth.spoken[1]?.onend?.();
+    await expect(second).resolves.toBe('ended');
+  });
+
+  it('page cachée : rien n’est dit, la lecture résout interrupted', async () => {
+    const synth = installFakeVoiceApi([voice('Amélie', 'fr-FR')]);
+    vi.stubGlobal('document', { hidden: true, addEventListener: vi.fn() });
+    await expect(speak('bonjour')).resolves.toBe('interrupted');
+    expect(synth.speak).not.toHaveBeenCalled();
+  });
+
   it('chien de garde : résout ended sans onend', async () => {
     vi.useFakeTimers();
     installFakeVoiceApi([voice('Amélie', 'fr-FR')]);
@@ -222,6 +240,41 @@ describe('speakSequence', () => {
 
     expect(order).toEqual(['mot', 'phrase']);
     expect(result).toBe('ended');
+  });
+
+  it('cancelSpeech() pendant une pause : la séquence ne reprend pas', async () => {
+    vi.useFakeTimers();
+    const synth = installFakeVoiceApi([voice('Amélie', 'fr-FR')]);
+    synth.speak.mockImplementation((u: FakeUtterance) => {
+      synth.spoken.push(u);
+      queueMicrotask(() => u.onend?.());
+    });
+
+    const promise = speakSequence([{ text: 'mot' }, { pauseMs: 600 }, { text: 'phrase' }]);
+    await vi.advanceTimersByTimeAsync(0); // « mot » est dit, la pause commence
+    cancelSpeech();
+    await vi.advanceTimersByTimeAsync(600);
+
+    await expect(promise).resolves.toBe('interrupted');
+    expect(synth.spoken.map((u) => u.text)).toEqual(['mot']);
+  });
+
+  it('une réécoute pendant une pause : la séquence ne la recouvre pas', async () => {
+    vi.useFakeTimers();
+    const synth = installFakeVoiceApi([voice('Amélie', 'fr-FR')]);
+    synth.speak.mockImplementation((u: FakeUtterance) => {
+      synth.spoken.push(u);
+      queueMicrotask(() => u.onend?.());
+    });
+
+    const promise = speakSequence([{ text: 'mot' }, { pauseMs: 600 }, { text: 'phrase' }]);
+    await vi.advanceTimersByTimeAsync(0);
+    const replay = speak('mot relu');
+    await vi.advanceTimersByTimeAsync(600);
+
+    await expect(promise).resolves.toBe('interrupted');
+    await expect(replay).resolves.toBe('ended');
+    expect(synth.spoken.map((u) => u.text)).toEqual(['mot', 'mot relu']);
   });
 
   it("s'arrête au premier résultat différent de ended", async () => {

@@ -72,6 +72,21 @@ describe('summarizeColorings', () => {
     expect(summary.firstTryRate).toBe(0.5); // 1 juste (wall) sur 2 cases peintes (roof, wall)
   });
 
+  it('une case essayée mais jamais peinte ne compte pas (réussite, palier, aide de la main)', () => {
+    const rec = record({
+      status: 'abandoned',
+      endReason: 'quit',
+      attempts: [
+        attempt('roof', 'red', { help: 2 }), // peinte, avec la main
+        attempt('door', 'red'), // ratée, puis dessin quitté : la porte n'est jamais peinte
+      ],
+    });
+    const summary = summarizeColorings([rec]);
+    expect(summary.firstTryRate).toBe(1); // 1 case peinte (roof), juste du premier coup
+    expect(summary.byTier.find((t) => t.tier === 1)?.firstTryRate).toBe(1);
+    expect(summary.handHelpRate).toBe(1);
+  });
+
   it('recette par couleur : essais frais seulement, affichée à partir de 5 essais, avec la confusion', () => {
     const attempts: PaintAttempt[] = [];
     for (let i = 0; i < 3; i += 1) attempts.push(attempt('roof', 'red'));

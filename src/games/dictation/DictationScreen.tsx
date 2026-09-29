@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { useProfile } from '../../app/context';
 import { returnTo } from '../../app/routes';
 import { createRng } from '../../engine/rng';
+import { Emoji } from '../../ui/Emoji';
 import { IconButton } from '../../ui/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 import { playError, playSuccess } from '../../ui/sound';
@@ -19,9 +20,10 @@ import {
   startDictation,
 } from '../../storage/dictations';
 import type { DictationItem, DictationPlannedWord, DictationRecord } from '../../storage/dictations';
+import type { GameEndReason } from '../../storage/types';
 import { normalizeAnswer, diffLetters } from './answer';
 import { defaultSeriesId, drawDictation } from './draw';
-import { createInitialState, isComplete, step, unitInProgress } from './machine';
+import { createInitialState, isComplete, readyToComplete, step, unitInProgress } from './machine';
 import type { DictationAction, DictationEffect, DictationState } from './machine';
 import { DICTATION_SERIES } from './series';
 import { DICTATION_WORDS } from './words';
@@ -32,6 +34,18 @@ import type { DictationWord } from './types';
 import './dictation.css';
 
 type UnavailableReason = 'muted' | VoiceProblem;
+
+/** Dictée en cours d'enregistrement ; une par dictée lancée. */
+interface RecordSlot {
+  /** Arrive quand la création, mise en file au premier mot validé, est faite. */
+  id: string | null;
+  /** Close (sortie, fin douce, voix indisponible) : plus rien ne s'y écrit, aucune dictée n'est plus créée. */
+  closed: boolean;
+}
+
+/** ✓ pulse après 3 s sans frappe ; 🔊 pulse si le champ reste vide 5 s après la lecture (§2.2). */
+const OK_IDLE_MS = 3000;
+const EMPTY_HINT_MS = 5000;
 
 function currentWord(s: DictationState): DictationWord | null {
   const planned = s.words[s.index];
@@ -73,25 +87,25 @@ export function DictationScreen() {
   const [rejectedKey, setRejectedKey] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const [endAnimating, setEndAnimating] = useState(false);
+  const [okIdle, setOkIdle] = useState(false);
+  const [emptyTooLong, setEmptyTooLong] = useState(false);
+  const [speechBlocked, setSpeechBlocked] = useState(false);
 
   const stateRef = useRef(state);
   stateRef.current = state;
-  const dictationIdRef = useRef<string | null>(null);
+  const recordRef = useRef<RecordSlot>({ id: null, closed: false });
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
   const failedStreakRef = useRef(0);
   const nextTimeoutRef = useRef<number | null>(null);
   const rejectTimeoutRef = useRef<number | null>(null);
+  const timersRef = useRef(new Set<number>());
   const unmountedRef = useRef(false);
 
   const softEnd = useSoftEnd({
     busy: unitInProgress(state) || state.phase === 'solved' || (state.phase === 'end' && endAnimating),
     onTimeUp: async () => {
       cancelSpeech();
-      const id = dictationIdRef.current;
-      if (id && !isComplete(stateRef.current)) {
-        enqueue(() => abandonDictation(id, 'time-up'));
-        await writeQueueRef.current;
-      }
+      await closeRecord('time-up');
     },
   });
 
@@ -125,23 +139,71 @@ export function DictationScreen() {
     };
   }, [profile?.id]);
 
-  // Ferme la dictée à la sortie (démontage), sauf si la fin douce l'a déjà fait (F4/F7/F8).
+  // Ferme la dictée à la sortie (démontage), sauf si la fin douce l'a déjà fait (F4/F7/F8). Rien ne
+  // doit plus parler ni avancer une fois l'écran quitté : minuteries annulées, voix coupée.
   useEffect(() => {
     unmountedRef.current = false;
+    const timers = timersRef.current;
     return () => {
       unmountedRef.current = true;
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.clear();
+      cancelSpeech();
       if (softEnd.endedRef.current) return;
-      const id = dictationIdRef.current;
-      if (!id) return;
-      const reason = softEnd.exitReason();
-      if (isComplete(stateRef.current)) {
-        enqueue(() => completeDictation(id));
-      } else {
-        enqueue(() => abandonDictation(id, reason));
-      }
+      void closeRecord(softEnd.exitReason());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Page cachée (écran éteint, autre app) : ce temps ne compte pas dans les durées du mot (§3.6).
+  useEffect(() => {
+    const onVisibility = () => dispatch({ type: 'visibility', hidden: document.hidden, now: Date.now() });
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Repères sans texte (§2.2) : ✓ pulse après 3 s sans frappe ; 🔊 pulse si le champ reste vide après la lecture.
+  const hasTyped = state.typed.length > 0;
+  useEffect(() => {
+    setOkIdle(false);
+    if (state.phase !== 'word' || !hasTyped) return undefined;
+    const id = window.setTimeout(() => setOkIdle(true), OK_IDLE_MS);
+    return () => window.clearTimeout(id);
+  }, [state.phase, state.index, state.typed]);
+
+  useEffect(() => {
+    setEmptyTooLong(false);
+    if (state.phase !== 'word' || hasTyped || speaking) return undefined;
+    const id = window.setTimeout(() => setEmptyTooLong(true), EMPTY_HINT_MS);
+    return () => window.clearTimeout(id);
+  }, [state.phase, state.index, hasTyped, speaking]);
+
+  /** Minuterie annulée au démontage. */
+  function later(fn: () => void, ms: number): number {
+    const id = window.setTimeout(() => {
+      timersRef.current.delete(id);
+      fn();
+    }, ms);
+    timersRef.current.add(id);
+    return id;
+  }
+
+  /**
+   * Clôt la dictée ouverte : `completed` si tous les mots ont un item (F7), sinon abandonnée avec `reason`.
+   * Mise en file comme les écritures : ce qui a été mis en file avant (le mot qui vient d'être validé, la
+   * création de la dictée) s'enregistre d'abord ; ce qui arrive après ne s'écrit plus.
+   */
+  function closeRecord(reason: GameEndReason): Promise<void> {
+    const slot = recordRef.current;
+    const complete = isComplete(stateRef.current);
+    return enqueue(async () => {
+      slot.closed = true;
+      if (!slot.id) return;
+      if (complete) await completeDictation(slot.id);
+      else await abandonDictation(slot.id, reason);
+    });
+  }
 
   function enqueue(task: () => Promise<void>): Promise<void> {
     writeQueueRef.current = writeQueueRef.current.then(task, task).catch((err) => {
@@ -151,10 +213,14 @@ export function DictationScreen() {
   }
 
   function trackSpeechResult(result: SpeakResult) {
+    if (unmountedRef.current) return;
     if (result === 'ended') {
       failedStreakRef.current = 0;
+      setSpeechBlocked(false);
       return;
     }
+    // Chrome refuse la voix sans geste de l'enfant : 🔊 pulse, et son tap relit (§3.4).
+    if (result === 'blocked') setSpeechBlocked(true);
     if (result !== 'failed') return;
     failedStreakRef.current += 1;
     if (failedStreakRef.current < 2) return;
@@ -163,11 +229,7 @@ export function DictationScreen() {
   }
 
   async function closeAsUnavailable() {
-    const id = dictationIdRef.current;
-    dictationIdRef.current = null;
-    if (id && !isComplete(stateRef.current)) {
-      enqueue(() => abandonDictation(id, 'quit'));
-    }
+    void closeRecord('quit');
     const check = await checkVoice();
     if (unmountedRef.current) return;
     setUnavailableReason(check.status === 'muted' ? 'muted' : (check.problem ?? 'no-api'));
@@ -208,29 +270,30 @@ export function DictationScreen() {
   }
 
   function handleSave(item: DictationItem, seriesId: string, seed: number, words: DictationPlannedWord[], willBeComplete: boolean) {
+    const slot = recordRef.current;
     enqueue(async () => {
-      let id = dictationIdRef.current;
-      if (!id) {
-        if (!profile) return;
+      if (slot.closed || !profile) return;
+      if (!slot.id) {
         const created = await startDictation(profile.id, { seriesId, seed, words });
         if (unmountedRef.current) {
           // F8 : démonté pendant la création — close dès sa création, sans compter ce mot.
-          await abandonDictation(created.id, 'quit');
+          slot.closed = true;
+          await abandonDictation(created.id, softEnd.exitReason());
           return;
         }
-        dictationIdRef.current = created.id;
-        id = created.id;
+        slot.id = created.id;
       }
-      await saveDictationItem(id, item);
-      if (willBeComplete) await completeDictation(id);
+      await saveDictationItem(slot.id, item);
+      if (willBeComplete) await completeDictation(slot.id);
     });
   }
 
   function scheduleNext(ms: number) {
     if (nextTimeoutRef.current !== null) window.clearTimeout(nextTimeoutRef.current);
-    nextTimeoutRef.current = window.setTimeout(() => {
+    nextTimeoutRef.current = later(() => {
       nextTimeoutRef.current = null;
-      if (softEnd.checkpoint()) return; // fin douce : ne pas commencer le mot suivant
+      // Fin douce : ne pas commencer le mot suivant. Après le dernier mot, l'écran de score passe d'abord (§6.2).
+      if (!isComplete(stateRef.current) && softEnd.checkpoint()) return;
       dispatch({ type: 'next', now: Date.now() });
     }, ms);
   }
@@ -243,10 +306,10 @@ export function DictationScreen() {
           if (!word) continue;
           const sentence = currentSentence(newState, word);
           if (opts.immediateIntro) void playIntro(word, sentence);
-          else window.setTimeout(() => void playIntro(word, sentence), 300);
+          else later(() => void playIntro(word, sentence), 300);
         } else if (effect.what === 'word') {
           const delay = opts.delayWordMs ?? 0;
-          if (delay > 0) window.setTimeout(() => void playWordOnly(newState), delay);
+          if (delay > 0) later(() => void playWordOnly(newState), delay);
           else void playWordOnly(newState);
         } else {
           void playSentenceOnly(newState);
@@ -256,7 +319,8 @@ export function DictationScreen() {
         else playError();
       } else if (effect.kind === 'save') {
         const seriesId = newState.seriesId;
-        if (seriesId) handleSave(effect.item, seriesId, newState.seed, newState.words, isComplete(newState));
+        // Close `completed` seulement quand le dernier item est définitif : jamais avant la dernière réécriture.
+        if (seriesId) handleSave(effect.item, seriesId, newState.seed, newState.words, readyToComplete(newState));
       } else if (effect.kind === 'next-after') {
         scheduleNext(effect.ms);
       } else if (effect.kind === 'finished') {
@@ -266,6 +330,7 @@ export function DictationScreen() {
   }
 
   function dispatch(action: DictationAction, opts: { immediateIntro?: boolean; delayWordMs?: number } = {}) {
+    if (unmountedRef.current) return;
     const { state: newState, effects } = step(stateRef.current, action);
     stateRef.current = newState;
     setState(newState);
@@ -275,8 +340,9 @@ export function DictationScreen() {
   function startNewDictation(seriesId: string) {
     if (softEnd.checkpoint()) return;
     const { seed, planned, expected } = drawWords(seriesId);
-    dictationIdRef.current = null;
+    recordRef.current = { id: null, closed: false };
     failedStreakRef.current = 0;
+    setSpeechBlocked(false);
     setEndAnimating(false);
     dispatch(
       { type: 'start', seriesId, seed, words: planned, expected, now: Date.now() },
@@ -387,6 +453,7 @@ export function DictationScreen() {
           class="dict-replay dict-replay--word"
           data-testid="replay-word"
           data-speaking={speaking ? 'true' : undefined}
+          data-hint={!speaking && (speechBlocked || emptyTooLong) ? 'true' : undefined}
           onClick={onReplayWord}
           aria-label="Réécouter le mot"
         >
@@ -399,7 +466,7 @@ export function DictationScreen() {
           onClick={onReplaySentence}
           aria-label="Réécouter la phrase"
         >
-          💬
+          <Emoji char="💬" />
         </button>
       </div>
 
@@ -410,7 +477,14 @@ export function DictationScreen() {
           </span>
         </div>
         {state.phase !== 'copy' && (
-          <button type="button" class="dict-ok" data-key="ok" onClick={onValidate} disabled={typedLen === 0} aria-label="Valider">
+          <button
+            type="button"
+            class={`dict-ok${okIdle ? ' dict-ok--idle' : ''}`}
+            data-key="ok"
+            onClick={onValidate}
+            disabled={typedLen === 0}
+            aria-label="Valider"
+          >
             <Icon name="check" size={40} />
           </button>
         )}
