@@ -78,7 +78,7 @@ désormais 20 niveaux par monde : forêt (1–20), mer (21–40). Un test vérif
 |---|---|---|---|
 | 5 | ms-robot-01 | Forêt | Robot pas à pas 4×4, sans rocher, chemin 2–3, 4 manches, **tutoriel** |
 | 10 | ms-code-01 | Forêt | Code secret 2 pions / 3 couleurs, une marque par pion, 5 essais, **tutoriel** |
-| 15 | ms-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, 2 grilles gagnantes, 5 vies, **tutoriel** |
+| 15 | ms-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, 2 grilles gagnantes, 3 vies, **tutoriel** |
 | 20 | ms-robot-02 | Forêt | Robot pas à pas 4×4, 1 rocher, chemin 3–4 |
 | 25 | ms-code-02 | Mer | Code secret 2 pions / 4 couleurs, 5 essais |
 | 30 | ms-morpion-02 | Mer | Morpion facile, coup de pouce, on commence une grille sur deux |

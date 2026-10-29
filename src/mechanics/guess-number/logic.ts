@@ -39,7 +39,8 @@ export function applyGuess(state: GuessState, n: number): GuessResult {
   // « Plus grand » : le secret est > n ; une proposition déjà éliminée ne change rien.
   const low = hint === 'higher' ? Math.max(state.low, n + 1) : state.low;
   const high = hint === 'lower' ? Math.min(state.high, n - 1) : state.high;
-  const overBudget = hint !== 'found' && guesses.length > state.maxGuesses;
+  // Raté dès que `maxGuesses` propositions ont été faites sans trouver (comme le code secret, spec §3.1).
+  const overBudget = hint !== 'found' && guesses.length >= state.maxGuesses;
   const justMissed = overBudget && !state.missed;
 
   return {

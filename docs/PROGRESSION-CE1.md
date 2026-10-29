@@ -125,7 +125,7 @@ avec tutoriel ; une manche ratée = budget de coups dépassé, grille perdue ou 
 
 | Place | id | Monde | Contenu |
 |---|---|---|---|
-| 5 | ce1-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, **2 grilles gagnantes**, 5 vies, **tutoriel** |
+| 5 | ce1-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, **2 grilles gagnantes**, 3 vies, **tutoriel** |
 | 10 | ce1-nombre-01 | Forêt | Devine le nombre 1–20, grille de nombres, 7 essais, **tutoriel** |
 | 15 | ce1-code-01 | Forêt | Code secret 3 pions / 5 couleurs, indices par pion, 6 essais, **tutoriel** |
 | 20 | ce1-robot-01 | Forêt | Robot à programmer 5×5, chemin 3–5, 6 flèches, **tutoriel** |

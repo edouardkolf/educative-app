@@ -16,14 +16,14 @@
   flex: 1 1 0;
   min-height: 0;
   width: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  /* Les lignes se tassent contre la ligne en cours ; au-delà de la place disponible, ça défile. */
+  /* Les lignes se tassent contre la ligne en cours ; au-delà de la place disponible, les plus anciennes
+     sortent par le haut : rien ne défile (règle UX enfant), les derniers indices restent visibles. */
   justify-content: flex-end;
-  overscroll-behavior: contain;
 }
 
 .cb-row {

@@ -7,7 +7,10 @@ export interface PresetSummary {
   preset: PuzzlePreset;
   /** Manches résolues à cette difficulté. */
   solved: number;
-  /** Part des manches résolues du premier coup ; null sans manche résolue. */
+  /**
+   * Part réussie du premier coup parmi les manches tentées : résolues, plus abandonnées après un raté (sinon un
+   * enfant qui quitte dès qu'il échoue afficherait 100 %). null sans manche tentée.
+   */
   firstTryRate: number | null;
 }
 
@@ -23,7 +26,11 @@ export function summarizePuzzles(records: readonly PuzzleRecord[]): PuzzleSummar
   const byPreset = PUZZLE_PRESETS.map((preset): PresetSummary => {
     const rounds = solvedRecords.filter((r) => r.preset === preset);
     const firstTry = rounds.filter((r) => r.firstTry === true).length;
-    return { preset, solved: rounds.length, firstTryRate: rounds.length === 0 ? null : firstTry / rounds.length };
+    const gaveUpAfterMiss = records.filter(
+      (r) => r.preset === preset && r.status === 'abandoned' && r.misses > 0,
+    ).length;
+    const tried = rounds.length + gaveUpAfterMiss;
+    return { preset, solved: rounds.length, firstTryRate: tried === 0 ? null : firstTry / tried };
   });
   const reached = byPreset.filter((p) => p.solved > 0);
   return { byPreset, highestSolved: reached.length === 0 ? null : reached[reached.length - 1]!.preset };

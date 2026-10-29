@@ -24,8 +24,10 @@ pendu (3 mots à deviner) » comme niveaux de la carte.
 Choix d'orchestration (le PM a délégué la planification) :
 
 - **Niveau obligatoire** comme les autres (question laissée ouverte par le PM) : chaque niveau doit se gagner par
-  compétence. Pour le morpion, la chance est neutralisée : une grille perdue coûte une vie mais on rejoue, et le niveau
-  fixe 5 vies.
+  compétence. Pour le morpion, la chance est neutralisée : une grille perdue coûte une vie (au plus une par manche),
+  on rejoue jusqu'à gagner, et le niveau fixe 3 vies pour 2 manches : il ne peut pas échouer, seules les étoiles
+  baissent. Le pendu occupe des places de raisonnement mais reste classé en compétence « orthographe » dans les
+  statistiques (deviner un mot à partir de son indice et de ses lettres).
 - **Alternance** : chaque monde compte **20 niveaux = 16 de compétence + 4 de raisonnement**, un niveau de raisonnement
   après chaque série de 4. `LEVELS_PER_WORLD` passe de 16 à 20 ; les mondes gardent ainsi leur alignement (une série de
   mots par monde en CE1). CE1 : 64 → 80 niveaux (4 mondes) ; MS : 32 → 40 (2 mondes).
@@ -84,7 +86,7 @@ revient au départ, le programme reste affiché pour être corrigé, et la manch
 Réutilise `src/games/tictactoe/logic.ts` (niveaux, minimax, `threatCells`). Une manche = gagner une grille contre le
 téléphone au niveau `level`. Grille perdue : `MISS`, puis nouvelle grille. Égalité : nouvelle grille, sans raté. L'enfant
 commence la première grille de chaque manche puis on alterne (`childStarts`). `hint` : coup de pouce (menace qui
-clignote). Sans texte. Niveau type : `rounds: 2` (« 2 manches gagnantes »), `lives: 5`, `level: 'easy'`, `hint: true`.
+clignote). Sans texte. Niveau type : `rounds: 2` (« 2 manches gagnantes »), `lives: 3`, `level: 'easy'`, `hint: true`.
 
 ### 3.5 `hangman` — Pendu (CE1)
 

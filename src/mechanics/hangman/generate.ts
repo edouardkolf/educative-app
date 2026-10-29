@@ -29,7 +29,9 @@ export function generateRounds(params: HangmanParams, count: number, rng: Rng): 
   if (pool.length < count) {
     throw new Error(`hangman : ${pool.length} mot(s) disponible(s) pour ${count} manches.`);
   }
-  const perRound = Math.min(1 + RESERVE_PER_ROUND, Math.floor(pool.length / count));
+  // Tout le reste du filtre sert de réserve (au moins RESERVE_PER_ROUND quand c'est possible) : on ne revient
+  // sur un mot déjà montré qu'après avoir perdu tous les autres mots de la manche.
+  const perRound = Math.floor(pool.length / count);
   const drawn = rng.shuffle(pool).slice(0, count * perRound);
   return Array.from({ length: count }, (_, i) => {
     const words = drawn.slice(i * perRound, (i + 1) * perRound);

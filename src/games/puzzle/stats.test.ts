@@ -41,3 +41,14 @@ describe('summarizePuzzles', () => {
     expect(s.highestSolved).toBe('easy');
   });
 });
+
+describe('summarizePuzzles — abandons après un raté (revue)', () => {
+  it('une manche abandonnée après un raté compte comme tentée, pas réussie du premier coup', () => {
+    const quitAfterMiss: PuzzleRecord = { ...rec('hard', false), status: 'abandoned', endReason: 'quit', misses: 1 };
+    const quitClean: PuzzleRecord = { ...rec('hard', false), status: 'abandoned', endReason: 'quit', misses: 0 };
+    const s = summarizePuzzles([rec('hard', true, true), quitAfterMiss, quitClean]);
+    const hard = s.byPreset.find((p) => p.preset === 'hard')!;
+    expect(hard.solved).toBe(1);
+    expect(hard.firstTryRate).toBeCloseTo(0.5);
+  });
+});

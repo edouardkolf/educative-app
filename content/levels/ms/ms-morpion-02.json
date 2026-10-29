@@ -6,7 +6,7 @@
   "objective": "Gagner deux grilles contre le téléphone, en commençant à tour de rôle.",
   "mechanic": "tictactoe",
   "rounds": 2,
-  "lives": 5,
+  "lives": 3,
   "params": {
     "level": "easy",
     "hint": true,

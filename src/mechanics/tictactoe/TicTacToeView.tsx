@@ -17,6 +17,8 @@ const WIN_SHOWN_MS = 400;
 
 export function TicTacToeView({ round, solved, onChoose }: MechanicViewProps<TicTacToeRoundData>) {
   const { level, hint, childStarts, seed } = round.data;
+  // Alternance : la manche n° k commence comme la grille n° k (l'enfant commence une manche sur deux).
+  const firstGrid = round.data.roundIndex ?? 0;
   const [gridIndex, setGridIndex] = useState(0);
   const [moves, setMoves] = useState<number[]>([]);
   const [thinking, setThinking] = useState(false);
@@ -29,7 +31,7 @@ export function TicTacToeView({ round, solved, onChoose }: MechanicViewProps<Tic
   const latest = useRef({ onChoose, solved, round });
   latest.current = { onChoose, solved, round };
 
-  const xStarts = childStartsGrid(childStarts, gridIndex);
+  const xStarts = childStartsGrid(childStarts, firstGrid + gridIndex);
   const board = boardFromMoves(moves, xStarts);
   const result = gridResult(moves, xStarts);
   const line = winningLine(board);
@@ -46,7 +48,7 @@ export function TicTacToeView({ round, solved, onChoose }: MechanicViewProps<Tic
   useEffect(() => {
     unmounted.current = false;
     // Si le téléphone ouvre la première grille (jamais avec les niveaux actuels, mais permis par le contrat).
-    if (!childStartsGrid(childStarts, 0)) schedulePhone(false);
+    if (!childStartsGrid(childStarts, firstGrid + 0)) schedulePhone(false);
     const pending = timers.current;
     return () => {
       unmounted.current = true;
@@ -57,7 +59,7 @@ export function TicTacToeView({ round, solved, onChoose }: MechanicViewProps<Tic
   }, []);
 
   function startGrid(index: number) {
-    const starts = childStartsGrid(childStarts, index);
+    const starts = childStartsGrid(childStarts, firstGrid + index);
     gridIndexRef.current = index;
     movesRef.current = [];
     setGridIndex(index);
@@ -101,8 +103,8 @@ export function TicTacToeView({ round, solved, onChoose }: MechanicViewProps<Tic
 
   function onCell(cell: number) {
     if (solved || thinking) return;
-    if (!isChildTurn(movesRef.current, childStartsGrid(childStarts, gridIndexRef.current))) return;
-    place(cell, childStartsGrid(childStarts, gridIndexRef.current));
+    if (!isChildTurn(movesRef.current, childStartsGrid(childStarts, firstGrid + gridIndexRef.current))) return;
+    place(cell, childStartsGrid(childStarts, firstGrid + gridIndexRef.current));
   }
 
   const childActive = result === null && isChildTurn(moves, xStarts);

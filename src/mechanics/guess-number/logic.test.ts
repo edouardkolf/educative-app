@@ -31,30 +31,31 @@ describe('applyGuess', () => {
     expect(r.justMissed).toBe(false);
   });
 
-  it('rate dès que le budget est dépassé, une seule fois', () => {
+  it('rate dès que les maxGuesses propositions sont faites sans trouver, une seule fois', () => {
     let s = start();
-    for (const n of [1, 2, 3]) {
+    for (const n of [1, 2]) {
       const r = applyGuess(s, n);
       expect(r.justMissed).toBe(false);
       s = r.state;
     }
     expect(s.missed).toBe(false);
-    let r = applyGuess(s, 4);
+    let r = applyGuess(s, 3);
     expect(r.justMissed).toBe(true);
     expect(r.state.missed).toBe(true);
-    r = applyGuess(r.state, 5);
+    r = applyGuess(r.state, 4);
     expect(r.justMissed).toBe(false);
     expect(r.state.missed).toBe(true);
   });
 
-  it('trouver juste à la dernière proposition permise ou juste après ne rate pas', () => {
+  it('trouver à la dernière proposition permise ne rate pas ; juste après, si', () => {
     let s = start();
     for (const n of [1, 2]) s = applyGuess(s, n).state;
     expect(applyGuess(s, 42).state.missed).toBe(false);
     s = applyGuess(s, 3).state;
+    expect(s.missed).toBe(true);
     const r = applyGuess(s, 42);
     expect(r.justMissed).toBe(false);
-    expect(r.state.missed).toBe(false);
+    expect(r.state.found).toBe(true);
   });
 
   it('ignore une proposition après la réussite', () => {

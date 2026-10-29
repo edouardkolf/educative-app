@@ -17,7 +17,8 @@ export function validateGuessNumber(params: GuessNumberParams): string[] {
   if (params.input === 'tiles' && size > MAX_TILES) {
     errors.push(`guess-number : avec des tuiles, la plage ne peut pas dépasser ${MAX_TILES} nombres (ici ${size}).`);
   }
-  const needed = Math.ceil(Math.log2(size));
+  // En coupant parfaitement en deux, on trouve à coup sûr en ⌊log2 n⌋ + 1 propositions.
+  const needed = Math.floor(Math.log2(size)) + 1;
   if (params.maxGuesses < needed) {
     errors.push(
       `guess-number : ${params.maxGuesses} propositions ne suffisent pas pour une plage de ${size} nombres ` +

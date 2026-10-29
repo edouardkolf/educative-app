@@ -20,14 +20,14 @@ describe('filterPool', () => {
 });
 
 describe('generateRounds', () => {
-  it('un mot principal + 2 réserves, tous distincts, answer = id du principal', () => {
+  it('un mot principal + tout le reste du filtre en réserve (au moins 2), tous distincts, answer = id du principal', () => {
     for (let seed = 1; seed <= 50; seed += 1) {
       const rounds = generateRounds({ ...params, maxLength: 6 }, 3, createRng(seed));
       expect(rounds).toHaveLength(3);
       const ids = rounds.flatMap((r) => r.data.words.map((w) => w.id));
-      expect(ids).toHaveLength(9);
-      expect(new Set(ids).size).toBe(9);
+      expect(new Set(ids).size).toBe(ids.length);
       rounds.forEach((r) => {
+        expect(r.data.words.length).toBeGreaterThanOrEqual(3);
         expect(r.answer).toBe(r.data.words[0]?.id);
         expect(r.data.maxMistakes).toBe(8);
         expect(r.data.words.every((w) => w.word.length <= 6)).toBe(true);

@@ -7,7 +7,7 @@
   "mechanic": "tictactoe",
   "rounds": 2,
   "tutorial": true,
-  "lives": 5,
+  "lives": 3,
   "params": {
     "level": "easy",
     "hint": true,
