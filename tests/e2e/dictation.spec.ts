@@ -4,6 +4,13 @@
 import { test, expect, type Page } from '@playwright/test';
 import { chooseProfile, profileCard } from './nav';
 
+/**
+ * Après `clock.runFor('15:05')`, l'appli a 15 minutes de tics d'horloge à enregistrer d'un coup (écritures IndexedDB
+ * réelles, hors horloge simulée) : l'écran de fin arrive un peu après. Sur le téléphone, le temps passe vraiment et ce
+ * retard n'existe pas. On laisse donc plus que les 5 s par défaut, sans rien changer à ce qui est vérifié.
+ */
+const LOCK_AFTER_FAST_FORWARD_MS = 15_000;
+
 const PARENT_PIN = '1234';
 
 // ---------- Garde-fou qualité : aucune erreur JS, aucun console.error pendant un test ----------
@@ -551,7 +558,7 @@ test('fin douce (dictée) : le mot en cours se termine, écran de fin, comptée 
   await page.locator('[data-key="ok"]').click();
   await page.clock.runFor(120_000); // laisse s'écouler l'animation « solved » (900/1200 ms)
 
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   // Déverrouille et termine la session pour lire les statistiques (horloge toujours simulée).
   await longPressClock(page, page.getByTestId('lock-parent'), 2100);

@@ -468,10 +468,10 @@ test.describe('niveaux de raisonnement', () => {
     await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
   });
 
-  test('ce1-morpion-01 : 2 grilles gagnantes contre le téléphone facile (5 vies)', async ({ page }) => {
+  test('ce1-morpion-01 : 2 grilles gagnantes contre le téléphone facile (3 vies, ne peut pas échouer)', async ({ page }) => {
     test.setTimeout(240_000);
     await setupLevel(page, 'Zoé', 'ce1', 'ce1-morpion-01');
-    await expect(page.getByTestId('lives')).toHaveAttribute('data-lives', '5');
+    await expect(page.getByTestId('lives')).toHaveAttribute('data-lives', '3');
 
     const LINES = [
       [0, 1, 2], [3, 4, 5], [6, 7, 8],
