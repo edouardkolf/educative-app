@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-code-02",
+  "title": "Code secret avec répétitions",
+  "skill": "logic",
+  "objective": "Trouver un code de trois couleurs où une même couleur peut revenir plusieurs fois.",
+  "mechanic": "code-breaker",
+  "rounds": 3,
+  "params": {
+    "length": 3,
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green",
+      "purple"
+    ],
+    "repeats": true,
+    "feedback": "positional",
+    "maxGuesses": 7
+  }
+}

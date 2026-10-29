@@ -217,10 +217,16 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       const candidate = track ? getNextLevelId(track, levelId) : undefined;
       if (track && candidate) {
         const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
-        const nextState = computeLevelStates(track, runs, overrides).find((s) => s.levelId === candidate);
-        if (nextState && nextState.status !== 'locked') next = candidate;
-        newWorld =
-          worldIndexForLevel(track.levels.indexOf(candidate)) !== worldIndexForLevel(track.levels.indexOf(levelId));
+        const states = computeLevelStates(track, runs, overrides);
+        const nextState = states.find((s) => s.levelId === candidate);
+        if (nextState?.status === 'unlocked') next = candidate;
+        // Niveau suivant déjà réussi (enfant qui rattrape un niveau inséré après coup, JEUX-LOGIQUE.md §7) :
+        // « Suivant » mène au niveau en cours plutôt que de faire rejouer les anciens un par un.
+        else if (nextState?.status === 'completed') next = states.find((s) => s.current)?.levelId ?? null;
+        if (next) {
+          newWorld =
+            worldIndexForLevel(track.levels.indexOf(next)) !== worldIndexForLevel(track.levels.indexOf(levelId));
+        }
       }
     } catch (err) {
       console.error('next level lookup failed', err);
@@ -470,7 +476,9 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
           ))}
         </div>
       </div>
-      <div class="play-round" data-answer={round.answer}>
+      {/* Premier tap dans la manche : la main du tutoriel s'efface, y compris pour les mécaniques à plusieurs
+          coups qui n'appellent onChoose qu'à la réussite ou au raté (JEUX-LOGIQUE.md §2). */}
+      <div class="play-round" data-answer={round.answer} onPointerDownCapture={() => setHasTapped(true)}>
         <mechanic.View round={round} wrongChoices={wrongChoices} solved={solved} onChoose={onChoose} key={roundIndex} />
       </div>
       {showTutorial && <TutorialHand targets={tutorialTargets} />}

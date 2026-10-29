@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-robot-02",
+  "title": "Robot : chemin plus long",
+  "skill": "logic",
+  "objective": "Programmer un trajet de 5 à 7 flèches jusqu'au trésor, en contournant 4 rochers.",
+  "mechanic": "robot",
+  "rounds": 3,
+  "params": {
+    "size": 5,
+    "obstacles": 4,
+    "mode": "program",
+    "pathLength": {
+      "min": 5,
+      "max": 7
+    },
+    "maxArrows": 8
+  }
+}

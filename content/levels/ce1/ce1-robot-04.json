@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-robot-04",
+  "title": "Robot : le labyrinthe",
+  "skill": "logic",
+  "objective": "Programmer un trajet de 7 à 9 flèches dans une grille 6 × 6 avec 8 rochers.",
+  "mechanic": "robot",
+  "rounds": 3,
+  "params": {
+    "size": 6,
+    "obstacles": 8,
+    "mode": "program",
+    "pathLength": {
+      "min": 7,
+      "max": 9
+    },
+    "maxArrows": 10
+  }
+}

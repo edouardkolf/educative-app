@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-code-03",
+  "title": "Code secret à quatre cases",
+  "skill": "logic",
+  "objective": "Retrouver un code de quatre couleurs sans répétition grâce au nombre de bien placés et de mal placés.",
+  "mechanic": "code-breaker",
+  "rounds": 3,
+  "params": {
+    "length": 4,
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green",
+      "purple"
+    ],
+    "repeats": false,
+    "feedback": "counts",
+    "maxGuesses": 8
+  }
+}

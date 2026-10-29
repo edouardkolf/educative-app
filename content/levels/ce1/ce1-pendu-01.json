@@ -1,0 +1,27 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-pendu-01",
+  "title": "Pendu : les animaux",
+  "skill": "spelling",
+  "objective": "Deviner des noms d'animaux lettre par lettre avant que la fleur ne se fane.",
+  "mechanic": "hangman",
+  "rounds": 3,
+  "params": {
+    "maxMistakes": 8,
+    "maxLength": 6,
+    "words": [
+      "lion",
+      "ours",
+      "lapin",
+      "vache",
+      "poule",
+      "tigre",
+      "singe",
+      "hibou",
+      "requin",
+      "cheval",
+      "canard",
+      "souris"
+    ]
+  }
+}

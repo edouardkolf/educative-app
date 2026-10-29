@@ -9,6 +9,7 @@ import {
   completeColoring,
   completeDictation,
   completeHangman,
+  completePuzzle,
   completeTicTacToe,
   completeRun,
   exportAll,
@@ -20,6 +21,7 @@ import {
   listHangmans,
   listTicTacToes,
   listOverrides,
+  listPuzzles,
   listProfiles,
   listRuns,
   recordPaint,
@@ -29,6 +31,7 @@ import {
   startColoring,
   startDictation,
   startHangman,
+  startPuzzle,
   startTicTacToe,
   startRun,
   updateSettings,
@@ -98,12 +101,14 @@ async function seed() {
   await completeTicTacToe(ttt.id, [4, 0, 2, 6, 3, 5, 1, 7, 8], 'draw', 4200);
   const hm = await startHangman(profile.id, { wordId: 'lion', word: 'lion', maxMistakes: 8, guesses: ['a'], mistakes: 1 });
   await completeHangman(hm.id, ['a', 'l', 'i', 'o', 'n'], 1, 'found', 9000);
+  const pz = await startPuzzle(profile.id, { game: 'code-breaker', preset: 'medium' });
+  await completePuzzle(pz.id, 7000);
 
   return profile;
 }
 
 describe('export → import', () => {
-  it('aller-retour v3 : les données (dont les parties de jeu) reviennent identiques', async () => {
+  it('aller-retour v4 : les données (dont les parties de jeu) reviennent identiques', async () => {
     const profile = await seed();
     const bundle = await exportAll();
 
@@ -114,6 +119,7 @@ describe('export → import', () => {
     expect(bundle.colorings).toHaveLength(1);
     expect(bundle.tictactoes).toHaveLength(1);
     expect(bundle.hangmans).toHaveLength(1);
+    expect(bundle.puzzles).toHaveLength(1);
 
     const before = {
       profiles: await listProfiles(),
@@ -124,11 +130,12 @@ describe('export → import', () => {
       colorings: await listColorings(profile.id),
       tictactoes: await listTicTacToes(profile.id),
       hangmans: await listHangmans(profile.id),
+      puzzles: await listPuzzles(profile.id),
     };
 
     const result = await importAll(bundle);
 
-    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 4, skipped: 0 });
+    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 5, skipped: 0 });
     expect(await listProfiles()).toEqual(before.profiles);
     expect(await listRuns(profile.id)).toEqual(before.runs);
     expect(await listOverrides(profile.id)).toEqual(before.overrides);
@@ -137,6 +144,7 @@ describe('export → import', () => {
     expect(await listColorings(profile.id)).toEqual(before.colorings);
     expect(await listTicTacToes(profile.id)).toEqual(before.tictactoes);
     expect(await listHangmans(profile.id)).toEqual(before.hangmans);
+    expect(await listPuzzles(profile.id)).toEqual(before.puzzles);
   });
 
   it('conserve le code parent et remet sessions/lock à vide/null', async () => {
@@ -161,7 +169,8 @@ describe('export → import', () => {
   it('un fichier v1 (sans dictations/colorings) est accepté, avec 0 partie de jeu', async () => {
     await seed();
     const bundle = await exportAll();
-    const { dictations: _d, colorings: _c, tictactoes: _t, hangmans: _h, ...v1Bundle } = bundle;
+    const { dictations: _d, colorings: _c, tictactoes: _t, hangmans: _h, puzzles: _p, ...v1Bundle } = bundle;
+    void _p;
     void _d;
     void _c;
     void _t;
@@ -179,7 +188,8 @@ describe('export → import', () => {
   it('un fichier v2 sans les tableaux de jeu est refusé', async () => {
     await seed();
     const bundle = await exportAll();
-    const { dictations: _d, colorings: _c, tictactoes: _t, hangmans: _h, ...v2WithoutGames } = bundle;
+    const { dictations: _d, colorings: _c, tictactoes: _t, hangmans: _h, puzzles: _p, ...v2WithoutGames } = bundle;
+    void _p;
     void _d;
     void _c;
     void _t;
@@ -191,7 +201,8 @@ describe('export → import', () => {
   it('un fichier v2 (sans morpion ni pendu) est accepté, avec ses dictées et coloriages', async () => {
     await seed();
     const bundle = await exportAll();
-    const { tictactoes: _t, hangmans: _h, ...v2Bundle } = bundle;
+    const { tictactoes: _t, hangmans: _h, puzzles: _p, ...v2Bundle } = bundle;
+    void _p;
     void _t;
     void _h;
 
@@ -222,11 +233,43 @@ describe('export → import', () => {
     expect(await importAll({ ...bundle, hangmans: [{ ...hm, guesses: ['é'] }] })).toMatchObject({ ok: false });
   });
 
-  it('refuse la version 4 (inconnue)', async () => {
+  it('un fichier v3 (sans puzzles) est accepté, avec ses parties de morpion et de pendu et 0 puzzle', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const { puzzles: _p, ...v3Bundle } = bundle;
+    void _p;
+
+    const result = await importAll({ ...v3Bundle, version: 3 });
+
+    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 4, skipped: 0 });
+    const [profile] = await listProfiles();
+    if (!profile) throw new Error('import invalide');
+    expect(await listPuzzles(profile.id)).toEqual([]);
+  });
+
+  it('un fichier v4 sans le tableau des puzzles est refusé', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const { puzzles: _p, ...withoutPuzzles } = bundle;
+    void _p;
+
+    expect(await importAll(withoutPuzzles)).toMatchObject({ ok: false });
+  });
+
+  it('refuse une manche de puzzle mal formée (jeu inconnu)', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const [pz] = bundle.puzzles;
+    if (!pz) throw new Error('seed invalide');
+
+    expect(await importAll({ ...bundle, puzzles: [{ ...pz, game: 'chess' }] })).toMatchObject({ ok: false });
+  });
+
+  it('refuse la version 5 (inconnue)', async () => {
     await seed();
     const bundle = await exportAll();
 
-    expect(await importAll({ ...bundle, version: 4 })).toMatchObject({ ok: false });
+    expect(await importAll({ ...bundle, version: 5 })).toMatchObject({ ok: false });
   });
 });
 
@@ -399,7 +442,7 @@ describe('F2 : lignes orphelines (enfant absent de la sauvegarde)', () => {
       runs: 0,
       gameRecords: 0,
       skipped: bundle.runs.length + bundle.overrides.length + bundle.usage.length + bundle.dictations.length +
-        bundle.colorings.length + bundle.tictactoes.length + bundle.hangmans.length,
+        bundle.colorings.length + bundle.tictactoes.length + bundle.hangmans.length + bundle.puzzles.length,
     });
     expect(await listProfiles()).toEqual([]);
     // Les anciennes données du profil (avant cet import) ont bien été remplacées, pas conservées.

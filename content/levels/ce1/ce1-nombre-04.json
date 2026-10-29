@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-nombre-04",
+  "title": "Devine le nombre de 100 à 999",
+  "skill": "logic",
+  "objective": "Trouver un nombre à trois chiffres en déduisant chaque chiffre à partir des indices.",
+  "mechanic": "guess-number",
+  "rounds": 3,
+  "params": {
+    "range": {
+      "min": 100,
+      "max": 999
+    },
+    "maxGuesses": 12,
+    "input": "keypad"
+  }
+}

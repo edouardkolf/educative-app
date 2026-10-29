@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-morpion-01",
+  "title": "Morpion contre le téléphone",
+  "skill": "logic",
+  "objective": "Gagner deux grilles en alignant trois croix et en bloquant les alignements du téléphone.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "tutorial": true,
+  "lives": 3,
+  "params": {
+    "level": "easy",
+    "hint": true,
+    "childStarts": "always"
+  }
+}

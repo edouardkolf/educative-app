@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-code-03",
+  "title": "Code secret à trois cases",
+  "skill": "logic",
+  "objective": "Retrouver un code de trois couleurs parmi quatre grâce aux indices.",
+  "mechanic": "code-breaker",
+  "rounds": 3,
+  "params": {
+    "length": 3,
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green"
+    ],
+    "repeats": false,
+    "feedback": "positional",
+    "maxGuesses": 6
+  }
+}

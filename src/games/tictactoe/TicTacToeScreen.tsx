@@ -376,7 +376,7 @@ export function MarkGlyph({ mark, size }: { mark: Mark; size: number }) {
 }
 
 /** Le téléphone adversaire, avec une tête par niveau : endormi et souriant, souriant, lunettes noires. */
-function PhoneGlyph({ size, level = 'medium' }: { size: number; level?: Level }) {
+export function PhoneGlyph({ size, level = 'medium' }: { size: number; level?: Level }) {
   const body = level === 'easy' ? '#4fb3a9' : level === 'hard' ? '#3d2c6e' : '#6c63ff';
   return (
     <svg class={`ttt-phone ttt-phone--${level}`} viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" focusable="false">

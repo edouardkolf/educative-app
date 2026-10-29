@@ -19,8 +19,8 @@ export const BOTTOM_PAD = 140;
 /** Largeur visible du chemin (bordure comprise) : un sentier, plus étroit que les niveaux posés dessus. */
 export const PATH_WIDTH = 38;
 
-/** Nombre de niveaux d'un monde avant de changer d'univers. */
-export const LEVELS_PER_WORLD = 16;
+/** Nombre de niveaux d'un monde avant de changer d'univers : 16 de compétence + 4 de raisonnement (docs/specs/JEUX-LOGIQUE.md). */
+export const LEVELS_PER_WORLD = 20;
 
 export type WorldId = 'forest' | 'sea' | 'mountain' | 'clouds';
 /** Ordre des mondes ; au-delà du dernier, on reboucle. */

@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-02",
+  "title": "Robot : un rocher",
+  "skill": "logic",
+  "objective": "Guider le robot jusqu'au trésor (3 à 4 pas) en évitant un rocher.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "params": {
+    "size": 4,
+    "obstacles": 1,
+    "mode": "step",
+    "pathLength": {
+      "min": 3,
+      "max": 4
+    }
+  }
+}

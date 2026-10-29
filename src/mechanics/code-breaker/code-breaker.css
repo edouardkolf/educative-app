@@ -1,0 +1,200 @@
+/* Vue « Code secret » — classes préfixées cb-, aucun texte. L'écran ne défile jamais : seul l'historique le peut. */
+
+.cb-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  gap: 10px;
+  padding: 8px 12px 12px;
+  box-sizing: border-box;
+}
+
+.cb-history {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  /* Les lignes se tassent contre la ligne en cours ; au-delà de la place disponible, les plus anciennes
+     sortent par le haut : rien ne défile (règle UX enfant), les derniers indices restent visibles. */
+  justify-content: flex-end;
+}
+
+.cb-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cb-row__pegs {
+  display: flex;
+  gap: 8px;
+}
+
+.cb-row--played {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgba(255, 253, 247, 0.7);
+}
+
+.cb-row--played.is-lit {
+  background: #fff3b0;
+  animation: cb-glow 700ms ease-in-out infinite alternate;
+}
+
+.cb-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.cb-peg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cb-mark {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.cb-mark--exact {
+  background: #43aa3b;
+  color: #fff;
+}
+
+.cb-mark--present {
+  background: #f77f00;
+  width: 12px;
+  height: 12px;
+  margin: 2px;
+}
+
+.cb-counts {
+  display: grid;
+  grid-template-columns: repeat(2, 14px);
+  gap: 4px;
+  align-content: center;
+  min-width: 32px;
+}
+
+.cb-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.cb-dot--exact {
+  background: #43aa3b;
+}
+
+.cb-dot--present {
+  background: #f77f00;
+}
+
+.cb-row--current {
+  flex: 0 0 auto;
+}
+
+.cb-slot {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 3px dashed #cdbfa6;
+  background: var(--surface, #fffdf7);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cb-slot.is-filled {
+  border-style: solid;
+  border-color: #eadfca;
+  box-shadow: var(--shadow-sm);
+}
+
+.cb-submit {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #d9d2c4;
+  color: #fff;
+  opacity: 0.6;
+}
+
+.cb-submit.is-ready {
+  background: #43aa3b;
+  opacity: 1;
+  box-shadow: var(--shadow-sm);
+  animation: cb-pulse 1200ms ease-in-out infinite;
+}
+
+.cb-pots {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 8px;
+  justify-content: center;
+}
+
+.cb-pot {
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 4px solid var(--pot);
+  background: var(--surface, #fffdf7);
+  box-shadow: var(--shadow-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cb-pot:active {
+  transform: scale(0.92);
+}
+
+/* Ligne vide : les pots pulsent doucement pour dire « commence ici ». */
+.cb-pots.is-hint .cb-pot {
+  animation: cb-pulse 1600ms ease-in-out infinite;
+}
+
+@keyframes cb-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 179, 71, 0);
+  }
+}
+
+@keyframes cb-glow {
+  from {
+    box-shadow: 0 0 0 0 rgba(255, 195, 0, 0.8);
+  }
+  to {
+    box-shadow: 0 0 18px 6px rgba(255, 195, 0, 0.8);
+  }
+}

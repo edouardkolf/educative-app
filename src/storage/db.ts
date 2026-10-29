@@ -1,16 +1,18 @@
-// Connexion IndexedDB : schéma typé (base "petits-malins", version 3), ouverture paresseuse,
+// Connexion IndexedDB : schéma typé (base "petits-malins", version 4), ouverture paresseuse,
 // connexion mise en cache. `__resetForTests` ferme et oublie cette connexion (utilisé par les tests).
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { ColoringRecord } from './colorings';
 import type { DictationRecord } from './dictations';
 import type { HangmanRecord } from './hangmans';
+import type { PuzzleRecord } from './puzzles';
 import type { TicTacToeRecord } from './tictactoes';
 import type { AppSettings, LevelOverride, Profile, Run, UsageDay } from './types';
 
 export const DB_NAME = 'petits-malins';
 /** v2 : parties des jeux hors parcours (stores "dictations" et "colorings", docs/specs/HUB.md §5.1).
- * v3 : morpion et pendu (stores "tictactoes" et "hangmans", docs/specs/MORPION-PENDU.md §4). */
-export const DB_VERSION = 3;
+ * v3 : morpion et pendu (stores "tictactoes" et "hangmans", docs/specs/MORPION-PENDU.md §4).
+ * v4 : jeux libres de logique (store "puzzles", docs/specs/JEUX-LOGIQUE.md §4). */
+export const DB_VERSION = 4;
 
 export interface StorageSchema extends DBSchema {
   profiles: {
@@ -71,6 +73,13 @@ export interface StorageSchema extends DBSchema {
       profileId: string;
     };
   };
+  puzzles: {
+    key: string; // PuzzleRecord['id']
+    value: PuzzleRecord;
+    indexes: {
+      profileId: string;
+    };
+  };
 }
 
 let dbPromise: Promise<IDBPDatabase<StorageSchema>> | null = null;
@@ -106,6 +115,9 @@ export function getDB(): Promise<IDBPDatabase<StorageSchema>> {
         if (oldVersion < 3) {
           db.createObjectStore('tictactoes', { keyPath: 'id' }).createIndex('profileId', 'profileId');
           db.createObjectStore('hangmans', { keyPath: 'id' }).createIndex('profileId', 'profileId');
+        }
+        if (oldVersion < 4) {
+          db.createObjectStore('puzzles', { keyPath: 'id' }).createIndex('profileId', 'profileId');
         }
       },
       // F5 : cette connexion (plus ancienne) bloque la mise à niveau demandée par une autre fenêtre

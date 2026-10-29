@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-robot-03",
+  "title": "Robot : grande grille",
+  "skill": "logic",
+  "objective": "Programmer un trajet de 6 à 8 flèches dans une grille 6 × 6 pleine de rochers.",
+  "mechanic": "robot",
+  "rounds": 3,
+  "params": {
+    "size": 6,
+    "obstacles": 6,
+    "mode": "program",
+    "pathLength": {
+      "min": 6,
+      "max": 8
+    },
+    "maxArrows": 9
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aboveChance, chanceOfFirstTry } from './chance';
+import { aboveChance, chanceOfFirstTry, randomNarrowingChance } from './chance';
 import { getLevel, getTracks } from './content';
 import type { Level } from './types';
 
@@ -52,5 +52,16 @@ describe('aboveChance', () => {
 
   it('ne descend pas sous 0 quand on fait pire que le hasard', () => {
     expect(aboveChance(0.2, 1 / 3)).toBe(0);
+  });
+});
+
+describe('hasard des jeux de logique (JEUX-LOGIQUE.md, revue)', () => {
+  it('devine le nombre en tuiles : piocher parmi les nombres restants réussit souvent', () => {
+    expect(randomNarrowingChance(1, 1)).toBe(1);
+    expect(randomNarrowingChance(2, 1)).toBeCloseTo(0.5);
+    expect(randomNarrowingChance(2, 2)).toBeCloseTo(1);
+    // 1–20 en 7 propositions : le hasard « guidé » trouve presque toujours.
+    expect(randomNarrowingChance(20, 7)).toBeGreaterThan(0.9);
+    expect(randomNarrowingChance(20, 7)).toBeLessThanOrEqual(1);
   });
 });

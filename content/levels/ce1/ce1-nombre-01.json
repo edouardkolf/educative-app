@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-nombre-01",
+  "title": "Devine le nombre de 1 à 20",
+  "skill": "logic",
+  "objective": "Trouver un nombre caché entre 1 et 20 en utilisant les indices « plus grand » ou « plus petit ».",
+  "mechanic": "guess-number",
+  "rounds": 3,
+  "tutorial": true,
+  "params": {
+    "range": {
+      "min": 1,
+      "max": 20
+    },
+    "maxGuesses": 7,
+    "input": "tiles"
+  }
+}

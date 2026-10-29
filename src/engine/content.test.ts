@@ -11,6 +11,11 @@ import { validateParams as validateCalc } from '../mechanics/calc/validate';
 import { validateParams as validateCompare } from '../mechanics/compare/validate';
 import { validateParams as validateRead } from '../mechanics/read/validate';
 import { validateParams as validateSpelling } from '../mechanics/spelling/validate';
+import { validateCodeBreaker } from '../mechanics/code-breaker/validate';
+import { validateGuessNumber } from '../mechanics/guess-number/validate';
+import { validateHangman } from '../mechanics/hangman/validate';
+import { validateRobot } from '../mechanics/robot/validate';
+import { validateTicTacToe } from '../mechanics/tictactoe/validate';
 import { createRng } from './rng';
 import type { CountParams, Level, OddOneOutParams, SequenceParams, Track } from './types';
 
@@ -132,6 +137,21 @@ function semanticErrors(level: Level): string[] {
       break;
     case 'read':
       errors.push(...validateRead(level.params).map((e) => `read : ${e}`));
+      break;
+    case 'guess-number':
+      errors.push(...validateGuessNumber(level.params).map((e) => `guess-number : ${e}`));
+      break;
+    case 'code-breaker':
+      errors.push(...validateCodeBreaker(level.params).map((e) => `code-breaker : ${e}`));
+      break;
+    case 'robot':
+      errors.push(...validateRobot(level.params).map((e) => `robot : ${e}`));
+      break;
+    case 'tictactoe':
+      errors.push(...validateTicTacToe(level.params).map((e) => `tictactoe : ${e}`));
+      break;
+    case 'hangman':
+      errors.push(...validateHangman(level.params).map((e) => `hangman : ${e}`));
       break;
     default:
       break;
@@ -310,5 +330,30 @@ describe('ordre des parcours', () => {
     const ids = getTracks().map((t) => t.id);
     expect(ids[0]).toBe('ms');
     expect(ids.indexOf('ce1')).toBeGreaterThan(ids.indexOf('ms'));
+  });
+});
+
+// ---------- Alternance compétence / raisonnement (docs/specs/JEUX-LOGIQUE.md §1) ----------
+
+/** Mécaniques de raisonnement : une sur cinq niveaux, à la 5e place de chaque groupe. */
+const REASONING_MECHANICS: ReadonlySet<string> = new Set(['guess-number', 'code-breaker', 'robot', 'tictactoe', 'hangman']);
+
+describe('alternance des niveaux sur les parcours', () => {
+  const levelById = new Map(levelEntries.map((e) => [e.level.id, e.level]));
+  describe.each(trackEntries.map(({ path, track }): [string, Track] => [path, track]))('%s', (path, track) => {
+    it('un niveau de raisonnement toutes les 5 places, et seulement là', () => {
+      const misplaced = track.levels.flatMap((id, i) => {
+        const level = levelById.get(id);
+        if (!level) return [];
+        const reasoning = REASONING_MECHANICS.has(level.mechanic);
+        const expected = i % 5 === 4;
+        return reasoning === expected ? [] : [`${i + 1}. ${id} (${reasoning ? 'raisonnement' : 'compétence'})`];
+      });
+      expect(misplaced, `${fileName(path)} : alternance non respectée — ${misplaced.join(', ')}`).toEqual([]);
+    });
+
+    it('des mondes complets de 20 niveaux', () => {
+      expect(track.levels.length % 20, `${fileName(path)} : ${track.levels.length} niveaux`).toBe(0);
+    });
   });
 });

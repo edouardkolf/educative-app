@@ -8,6 +8,30 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { enterMap, openMap, profileCard } from './nav';
 
+/**
+ * Après `clock.runFor('15:05')`, l'appli a 15 minutes de tics d'horloge à enregistrer d'un coup (écritures IndexedDB
+ * réelles, hors horloge simulée) : l'écran de fin arrive un peu après. Sur le téléphone, le temps passe vraiment et ce
+ * retard n'existe pas. On laisse donc plus que les 5 s par défaut, sans rien changer à ce qui est vérifié.
+ */
+const LOCK_AFTER_FAST_FORWARD_MS = 15_000;
+
+/** Verrou (écran de fin) enregistré par l'appli, lu directement dans IndexedDB. */
+async function readLock(page: Page): Promise<unknown> {
+  return page.evaluate(async () => {
+    const db: IDBDatabase = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('petits-malins');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const settings = await new Promise<{ lock?: unknown } | undefined>((resolve) => {
+      const request = db.transaction('settings').objectStore('settings').get('app');
+      request.onsuccess = () => resolve(request.result as { lock?: unknown } | undefined);
+    });
+    db.close();
+    return settings?.lock ?? null;
+  });
+}
+
 const PARENT_PIN = '1234';
 
 // ---------- Garde-fou qualité : aucune erreur JS, aucun console.error pendant un test ----------
@@ -110,10 +134,10 @@ test('minuteur de session sur la carte : écran de fin, persiste au rechargement
   await page.clock.runFor('15:05'); // dépasse les 15 min de session par défaut (fixées à la création de l'enfant)
 
   // Sur la carte ("hors partie") : l'horloge de session navigue elle-même vers l'écran de fin.
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   await page.reload(); // l'horloge simulée (et le temps déjà avancé) survit au rechargement
-  await expect(page.getByTestId('lock-parent')).toBeVisible(); // toujours bloqué : settings.lock persisté
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS }); // toujours bloqué : settings.lock persisté
 
   // Messages de l'écran de fin : enfant (demander à un adulte) + consigne adulte (appui long cadenas).
   await expect(page.getByTestId('lock-message')).toContainText('Tu as utilisé tout le temps disponible.');
@@ -134,7 +158,7 @@ test("verrou de la veille : le lendemain, l'enfant n'est plus bloqué et repart 
   await onboardWithChild(page, 'Lina');
   await enterMap(page, 'Lina');
   await page.clock.runFor('15:05'); // limite de session atteinte : écran de fin, personne ne déverrouille
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   await page.clock.fastForward('24:00:00'); // le lendemain
   await page.reload();
@@ -171,12 +195,15 @@ test('minuteur pendant une partie : la manche se termine puis écran de fin, com
   }
 
   await page.clock.runFor('15:05'); // épuise la session pendant que la manche 1 est toujours affichée, sans réponse
+  // En temps réel, l'appli enregistre la fin du temps dans les 5 s ; ici 15 minutes de tics arrivent d'un coup : on attend
+  // qu'elle l'ait enregistrée (verrou posé) avant que l'enfant réponde, sinon la réponse passerait avant le verrou.
+  await expect.poll(() => readLock(page), { timeout: LOCK_AFTER_FAST_FORWARD_MS }).not.toBeNull();
 
   // La bonne réponse malgré le minuteur écoulé : la manche en cours se termine normalement...
   await page.locator(`[data-choice="${answer}"]`).click();
   // ... mais au lieu de passer à la manche suivante (délai de 900 ms), la partie s'arrête : écran de fin.
   await page.clock.runFor(1000);
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   await unlockAndTap(page, 'end-session');
   await expect(profileCard(page, 'Lina')).toBeVisible();
@@ -209,19 +236,19 @@ test('F1 : le bouton retour Android après l\'écran de fin reste bloqué, aucun
   await page.getByTestId('quit').click();
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
   await page.clock.runFor('15:05');
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   // Plusieurs retours Android d'affilée : toujours l'écran de fin, jamais une manche relancée.
   await page.goBack();
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
   await page.goBack();
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   // Même après un délai (> 10 min, fenêtre de reprise de session) qui, avant le correctif, aurait
   // fait repartir une session neuve à 0 et n'aurait plus jamais réappliqué le verrou.
   await page.clock.runFor('11:00');
   await page.goBack();
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
   await expect(currentRound(page)).toHaveCount(0);
 
   await unlockAndTap(page, 'end-session');
@@ -254,7 +281,7 @@ test('quota du jour épuisé : le profil apparaît estompé et non sélectionnab
   // quota du jour (30 min par défaut). On repart via « Terminer » (pas « +X ») entre les deux : le
   // quota du jour ne dépend que du temps cumulé (`usage`), jamais de la session en cours.
   await page.clock.runFor('15:05');
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
   await unlockAndTap(page, 'end-session');
   await expect(profileCard(page, 'Lina')).toBeVisible();
   await expect(profileCard(page, 'Lina')).not.toHaveAttribute('data-exhausted', 'true'); // quota pas encore épuisé
@@ -262,7 +289,7 @@ test('quota du jour épuisé : le profil apparaît estompé et non sélectionnab
   await enterMap(page, 'Lina');
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
   await page.clock.runFor('15:05');
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: LOCK_AFTER_FAST_FORWARD_MS });
 
   await unlockAndTap(page, 'end-session');
   await expect(profileCard(page, 'Lina')).toBeVisible();

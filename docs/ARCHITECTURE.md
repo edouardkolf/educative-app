@@ -37,6 +37,7 @@ src/
     coloring/                ← coloriage magique (MS) : catalogue de dessins, récipient, paliers, écran, stats
     tictactoe/               ← morpion (CE1) : contre le téléphone ou à deux (docs/specs/MORPION-PENDU.md)
     hangman/                 ← pendu (CE1) : 114 mots avec indice, fleur à pétales (docs/specs/MORPION-PENDU.md)
+    puzzle/                  ← écran générique « une mécanique en manches illimitées » (devine le nombre, code secret, robot)
   screens/                   ← écrans enfant : profils, hub, carte, partie, fin de niveau, écran de fin
   parent/                    ← espace parent : code, profils, stats, réglages, export/import
   storage/                   ← IndexedDB : profils, parties, parties de jeu, réglages ; export/import
@@ -117,6 +118,8 @@ Le conteneur de manche porte `data-answer` (utile aux tests e2e, invisible pour 
   cours (`completed` si tout était joué, sinon `time-up` ou `closed`), comme `closeStaleRuns`.
 - **Export v2** : ajoute `dictations` et `colorings`. L'import accepte les sauvegardes v1 (sans parties de jeu) et v2.
 - **IndexedDB v3 / export v3** : stores `tictactoes` et `hangmans` (morpion, pendu). L'import accepte v1, v2 et v3.
+- **IndexedDB v4 / export v4** : store `puzzles`, partagé par les jeux libres de logique (devine le nombre, code
+  secret, robot ; docs/specs/JEUX-LOGIQUE.md §4). L'import accepte v1 à v4.
 
 La progression (étoiles, niveaux débloqués) est **recalculée à partir des parties** (`computeLevelStates`) : aucune donnée dupliquée qui pourrait diverger.
 De même, la série proposée en dictée et le palier du coloriage se déduisent des parties de jeu.

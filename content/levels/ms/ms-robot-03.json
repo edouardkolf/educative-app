@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-03",
+  "title": "Robot : trois rochers",
+  "skill": "logic",
+  "objective": "Guider le robot jusqu'au trésor (4 à 6 pas) en contournant trois rochers.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "params": {
+    "size": 4,
+    "obstacles": 3,
+    "mode": "step",
+    "pathLength": {
+      "min": 4,
+      "max": 6
+    }
+  }
+}

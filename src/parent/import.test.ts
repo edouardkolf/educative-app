@@ -27,6 +27,11 @@ describe('describeImportCounts', () => {
     expect(describeImportCounts(data)).toEqual({ profiles: 1, runs: 4 });
   });
 
+  it('inclut aussi le morpion, le pendu et les puzzles de logique', () => {
+    const data = { profiles: [{}], runs: [{}], tictactoes: [{}], hangmans: [{}, {}], puzzles: [{}, {}, {}] };
+    expect(describeImportCounts(data)).toEqual({ profiles: 1, runs: 7 });
+  });
+
   it('renvoie zéro pour une forme inattendue', () => {
     expect(describeImportCounts(null)).toEqual({ profiles: 0, runs: 0 });
     expect(describeImportCounts('texte')).toEqual({ profiles: 0, runs: 0 });

@@ -110,11 +110,37 @@ le pas fait deux fois, une dizaine à côté ; jamais un nombre déjà affiché.
 
 ## Les mondes de la carte
 
-La carte compte 16 niveaux par monde : forêt (1–16), mer (17–32), montagne (33–48), nuages (49–64). Chaque monde
-mêle 4 niveaux de mots invariables (sa série), 3 suites logiques et 8 à 9 niveaux de calcul et de lecture, dans
-l'ordre de difficulté de chaque jeu. Le monde des nuages reçoit les sommets de chaque jeu, plus deux niveaux qui lui
+La carte compte 20 niveaux par monde : forêt (1–20), mer (21–40), montagne (41–60), nuages (61–80). Chaque monde
+mêle 16 niveaux de compétence — 4 niveaux de mots invariables (sa série), 3 suites logiques et 8 à 9 niveaux de calcul
+et de lecture, dans l'ordre de difficulté de chaque jeu — et 4 niveaux de raisonnement, un toutes les 5 places
+(voir « Raisonnement » ci-dessous). Le monde des nuages reçoit les sommets de chaque jeu, plus deux niveaux qui lui
 sont propres : **ce1-compare-07** (deux additions à deux chiffres, écart ≤ 3, 8 manches) et **ce1-tables-07**
 (facteur manquant au pavé, 8 manches).
+
+## Raisonnement : jeux de logique et de devinette (29/10/2026)
+
+Une place sur cinq (5, 10, 15… 80) est un niveau de raisonnement : il change le mode d'effort sans quitter
+l'apprentissage (docs/specs/JEUX-LOGIQUE.md). Un test vérifie l'alternance au build. Chaque jeu commence par un niveau
+avec tutoriel ; une manche ratée = budget de coups dépassé, grille perdue ou mot perdu (une vie), puis la manche continue.
+
+| Place | id | Monde | Contenu |
+|---|---|---|---|
+| 5 | ce1-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, **2 grilles gagnantes**, 3 vies, **tutoriel** |
+| 10 | ce1-nombre-01 | Forêt | Devine le nombre 1–20, grille de nombres, 7 essais, **tutoriel** |
+| 15 | ce1-code-01 | Forêt | Code secret 3 pions / 5 couleurs, indices par pion, 6 essais, **tutoriel** |
+| 20 | ce1-robot-01 | Forêt | Robot à programmer 5×5, chemin 3–5, 6 flèches, **tutoriel** |
+| 25 | ce1-pendu-01 | Mer | Pendu : les animaux (6 lettres au plus), **3 mots**, 8 pétales |
+| 30 | ce1-nombre-02 | Mer | Devine le nombre 1–50, pavé, 8 essais |
+| 35 | ce1-code-02 | Mer | Code secret 3 pions / 5 couleurs, répétitions, 7 essais |
+| 40 | ce1-robot-02 | Mer | Robot 5×5, chemin 5–7, 8 flèches |
+| 45 | ce1-pendu-02 | Montagne | Pendu : fruits et nature, 3 mots |
+| 50 | ce1-nombre-03 | Montagne | Devine le nombre 1–100, pavé, 9 essais |
+| 55 | ce1-code-03 | Montagne | Code secret 4 pions / 5 couleurs, indices globaux (bien / mal placés), 8 essais |
+| 60 | ce1-robot-03 | Montagne | Robot 6×6, chemin 6–8, 9 flèches |
+| 65 | ce1-pendu-03 | Nuages | Pendu : l'école et la maison, 3 mots |
+| 70 | ce1-nombre-04 | Nuages | Devine le nombre 100–999, pavé, 12 essais |
+| 75 | ce1-code-04 | Nuages | Code secret 4 pions / 6 couleurs, répétitions, indices globaux, 10 essais |
+| 80 | ce1-robot-04 | Nuages | Robot 6×6, chemin 7–9, 10 flèches |
 
 ## Notes
 

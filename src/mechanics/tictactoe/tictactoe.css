@@ -1,0 +1,22 @@
+/* Morpion en niveau : réutilise les classes ttt- du jeu libre (importées), ajuste la mise en page. */
+.tm-view {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.tm-players {
+  display: flex;
+  gap: 16px;
+}
+
+.tm-view .ttt-board {
+  width: min(100%, 340px, calc(100dvh - 240px));
+}
+
+/* Grille perdue : la ligne du téléphone ressort en rose doux, sans reproche. */
+.tm-board--lost .ttt-cell--win {
+  background: #ffd9e0;
+}

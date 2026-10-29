@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-nombre-02",
+  "title": "Devine le nombre de 1 à 50",
+  "skill": "logic",
+  "objective": "Trouver un nombre entre 1 et 50 par déduction, à l'aide du pavé numérique.",
+  "mechanic": "guess-number",
+  "rounds": 3,
+  "params": {
+    "range": {
+      "min": 1,
+      "max": 50
+    },
+    "maxGuesses": 8,
+    "input": "keypad"
+  }
+}

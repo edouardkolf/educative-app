@@ -1,0 +1,28 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-pendu-03",
+  "title": "Pendu : l'école et la maison",
+  "skill": "spelling",
+  "objective": "Deviner des mots de l'école et de la maison lettre par lettre.",
+  "mechanic": "hangman",
+  "rounds": 3,
+  "params": {
+    "maxMistakes": 8,
+    "words": [
+      "gomme",
+      "livre",
+      "regle",
+      "crayon",
+      "cahier",
+      "table",
+      "lampe",
+      "chaise",
+      "maison",
+      "miroir",
+      "ballon",
+      "poupee",
+      "fenetre",
+      "tableau"
+    ]
+  }
+}

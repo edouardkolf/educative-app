@@ -15,12 +15,12 @@
     },
     "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
     "skill": {
-      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling", "reading"],
-      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables, reading = lire une phrase et montrer l'image."
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling", "reading", "logic"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables, reading = lire une phrase et montrer l'image, logic = raisonnement (déduction, anticipation, programmation)."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling", "read"], "description": "Mécanique de jeu. Détermine la forme de params." },
-    "rounds": { "type": "integer", "minimum": 3, "maximum": 10, "description": "Nombre de manches dans le niveau." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling", "read", "guess-number", "code-breaker", "robot", "tictactoe", "hangman"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "rounds": { "type": "integer", "minimum": 2, "maximum": 10, "description": "Nombre de manches dans le niveau (2 réservé aux jeux longs comme le morpion)." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
       "type": "object",
@@ -88,7 +88,12 @@
     {
       "if": { "type": "object", "properties": { "mechanic": { "const": "read" } } },
       "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/readParams" } } }
-    }
+    },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "guess-number" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/guessNumberParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "code-breaker" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/codeBreakerParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "robot" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/robotParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "tictactoe" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/tictactoeParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "hangman" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/hangmanParams" } } } }
   ],
   "definitions": {
     "color": { "enum": ["red", "blue", "yellow", "green", "purple", "orange"] },
@@ -293,6 +298,66 @@
         "relations": {"type": "array", "items": {"enum": ["on", "under", "beside", "in-front"]}, "minItems": 1, "uniqueItems": true, "description": "on = sur, under = sous, beside = à côté de, in-front = devant."},
         "sentences": {"type": "integer", "minimum": 1, "maximum": 2},
         "choices": {"type": "integer", "minimum": 3, "maximum": 4}
+      }
+    },
+    "guessNumberParams": {
+      "type": "object",
+      "description": "Devine le nombre (docs/specs/JEUX-LOGIQUE.md §3.1).",
+      "required": ["range", "maxGuesses", "input"],
+      "additionalProperties": false,
+      "properties": {
+        "range": { "$ref": "#/definitions/intRange" },
+        "maxGuesses": { "type": "integer", "minimum": 2, "maximum": 20, "description": "Propositions permises avant que la manche compte comme ratée." },
+        "input": { "enum": ["tiles", "keypad"], "description": "tiles : tous les nombres en grille (30 au plus) ; keypad : pavé numérique." }
+      }
+    },
+    "codeBreakerParams": {
+      "type": "object",
+      "description": "Code secret (docs/specs/JEUX-LOGIQUE.md §3.2).",
+      "required": ["length", "colors", "repeats", "feedback", "maxGuesses"],
+      "additionalProperties": false,
+      "properties": {
+        "length": { "type": "integer", "minimum": 2, "maximum": 4 },
+        "colors": { "type": "array", "items": { "$ref": "#/definitions/color" }, "minItems": 3, "maxItems": 6, "uniqueItems": true },
+        "repeats": { "type": "boolean" },
+        "feedback": { "enum": ["positional", "counts"] },
+        "maxGuesses": { "type": "integer", "minimum": 2, "maximum": 12 }
+      }
+    },
+    "robotParams": {
+      "type": "object",
+      "description": "Robot à programmer (docs/specs/JEUX-LOGIQUE.md §3.3).",
+      "required": ["size", "obstacles", "mode", "pathLength"],
+      "additionalProperties": false,
+      "properties": {
+        "size": { "type": "integer", "minimum": 4, "maximum": 6 },
+        "obstacles": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "mode": { "enum": ["step", "program"] },
+        "pathLength": { "$ref": "#/definitions/intRange" },
+        "maxArrows": { "type": "integer", "minimum": 2, "maximum": 16 }
+      }
+    },
+    "tictactoeParams": {
+      "type": "object",
+      "description": "Morpion contre le téléphone (docs/specs/JEUX-LOGIQUE.md §3.4).",
+      "required": ["level", "hint", "childStarts"],
+      "additionalProperties": false,
+      "properties": {
+        "level": { "enum": ["easy", "medium", "hard"] },
+        "hint": { "type": "boolean" },
+        "childStarts": { "enum": ["always", "alternate"] }
+      }
+    },
+    "hangmanParams": {
+      "type": "object",
+      "description": "Pendu (docs/specs/JEUX-LOGIQUE.md §3.5).",
+      "required": ["maxMistakes"],
+      "additionalProperties": false,
+      "properties": {
+        "words": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 3, "uniqueItems": true },
+        "minLength": { "type": "integer", "minimum": 3, "maximum": 10 },
+        "maxLength": { "type": "integer", "minimum": 3, "maximum": 10 },
+        "maxMistakes": { "type": "integer", "minimum": 4, "maximum": 10 }
       }
     }
   }

@@ -1,12 +1,12 @@
 // Mondes de la carte : arrivée dans un nouveau monde (trajet de l'avatar puis panneau), une seule fois.
-// La progression est injectée directement dans IndexedDB : rejouer 16 niveaux n'apporterait rien ici.
+// La progression est injectée directement dans IndexedDB : rejouer 20 niveaux n'apporterait rien ici.
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 import { backToHub, enterMap } from './nav';
 
 const PARENT_PIN = '1234';
 const SHOTS_DIR = '/tmp/claude-0/-home-user-educative-app/007564ed-74b0-55f0-83b0-41f952e2f0cb/scratchpad/shots';
-const LEVELS_PER_WORLD = 16; // src/screens/map/layout.ts
+const LEVELS_PER_WORLD = 20; // src/screens/map/layout.ts
 const TRACK = JSON.parse(readFileSync('content/tracks/ms.json', 'utf-8')) as { id: string; levels: string[] };
 
 let jsErrors: string[] = [];

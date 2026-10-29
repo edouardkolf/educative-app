@@ -5,22 +5,29 @@ import type { GameDefinition } from './index';
 
 describe('defaultGameIds', () => {
   it("'ms' donne le coloriage", () => {
-    expect(defaultGameIds('ms')).toEqual(['coloring']);
+    expect(defaultGameIds('ms')).toEqual(['coloring', 'code-breaker', 'robot']);
   });
 
-  it("'ce1' donne la dictée, le morpion et le pendu", () => {
-    expect(defaultGameIds('ce1')).toEqual(['dictation', 'tictactoe', 'hangman']);
+  it("'ce1' donne la dictée, le morpion, le pendu et les jeux de logique", () => {
+    expect(defaultGameIds('ce1')).toEqual(['dictation', 'tictactoe', 'hangman', 'guess-number', 'code-breaker', 'robot']);
   });
 
   it('un parcours inconnu se replie sur le premier parcours (ms)', () => {
-    expect(defaultGameIds('inconnu')).toEqual(['coloring']);
+    expect(defaultGameIds('inconnu')).toEqual(['coloring', 'code-breaker', 'robot']);
   });
 });
 
 describe('visibleGameIds', () => {
   it('profile.games absent : le défaut du parcours', () => {
-    expect(visibleGameIds({ trackId: 'ce1', games: undefined })).toEqual(['dictation', 'tictactoe', 'hangman']);
-    expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual(['coloring']);
+    expect(visibleGameIds({ trackId: 'ce1', games: undefined })).toEqual([
+      'dictation',
+      'tictactoe',
+      'hangman',
+      'guess-number',
+      'code-breaker',
+      'robot',
+    ]);
+    expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual(['coloring', 'code-breaker', 'robot']);
   });
 
   it('[] : aucun jeu', () => {

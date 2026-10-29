@@ -1,6 +1,11 @@
 // Registre des mécaniques. Ajouter une mécanique = une ligne ici + son dossier.
 import type { MechanicDefinition, MechanicId } from '../engine/types';
 import { builder } from './builder';
+import { codeBreaker } from './code-breaker';
+import { guessNumber } from './guess-number';
+import { hangman } from './hangman';
+import { robot } from './robot';
+import { tictactoe } from './tictactoe';
 import { calc } from './calc';
 import { compare } from './compare';
 import { colorMix } from './color-mix';
@@ -25,6 +30,11 @@ const registry: Partial<Record<MechanicId, AnyMechanic>> = {
   calc,
   spelling,
   read,
+  'guess-number': guessNumber,
+  'code-breaker': codeBreaker,
+  robot,
+  tictactoe,
+  hangman,
 };
 
 export function getMechanic(id: MechanicId): AnyMechanic | undefined {
