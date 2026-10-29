@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-morpion-02",
+  "title": "Morpion facile, à tour alterné",
+  "skill": "logic",
+  "objective": "Gagner deux grilles contre le téléphone, en commençant à tour de rôle.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "lives": 5,
+  "params": {
+    "level": "easy",
+    "hint": true,
+    "childStarts": "alternate"
+  }
+}

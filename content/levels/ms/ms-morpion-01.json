@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-morpion-01",
+  "title": "Morpion facile",
+  "skill": "logic",
+  "objective": "Gagner deux grilles contre le téléphone en alignant trois croix.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "tutorial": true,
+  "lives": 5,
+  "params": {
+    "level": "easy",
+    "hint": true,
+    "childStarts": "always"
+  }
+}

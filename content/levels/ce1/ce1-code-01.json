@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-code-01",
+  "title": "Code secret à trois couleurs",
+  "skill": "logic",
+  "objective": "Retrouver un code de trois couleurs sans répétition en utilisant les indices de chaque essai.",
+  "mechanic": "code-breaker",
+  "rounds": 3,
+  "tutorial": true,
+  "params": {
+    "length": 3,
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green",
+      "purple"
+    ],
+    "repeats": false,
+    "feedback": "positional",
+    "maxGuesses": 6
+  }
+}

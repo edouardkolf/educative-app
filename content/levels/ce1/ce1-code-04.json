@@ -1,0 +1,23 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-code-04",
+  "title": "Code secret à six couleurs",
+  "skill": "logic",
+  "objective": "Retrouver un code de quatre couleurs parmi six, avec répétitions possibles.",
+  "mechanic": "code-breaker",
+  "rounds": 3,
+  "params": {
+    "length": 4,
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green",
+      "purple",
+      "orange"
+    ],
+    "repeats": true,
+    "feedback": "counts",
+    "maxGuesses": 10
+  }
+}

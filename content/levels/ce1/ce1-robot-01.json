@@ -1,0 +1,20 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-robot-01",
+  "title": "Robot : le chemin vers le trésor",
+  "skill": "logic",
+  "objective": "Programmer une suite de flèches (3 à 5) pour amener le robot au trésor sans heurter un rocher.",
+  "mechanic": "robot",
+  "rounds": 3,
+  "tutorial": true,
+  "params": {
+    "size": 5,
+    "obstacles": 2,
+    "mode": "program",
+    "pathLength": {
+      "min": 3,
+      "max": 5
+    },
+    "maxArrows": 6
+  }
+}

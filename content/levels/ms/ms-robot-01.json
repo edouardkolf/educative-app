@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-01",
+  "title": "Robot : premiers pas",
+  "skill": "logic",
+  "objective": "Guider le robot jusqu'au trésor en touchant les flèches une à une, sans rien heurter.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "tutorial": true,
+  "params": {
+    "size": 4,
+    "obstacles": 0,
+    "mode": "step",
+    "pathLength": {
+      "min": 2,
+      "max": 3
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ce1-pendu-02",
+  "title": "Pendu : fruits et nature",
+  "skill": "spelling",
+  "objective": "Deviner des mots de fruits et de nature lettre par lettre.",
+  "mechanic": "hangman",
+  "rounds": 3,
+  "params": {
+    "maxMistakes": 8,
+    "words": [
+      "pomme",
+      "poire",
+      "melon",
+      "fraise",
+      "cerise",
+      "citron",
+      "raisin",
+      "banane",
+      "arbre",
+      "fleur",
+      "neige",
+      "nuage",
+      "plage",
+      "soleil"
+    ]
+  }
+}

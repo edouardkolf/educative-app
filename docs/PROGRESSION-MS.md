@@ -69,6 +69,22 @@ plusieurs poses.
 **À observer dans les statistiques** : un taux de réussite au premier coup sous 50 % sur deux parties signale une marche trop haute.
 Deux corrections possibles : ajouter un niveau intermédiaire (du JSON) ou rebloquer temporairement le niveau depuis l'espace parent.
 
+## Raisonnement : jeux de logique (29/10/2026)
+
+Une place sur cinq (5, 10… 40) est un niveau de raisonnement, sans texte (docs/specs/JEUX-LOGIQUE.md). La carte compte
+désormais 20 niveaux par monde : forêt (1–20), mer (21–40). Un test vérifie l'alternance au build.
+
+| Place | id | Monde | Contenu |
+|---|---|---|---|
+| 5 | ms-robot-01 | Forêt | Robot pas à pas 4×4, sans rocher, chemin 2–3, 4 manches, **tutoriel** |
+| 10 | ms-code-01 | Forêt | Code secret 2 pions / 3 couleurs, une marque par pion, 5 essais, **tutoriel** |
+| 15 | ms-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, 2 grilles gagnantes, 5 vies, **tutoriel** |
+| 20 | ms-robot-02 | Forêt | Robot pas à pas 4×4, 1 rocher, chemin 3–4 |
+| 25 | ms-code-02 | Mer | Code secret 2 pions / 4 couleurs, 5 essais |
+| 30 | ms-morpion-02 | Mer | Morpion facile, coup de pouce, on commence une grille sur deux |
+| 35 | ms-robot-03 | Mer | Robot pas à pas 4×4, 3 rochers, chemin 4–6 |
+| 40 | ms-code-03 | Mer | Code secret 3 pions / 4 couleurs, 6 essais |
+
 ## Jeu libre : le coloriage magique (hors carte)
 
 Accessible depuis le hub, en illimité (dans la limite du minuteur et du quota) : il ne donne ni étoile, ni niveau.
