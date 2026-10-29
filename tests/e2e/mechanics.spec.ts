@@ -490,7 +490,7 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
 // ==================== 7. Mise en page des 32 niveaux (test paramétré, standard + petit téléphone) ====================
 
 test('mise en page : tous les niveaux MS tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(240_000); // 40 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+  test.setTimeout(420_000); // 60 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
@@ -511,7 +511,15 @@ test('mise en page : tous les niveaux MS tiennent à l\'écran, en standard et s
     await test.step(`niveau ${levelId}`, async () => {
       await openLevelHash(page, levelId);
       // Mécaniques de logique (JEUX-LOGIQUE.md §2) : cibles ≥ 56 px (flèches, pots, cases) au lieu de 72 px.
-      const minTarget = /^ms-(robot|code|morpion)-/.test(levelId) ? 56 : 72;
+      // Maternelle (JEUX-MATERNELLE.md §2) : memory ≥ 64 px (16 cartes), ranger 72 px (zones fixes),
+      // labyrinthe ≥ 44 px (cases d'une grille, assumé dans la spec).
+      const minTarget = /^ms-(robot|code|morpion)-/.test(levelId)
+        ? 56
+        : /^ms-memoire-/.test(levelId)
+          ? 64
+          : /^ms-labyrinthe-/.test(levelId)
+            ? 44
+            : 72;
       await assertRoundFitsScreen(page, minTarget);
 
       await page.setViewportSize({ width: 360, height: 640 });

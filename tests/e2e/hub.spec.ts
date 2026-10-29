@@ -64,7 +64,7 @@ async function longPressClock(page: Page, locator: ReturnType<Page['getByTestId'
 
 // ==================== 1. Hub d'une enfant MS : carte, coloriage, code secret, robot ====================
 
-test('hub MS : carte, coloriage, code secret et robot, sans texte visible, sans cadenas', async ({ page }) => {
+test('hub MS : carte, coloriage, code secret, robot et memory, sans texte visible, sans cadenas', async ({ page }) => {
   await onboardWithChild(page, 'Alice');
   await chooseProfile(page, 'Alice');
 
@@ -75,7 +75,8 @@ test('hub MS : carte, coloriage, code secret et robot, sans texte visible, sans 
   await expect(hub.getByTestId('hub-tile-dictation')).toHaveCount(0);
   await expect(hub.getByTestId('hub-tile-code-breaker')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-robot')).toBeVisible();
-  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '4');
+  await expect(hub.getByTestId('hub-tile-memory')).toBeVisible();
+  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '5');
   await expect(page.getByTestId('parent-access')).toHaveCount(0);
   await expect(hub).toHaveText(''); // aucun texte visible (règle 2, HUB.md §3)
 
