@@ -481,7 +481,8 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   await expect(mapNode(page, 'ms-suite-01')).toBeVisible();
 
   await page.clock.runFor('15:05'); // dépasse les 15 min de session par défaut
-  await expect(page.getByTestId('lock-parent')).toBeVisible();
+  // 15 minutes de tics à enregistrer d'un coup (IndexedDB réelle) : l'écran de fin arrive un peu après (voir session.spec).
+  await expect(page.getByTestId('lock-parent')).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(200);
   await page.screenshot({ path: shot('16-ecran-de-fin.png') });
 });
