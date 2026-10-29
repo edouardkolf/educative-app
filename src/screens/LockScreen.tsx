@@ -1,4 +1,5 @@
-// Écran de fin (minuteur ou quota atteint) : visuel de nuit calme, sans texte pour l'enfant.
+// Écran de fin (minuteur ou quota atteint) : visuel de nuit calme + message court pour l'enfant
+// (« demande à un adulte ») et consigne pour l'adulte (appui long sur le cadenas).
 // Bloquant même après rechargement (settings.lock persisté). Coin haut droit : appui long 2 s sur
 // le cadenas → code parent (PinGate) → panneau parent (+5 min / +15 min / Terminer).
 import { useEffect, useState } from 'preact/hooks';
@@ -196,6 +197,13 @@ export function LockScreen() {
         <span class="lock-screen__zzz">
           <Emoji char="💤" />
         </span>
+      </div>
+      <div class="lock-screen__message" data-testid="lock-message">
+        <p class="lock-screen__title">Tu as utilisé tout le temps disponible.</p>
+        <p class="lock-screen__ask">Demande à un adulte pour ajouter du temps.</p>
+        <p class="lock-screen__hint" data-testid="lock-hint">
+          Adulte : restez appuyé 2 secondes sur le cadenas <Icon name="lock" size={18} /> en haut à droite.
+        </p>
       </div>
     </div>
   );

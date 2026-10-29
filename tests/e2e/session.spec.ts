@@ -115,6 +115,11 @@ test('minuteur de session sur la carte : écran de fin, persiste au rechargement
   await page.reload(); // l'horloge simulée (et le temps déjà avancé) survit au rechargement
   await expect(page.getByTestId('lock-parent')).toBeVisible(); // toujours bloqué : settings.lock persisté
 
+  // Messages de l'écran de fin : enfant (demander à un adulte) + consigne adulte (appui long cadenas).
+  await expect(page.getByTestId('lock-message')).toContainText('Tu as utilisé tout le temps disponible.');
+  await expect(page.getByTestId('lock-message')).toContainText('Demande à un adulte pour ajouter du temps.');
+  await expect(page.getByTestId('lock-hint')).toContainText('restez appuyé');
+
   await unlockAndTap(page, 'grant-5');
 
   await expect(page.getByTestId('hub')).toBeVisible(); // déverrouillé, retour au hub (et non plus la carte)

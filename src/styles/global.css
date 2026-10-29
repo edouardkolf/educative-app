@@ -980,6 +980,49 @@ svg {
   animation: bounce 2.4s ease-in-out infinite;
 }
 
+.lock-screen__message {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 340px;
+  text-align: center;
+  color: #fff8e4;
+}
+
+.lock-screen__message p {
+  margin: 0;
+}
+
+.lock-screen__title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.lock-screen__ask {
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+/* Consigne adulte : plus discrète que le message enfant, mais lisible sur fond nuit. */
+.lock-screen__hint {
+  margin-top: 6px !important;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(255, 248, 228, 0.85);
+}
+
+.lock-screen__hint svg {
+  display: inline-block;
+  vertical-align: -4px;
+}
+
 @keyframes twinkle {
   0%,
   100% {
