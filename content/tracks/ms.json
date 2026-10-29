@@ -43,6 +43,26 @@
     "ms-tri-03",
     "ms-suite-07",
     "ms-suite-08",
-    "ms-code-03"
+    "ms-code-03",
+    "ms-memoire-01",
+    "ms-ranger-01",
+    "ms-labyrinthe-01",
+    "ms-memoire-02",
+    "ms-robot-04",
+    "ms-ranger-02",
+    "ms-labyrinthe-02",
+    "ms-intrus-07",
+    "ms-memoire-03",
+    "ms-code-04",
+    "ms-ranger-03",
+    "ms-labyrinthe-03",
+    "ms-suite-09",
+    "ms-memoire-04",
+    "ms-morpion-03",
+    "ms-ranger-04",
+    "ms-labyrinthe-04",
+    "ms-ranger-05",
+    "ms-memoire-05",
+    "ms-robot-05"
   ]
 }

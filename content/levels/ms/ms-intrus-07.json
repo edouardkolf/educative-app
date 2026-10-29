@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-intrus-07",
+  "title": "Intrus : 5 familles",
+  "skill": "categorization",
+  "objective": "Repérer l'objet d'une autre famille parmi fruits, animaux, véhicules, jouets et plantes.",
+  "mechanic": "odd-one-out",
+  "rounds": 5,
+  "params": {
+    "items": 6,
+    "differBy": "category",
+    "categories": ["fruit", "animal", "vehicle", "toy", "plant"],
+    "distract": true
+  }
+}

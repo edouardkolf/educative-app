@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-memoire-01",
+  "title": "Memory : 2 paires",
+  "skill": "memory",
+  "objective": "Retrouver les deux paires d'images identiques en retournant les cartes.",
+  "mechanic": "memory",
+  "rounds": 2,
+  "tutorial": true,
+  "params": {
+    "pairs": 2,
+    "objects": ["apple", "dog", "car", "ball", "sunflower", "fish"],
+    "maxMisses": 6,
+    "peekMs": 2000
+  }
+}

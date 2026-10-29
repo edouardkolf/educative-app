@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-memoire-03",
+  "title": "Memory : 4 paires",
+  "skill": "memory",
+  "objective": "Retrouver les quatre paires d'images identiques, avec quelques erreurs permises.",
+  "mechanic": "memory",
+  "rounds": 2,
+  "params": {
+    "pairs": 4,
+    "objects": ["apple", "dog", "car", "ball", "sunflower", "fish", "butterfly", "train", "cow", "kite"],
+    "maxMisses": 10,
+    "peekMs": 1000
+  }
+}

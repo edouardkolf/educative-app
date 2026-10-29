@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-labyrinthe-03",
+  "title": "Labyrinthe : au doigt",
+  "skill": "spatial",
+  "objective": "Tracer au doigt le chemin qui mène l'animal à sa nourriture.",
+  "mechanic": "maze",
+  "rounds": 3,
+  "tutorial": true,
+  "params": {
+    "size": 5,
+    "mode": "trace",
+    "minPath": 10
+  }
+}

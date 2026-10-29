@@ -1,0 +1,14 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-memoire-05",
+  "title": "Memory : 6 paires",
+  "skill": "memory",
+  "objective": "Retrouver les six paires d'images identiques, la plus grande grille de la montagne.",
+  "mechanic": "memory",
+  "rounds": 2,
+  "params": {
+    "pairs": 6,
+    "objects": ["apple", "dog", "car", "ball", "sunflower", "fish", "butterfly", "train", "cow", "kite", "owl", "drum"],
+    "maxMisses": 12
+  }
+}

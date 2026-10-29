@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-05",
+  "title": "Robot : chemin long",
+  "skill": "logic",
+  "objective": "Programmer un chemin plus long jusqu'au trésor, entre 5 obstacles.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "params": {
+    "size": 5,
+    "obstacles": 5,
+    "mode": "step",
+    "pathLength": {
+      "min": 6,
+      "max": 8
+    }
+  }
+}
