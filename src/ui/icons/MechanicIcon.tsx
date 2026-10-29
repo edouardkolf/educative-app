@@ -138,12 +138,79 @@ const DRAWINGS: Record<MechanicId, () => JSX.Element> = {
       <path d="M27.5 18.5Q32.5 16.5 37.5 17.5M27.5 23.5Q32.5 21.5 37.5 22.5M27.5 28.5Q32.5 26.5 37.5 27.5" stroke="#d6cbb8" stroke-width="1.8" stroke-linecap="round" fill="none" />
     </>
   ),
-  // SOUCHES (T0) : remplacées par les vrais pictos (tâche T6, docs/specs/JEUX-LOGIQUE.md §5).
-  'guess-number': () => <circle cx="24" cy="24" r="16" fill="#ffc53d" />,
-  'code-breaker': () => <circle cx="24" cy="24" r="16" fill="#e63946" />,
-  robot: () => <circle cx="24" cy="24" r="16" fill="#6c63ff" />,
-  tictactoe: () => <circle cx="24" cy="24" r="16" fill="#1d7fd8" />,
-  hangman: () => <circle cx="24" cy="24" r="16" fill="#ff8fab" />,
+  // Devine le nombre : une bulle de dialogue avec un « ? ».
+  'guess-number': () => (
+    <>
+      <path d="M9 7H39Q43 7 43 11V29Q43 33 39 33H28L21 41L21.5 33H9Q5 33 5 29V11Q5 7 9 7Z" fill="#ffc53d" />
+      <path d="M9 7H39Q43 7 43 11V14H5V11Q5 7 9 7Z" fill="#ffd978" />
+      <path d="M17.5 15.5Q17.5 10 24 10Q30.5 10 30.5 15Q30.5 19 24 21V23.5" fill="none" stroke="#7a4b00" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
+      <circle cx="24" cy="28.3" r="2.2" fill="#7a4b00" />
+    </>
+  ),
+  // Code secret : un cadenas, et trois pions colorés derrière.
+  'code-breaker': () => (
+    <>
+      <circle cx="10" cy="38" r="5" fill="#e63946" />
+      <circle cx="24" cy="39" r="5" fill="#1d7fd8" />
+      <circle cx="38" cy="38" r="5" fill="#2faa5a" />
+      <circle cx="8.3" cy="36.3" r="1.4" fill="#ff9aa3" />
+      <circle cx="22.3" cy="37.3" r="1.4" fill="#8cc4f2" />
+      <circle cx="36.3" cy="36.3" r="1.4" fill="#9de0b4" />
+      <path d="M15.5 21V14Q15.5 6 24 6Q32.5 6 32.5 14V21" fill="none" stroke="#a6978a" stroke-width="4.5" stroke-linecap="round" />
+      <rect x="10" y="19" width="28" height="17" rx="5.5" fill="#ffc53d" />
+      <rect x="10" y="19" width="28" height="7" rx="5.5" fill="#ffd978" />
+      <circle cx="24" cy="27" r="2.8" fill="#7a4b00" />
+      <rect x="22.7" y="27.5" width="2.6" height="5" rx="1.3" fill="#7a4b00" />
+    </>
+  ),
+  // Robot : la tête d'un petit robot à antenne.
+  robot: () => (
+    <>
+      <ellipse cx="24" cy="42.5" rx="14" ry="2.5" fill={SHADOW} />
+      <path d="M24 5V11" stroke="#8b86e8" stroke-width="2.4" stroke-linecap="round" />
+      <circle cx="24" cy="5.5" r="3" fill="#e63946" />
+      <rect x="9" y="11" width="30" height="24" rx="7" fill="#6c63ff" />
+      <rect x="9" y="11" width="30" height="10" rx="7" fill="#8b86ff" />
+      <circle cx="17.5" cy="22.5" r="4.4" fill="#ffffff" />
+      <circle cx="30.5" cy="22.5" r="4.4" fill="#ffffff" />
+      <circle cx="18" cy="23" r="2.1" fill="#3d2c6e" />
+      <circle cx="31" cy="23" r="2.1" fill="#3d2c6e" />
+      <rect x="17" y="29.5" width="14" height="3" rx="1.5" fill="#3d2c6e" />
+      <rect x="5" y="19" width="4" height="9" rx="2" fill="#5a52e0" />
+      <rect x="39" y="19" width="4" height="9" rx="2" fill="#5a52e0" />
+      <rect x="15" y="35" width="18" height="6" rx="3" fill="#5a52e0" />
+    </>
+  ),
+  // Morpion : une grille de 3 × 3, une croix rouge et un rond bleu.
+  tictactoe: () => (
+    <>
+      <rect x="5" y="5" width="38" height="38" rx="7" fill="#fff7e8" stroke="#e6dcc4" stroke-width="1.5" />
+      <path d="M17.7 9.5V38.5M30.3 9.5V38.5M9.5 17.7H38.5M9.5 30.3H38.5" stroke="#c9bfad" stroke-width="2.2" stroke-linecap="round" />
+      <path d="M9 9.5L15 15.5M15 9.5L9 15.5" stroke="#e63946" stroke-width="3" stroke-linecap="round" />
+      <path d="M21.5 21.5L27.5 27.5M27.5 21.5L21.5 27.5" stroke="#e63946" stroke-width="3" stroke-linecap="round" />
+      <circle cx="36.5" cy="12.5" r="3.6" fill="none" stroke="#1d7fd8" stroke-width="3" />
+      <circle cx="12" cy="36" r="3.6" fill="none" stroke="#1d7fd8" stroke-width="3" />
+    </>
+  ),
+  // Pendu : une fleur à pétales (une erreur = un pétale qui tombe) au-dessus de trois cases.
+  hangman: () => (
+    <>
+      <path d="M24 21V30" stroke="#5aa469" stroke-width="2.4" stroke-linecap="round" />
+      <g fill="#ff8fab">
+        <ellipse cx="24" cy="6.5" rx="3.6" ry="5" />
+        <ellipse cx="24" cy="6.5" rx="3.6" ry="5" transform="rotate(72 24 13.5)" />
+        <ellipse cx="24" cy="6.5" rx="3.6" ry="5" transform="rotate(144 24 13.5)" />
+        <ellipse cx="24" cy="6.5" rx="3.6" ry="5" transform="rotate(216 24 13.5)" />
+        <ellipse cx="24" cy="6.5" rx="3.6" ry="5" transform="rotate(288 24 13.5)" />
+      </g>
+      <circle cx="24" cy="13.5" r="4.6" fill="#ffc53d" />
+      <circle cx="22.6" cy="12.1" r="1.4" fill="#fff3c4" />
+      <rect x="5" y="32" width="11" height="10" rx="2.4" fill="#ffffff" stroke="#e6dcc4" stroke-width="1.2" />
+      <rect x="18.5" y="32" width="11" height="10" rx="2.4" fill="#ffffff" stroke="#e6dcc4" stroke-width="1.2" />
+      <rect x="32" y="32" width="11" height="10" rx="2.4" fill="#ffffff" stroke="#e6dcc4" stroke-width="1.2" />
+      <path d="M21.5 39.5L24 34.5L26.5 39.5M22.4 37.6H25.6" fill="none" stroke="#1d7fd8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    </>
+  ),
 };
 
 export function MechanicIcon({ mechanic, size = 44 }: { mechanic: MechanicId | undefined; size?: number }) {
