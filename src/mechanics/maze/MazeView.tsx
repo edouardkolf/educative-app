@@ -166,57 +166,59 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   return (
     <div class="maze-view" data-mode={d.mode} data-size={maze.size}>
       <div class="maze-board-wrap">
-        <svg
-          ref={svgRef}
-          class="maze-board"
-          viewBox={`0 0 ${side} ${side}`}
-          aria-hidden="true"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerEnd}
-          onPointerCancel={onPointerEnd}
-        >
-          <rect width={side} height={side} rx="26" fill="#8fd49c" />
-          <path d={corridors} class="maze-corridor-edge" />
-          <path d={corridors} class="maze-corridor" />
-          <path d={trailPath(trail)} class="maze-trail" />
-
-          <g transform={`translate(${goalPos.x} ${goalPos.y})`}>
-            <circle class="maze-glow" r="40" fill="#ffe27a" />
-            <image
-              class={celebrating ? 'maze-food maze-food--eaten' : 'maze-food'}
-              href={emojiUrl(d.food)}
-              x="-30"
-              y="-30"
-              width="60"
-              height="60"
-            />
-          </g>
-
-          <g class="maze-mover" style={{ transform: `translate(${headPos.x}px, ${headPos.y}px)` }}>
-            <g key={shakeKey} class={`${shakeKey > 0 ? 'maze-shake' : ''}${celebrating ? ' maze-joy' : ''}`}>
-              <image href={emojiUrl(d.animal)} x="-32" y="-32" width="64" height="64" />
-            </g>
-          </g>
-
-          {Array.from({ length: maze.size * maze.size }, (_, i) => {
-            const r = Math.floor(i / maze.size);
-            const c = i % maze.size;
-            return (
-              <rect
-                key={i}
-                class="maze-hit"
-                data-choice={`cell-${r}-${c}`}
-                x={c * CELL}
-                y={r * CELL}
-                width={CELL}
-                height={CELL}
-                fill="transparent"
-                onClick={isTrace ? undefined : () => tapCell({ r, c })}
+        <div class="maze-board-box">
+          <svg
+            ref={svgRef}
+            class="maze-board"
+            viewBox={`0 0 ${side} ${side}`}
+            aria-hidden="true"
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerEnd}
+            onPointerCancel={onPointerEnd}
+          >
+            <rect width={side} height={side} rx="26" fill="#8fd49c" />
+            <path d={corridors} class="maze-corridor-edge" />
+            <path d={corridors} class="maze-corridor" />
+            <path d={trailPath(trail)} class="maze-trail" />
+  
+            <g transform={`translate(${goalPos.x} ${goalPos.y})`}>
+              <circle class="maze-glow" r="40" fill="#ffe27a" />
+              <image
+                class={celebrating ? 'maze-food maze-food--eaten' : 'maze-food'}
+                href={emojiUrl(d.food)}
+                x="-30"
+                y="-30"
+                width="60"
+                height="60"
               />
-            );
-          })}
-        </svg>
+            </g>
+  
+            <g class="maze-mover" style={{ transform: `translate(${headPos.x}px, ${headPos.y}px)` }}>
+              <g key={shakeKey} class={`${shakeKey > 0 ? 'maze-shake' : ''}${celebrating ? ' maze-joy' : ''}`}>
+                <image href={emojiUrl(d.animal)} x="-32" y="-32" width="64" height="64" />
+              </g>
+            </g>
+  
+            {Array.from({ length: maze.size * maze.size }, (_, i) => {
+              const r = Math.floor(i / maze.size);
+              const c = i % maze.size;
+              return (
+                <rect
+                  key={i}
+                  class="maze-hit"
+                  data-choice={`cell-${r}-${c}`}
+                  x={c * CELL}
+                  y={r * CELL}
+                  width={CELL}
+                  height={CELL}
+                  fill="transparent"
+                  onClick={isTrace ? undefined : () => tapCell({ r, c })}
+                />
+              );
+            })}
+          </svg>
+        </div>
       </div>
     </div>
   );
