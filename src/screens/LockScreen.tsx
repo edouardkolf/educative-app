@@ -64,6 +64,22 @@ export function LockScreen() {
     };
   }, []);
 
+  // L'app peut rester ouverte sur l'écran de fin toute la nuit (PWA gardée en mémoire) : au retour au
+  // premier plan, on relit les réglages — `getSettings` lève un verrou de la veille — et, s'il n'y a
+  // plus de verrou, retour aux profils au lieu de laisser l'enfant devant un écran de fin périmé.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      getSettings()
+        .then((s) => {
+          if (!s.lock) navigate({ name: 'profiles' }, { replace: true });
+        })
+        .catch((err) => console.error('LockScreen refresh failed', err));
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
   async function grant(minutes: 5 | 15) {
     const lock = settings?.lock;
     if (!lock || busy) return;

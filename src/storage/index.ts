@@ -7,13 +7,8 @@ export * from './types';
 
 // ---------- Utilitaires ----------
 
-/** Jour local "YYYY-MM-DD" (pas UTC : minuit = minuit à la maison). */
-export function dayKey(date: Date = new Date()): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+/** Jour local "YYYY-MM-DD" (pas UTC : minuit = minuit à la maison). Défini dans `day.ts`. */
+export { dayKey } from './day';
 
 /** Connexion IndexedDB mise en cache : la fermer et l'oublier. Utilisé par les tests entre deux cas. */
 export { __resetForTests } from './db';

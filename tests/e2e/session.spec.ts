@@ -128,6 +128,25 @@ test('minuteur de session sur la carte : écran de fin, persiste au rechargement
   await expect(currentRound(page)).toBeVisible(); // l'enfant peut effectivement rejouer
 });
 
+test("verrou de la veille : le lendemain, l'enfant n'est plus bloqué et repart avec un temps neuf", async ({ page }) => {
+  test.slow();
+  await page.clock.install();
+  await onboardWithChild(page, 'Lina');
+  await enterMap(page, 'Lina');
+  await page.clock.runFor('15:05'); // limite de session atteinte : écran de fin, personne ne déverrouille
+  await expect(page.getByTestId('lock-parent')).toBeVisible();
+
+  await page.clock.fastForward('24:00:00'); // le lendemain
+  await page.reload();
+
+  // Plus d'écran de fin : retour aux profils, puis jeu normal (session et quota du jour neufs).
+  await expect(page.getByTestId('lock-parent')).toHaveCount(0);
+  await expect(profileCard(page, 'Lina')).toBeVisible();
+  await enterMap(page, 'Lina');
+  await openLevel(page, 'ms-suite-01');
+  await expect(currentRound(page)).toBeVisible();
+});
+
 // ==================== 2. Minuteur pendant une partie ====================
 
 test('minuteur pendant une partie : la manche se termine puis écran de fin, comptée en interruption', async ({ page }) => {
