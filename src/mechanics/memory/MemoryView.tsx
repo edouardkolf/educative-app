@@ -98,7 +98,8 @@ function MemoryBoard({ round, solved, onChoose }: MechanicViewProps<MemoryRoundD
                     <CardBack />
                   </span>
                   <span class="memory-face memory-face--front">
-                    <Emoji char={getObject(id)?.emoji ?? '❓'} />
+                    {/* Objets validés au build : un id inconnu n'affiche rien (pas d'émoji non embarqué). */}
+                    {getObject(id) && <Emoji char={getObject(id)!.emoji} />}
                   </span>
                 </span>
               </button>
