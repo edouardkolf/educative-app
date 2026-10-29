@@ -30,7 +30,7 @@ Choix d'orchestration (le PM a délégué la planification) :
   après chaque série de 4. `LEVELS_PER_WORLD` passe de 16 à 20 ; les mondes gardent ainsi leur alignement (une série de
   mots par monde en CE1). CE1 : 64 → 80 niveaux (4 mondes) ; MS : 32 → 40 (2 mondes).
 - **Jeux libres** : `guess-number`, `code-breaker`, `robot` rejoignent le hub. Défauts : CE1 → dictée, morpion, pendu
-  et les trois nouveaux (8 tuiles avec la carte) ; MS → coloriage, code secret, robot (4 tuiles).
+  et les trois nouveaux (7 tuiles avec la carte) ; MS → coloriage, code secret, robot (4 tuiles).
 
 ## 2. Contrat commun des mécaniques « à plusieurs coups »
 
