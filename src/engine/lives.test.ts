@@ -37,6 +37,11 @@ describe('livesFor', () => {
       for (const id of track.levels) {
         const lvl = getLevel(id)!;
         const lives = livesFor(lvl);
+        // Vies fixées par le niveau (ex. morpion : 5 vies pour neutraliser la chance, JEUX-LOGIQUE.md §3.4).
+        if (lvl.lives !== undefined) {
+          expect(lives).toBe(lvl.lives);
+          continue;
+        }
         expect(lives).toBeGreaterThanOrEqual(2);
         expect(lives).toBeLessThanOrEqual(Math.max(2, Math.min(4, lvl.rounds)));
         if (lives > 2) expect(randomPassRate(lvl, lives)).toBeLessThanOrEqual(0.25);
