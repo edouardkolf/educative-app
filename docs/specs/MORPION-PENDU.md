@@ -20,7 +20,11 @@ de mots.
 
 ### 2.1 Morpion (`src/games/tictactoe/`)
 
-- **Choix** : « Contre le téléphone » (avatar de l'enfant et téléphone souriant) ou « À deux » (croix et rond).
+- **Choix** : « Contre le téléphone » (avatar de l'enfant et téléphone) ou « À deux » (croix et rond). Sous la
+  carte solo, trois niveaux à toucher : **Facile** (présélectionné à chaque ouverture, décision PM du 29/10),
+  Moyen, Fort. Le téléphone change de tête selon le niveau (endormi, souriant, lunettes noires).
+- **Coup de pouce (facile seulement)** : quand c'est à l'enfant de jouer et que le téléphone a deux pions alignés
+  avec une case libre, l'alignement clignote et la case à bloquer est entourée.
 - **Partie** : grille 3 × 3 (cases ≥ 96 px), maison en haut à gauche, score de la séance (X – O) avec l'indicateur du
   joueur dont c'est le tour. Le téléphone « réfléchit » 650 ms puis joue.
 - En solo, l'enfant a les croix. Le premier joueur **alterne** d'une grille à l'autre (l'enfant commence la première).
@@ -44,8 +48,11 @@ de mots.
 ### 3.1 Morpion — `logic.ts`
 
 1. 8 alignements ; grille pleine sans alignement = égalité.
-2. Coup du téléphone : gagner si possible ; sinon bloquer l'enfant **3 fois sur 4** (`BLOCK_PROBABILITY`) ; sinon le
-   centre une fois sur deux ; sinon une case libre au hasard. Il reste battable.
+2. Coup du téléphone selon le niveau (`LEVEL_TUNING`) :
+   - Facile : joue son coup gagnant 1 fois sur 2, bloque 3 fois sur 10, centre 2 fois sur 10, sinon au hasard ;
+   - Moyen : coup gagnant 9 fois sur 10, blocage 6 fois sur 10, centre 1 fois sur 2 ;
+   - Fort : minimax (mis en cache), coup optimal tiré au hasard parmi les meilleurs : on ne le bat pas.
+3. La grille enregistre son niveau (`level`, solo seulement ; absent sur les grilles d'avant = moyen).
 
 ### 3.2 Pendu — `logic.ts`
 
@@ -74,8 +81,8 @@ contient pas le mot.
 
 | Jeu | Indicateur | Définition |
 |---|---|---|
-| Morpion | Contre le téléphone : gagnées / perdues / nulles | grilles `solo` avec une issue, par issue |
-| Morpion | Victoires contre le téléphone | gagnées / grilles `solo` avec une issue |
+| Morpion | Par niveau : gagnées / perdues / nulles, victoires | grilles `solo` avec une issue, par niveau |
+| Morpion | Plus haut niveau battu | niveau le plus élevé avec au moins une grille gagnée |
 | Morpion | Grilles jouées à deux | grilles `duo` avec une issue |
 | Pendu | Mots trouvés | `found` / mots avec une issue |
 | Pendu | Erreurs par mot trouvé | moyenne de `mistakes` sur les mots `found` |
@@ -105,4 +112,4 @@ Fichiers touchés : `app/routes.ts`, `app/AppShell.tsx`, `games/index.ts`, `ui/i
 ## 9. Hors périmètre / V2
 
 - Difficulté progressive du pendu (mots plus longs après une série de réussites) ; tirage par thème.
-- Morpion 4 × 4 ou niveau du téléphone réglable par le parent.
+- Morpion 4 × 4 ; montée de niveau automatique (deux victoires d'affilée) si le choix manuel ne suffit pas.

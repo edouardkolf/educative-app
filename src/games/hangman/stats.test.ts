@@ -35,15 +35,21 @@ describe('statistiques du pendu', () => {
 });
 
 describe('statistiques du morpion', () => {
-  it('sépare le solo du jeu à deux et ignore les grilles sans issue', () => {
+  it('ventile le solo par niveau (sans niveau = moyen), ignore les grilles sans issue', () => {
     const s = summarizeTicTacToes([
-      ttt('1', 'solo', 'x'),
-      ttt('2', 'solo', 'o'),
-      ttt('3', 'solo', 'draw'),
+      { ...ttt('1', 'solo', 'x'), level: 'easy' },
+      { ...ttt('2', 'solo', 'o'), level: 'easy' },
+      { ...ttt('3', 'solo', 'draw'), level: 'hard' },
       ttt('4', 'solo', 'x'),
       ttt('5', 'duo', 'o'),
-      ttt('6', 'solo', null),
+      { ...ttt('6', 'solo', null), level: 'hard' },
     ]);
-    expect(s).toEqual({ soloGrids: 4, soloWins: 2, soloLosses: 1, soloDraws: 1, soloWinRate: 0.5, duoGrids: 1 });
+    expect(s.byLevel).toEqual([
+      { level: 'easy', grids: 2, wins: 1, losses: 1, draws: 0, winRate: 0.5 },
+      { level: 'medium', grids: 1, wins: 1, losses: 0, draws: 0, winRate: 1 },
+      { level: 'hard', grids: 1, wins: 0, losses: 0, draws: 1, winRate: 0 },
+    ]);
+    expect(s.bestLevelWon).toBe('medium');
+    expect(s.duoGrids).toBe(1);
   });
 });

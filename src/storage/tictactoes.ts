@@ -9,6 +9,8 @@ import { isPlainObject } from './validate';
 export type TicTacToeMode = 'solo' | 'duo';
 /** `x` : X gagne (l'enfant en solo) ; `o` : O gagne (le téléphone en solo) ; `draw` : grille pleine. */
 export type TicTacToeOutcome = 'x' | 'o' | 'draw';
+/** Niveau du téléphone en solo. Absent : grille à deux, ou enregistrée avant les niveaux (= moyen). */
+export type TicTacToeLevel = 'easy' | 'medium' | 'hard';
 
 export interface TicTacToeRecord extends GameRecordBase {
   mode: TicTacToeMode;
@@ -17,13 +19,15 @@ export interface TicTacToeRecord extends GameRecordBase {
   /** Cases jouées dans l'ordre (0 à 8, de gauche à droite puis de haut en bas). */
   moves: number[];
   outcome: TicTacToeOutcome | null;
+  level?: TicTacToeLevel;
 }
 
 export async function startTicTacToe(
   profileId: string,
-  init: Pick<TicTacToeRecord, 'mode' | 'xStarts' | 'moves'>,
+  init: Pick<TicTacToeRecord, 'mode' | 'xStarts' | 'moves' | 'level'>,
 ): Promise<TicTacToeRecord> {
-  return startGameRecord('tictactoes', profileId, { ...init, outcome: null });
+  const { level, ...rest } = init;
+  return startGameRecord('tictactoes', profileId, { ...rest, ...(level ? { level } : {}), outcome: null });
 }
 
 /** Coups joués et temps actif ; partie `in_progress` seulement. */
@@ -75,5 +79,6 @@ export function isTicTacToeRecord(value: unknown): value is TicTacToeRecord {
     seen.add(move as number);
   }
   if (v.outcome !== null && v.outcome !== 'x' && v.outcome !== 'o' && v.outcome !== 'draw') return false;
+  if (v.level !== undefined && v.level !== 'easy' && v.level !== 'medium' && v.level !== 'hard') return false;
   return true;
 }

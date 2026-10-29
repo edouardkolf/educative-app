@@ -19,13 +19,20 @@ export const LINES: readonly (readonly [number, number, number])[] = [
   [2, 4, 6],
 ];
 
+/** Niveau du téléphone (choisi par l'enfant, « facile » par défaut à chaque ouverture). */
+export type Level = 'easy' | 'medium' | 'hard';
+export const LEVELS: readonly Level[] = ['easy', 'medium', 'hard'];
+
 /**
- * Le téléphone bloque un alignement menacé dans 3 cas sur 4 seulement : il reste battable par une
- * enfant de 7 ans, sans jouer au hasard. Il gagne toujours quand il le peut.
+ * Comportement par niveau : probabilité de jouer un coup gagnant, de bloquer une menace, de prendre le
+ * centre. « Fort » ne tire rien au sort : il joue un coup optimal (minimax), on ne peut pas le battre.
+ * - Facile : rate un coup gagnant sur deux, bloque rarement → une enfant de 7 ans gagne souvent.
+ * - Moyen : gagne presque toujours quand il peut, bloque 6 fois sur 10 → il faut voir les menaces.
  */
-export const BLOCK_PROBABILITY = 0.75;
-/** Probabilité de prendre le centre s'il est libre (quand il n'y a ni gain ni blocage). */
-export const CENTER_PROBABILITY = 0.5;
+export const LEVEL_TUNING: Record<Exclude<Level, 'hard'>, { win: number; block: number; center: number }> = {
+  easy: { win: 0.5, block: 0.3, center: 0.2 },
+  medium: { win: 0.9, block: 0.6, center: 0.5 },
+};
 
 export function emptyBoard(): Cell[] {
   return Array.from({ length: 9 }, () => null);
@@ -85,19 +92,85 @@ export function winningMove(board: Board, mark: Mark): number | null {
 }
 
 /**
- * Coup du téléphone (`me`) : gagner si possible ; sinon bloquer l'adversaire (3 fois sur 4) ; sinon
- * le centre (1 fois sur 2) ; sinon une case libre au hasard. Lève une erreur si la grille est pleine.
+ * Coup du téléphone (`me`) selon le niveau. Facile et moyen : gagner (selon `win`), sinon bloquer
+ * (selon `block`), sinon le centre (selon `center`), sinon une case libre au hasard. Fort : minimax.
+ * Lève une erreur si la grille est pleine.
  */
-export function chooseComputerMove(board: Board, me: Mark, rng: Rng): number {
+export function chooseComputerMove(board: Board, me: Mark, rng: Rng, level: Level = 'medium'): number {
   const free = freeCells(board);
   if (free.length === 0) throw new Error('chooseComputerMove: grille pleine');
+  if (level === 'hard') return rng.pick(bestMoves(board, me));
+  const tuning = LEVEL_TUNING[level];
   const win = winningMove(board, me);
-  if (win !== null) return win;
+  if (win !== null && rng.next() < tuning.win) return win;
   const opponent: Mark = me === 'x' ? 'o' : 'x';
   const block = winningMove(board, opponent);
-  if (block !== null && rng.next() < BLOCK_PROBABILITY) return block;
-  if (board[4] === null && rng.next() < CENTER_PROBABILITY) return 4;
+  if (block !== null && rng.next() < tuning.block) return block;
+  if (board[4] === null && rng.next() < tuning.center) return 4;
   return rng.pick(free);
+}
+
+/**
+ * Valeur minimax de la grille pour `me` : gagner vite > gagner tard > nul > perdre tard > perdre vite.
+ * La rapidité se lit au nombre de cases encore libres, ce qui ne dépend que de la position : on peut
+ * donc la mettre en cache (au plus 3⁹ positions), et le niveau fort répond instantanément.
+ */
+const minimaxCache = new Map<string, number>();
+
+function minimax(board: Cell[], me: Mark, toPlay: Mark): number {
+  const key = `${me}${toPlay}${board.map((c) => c ?? '-').join('')}`;
+  const cached = minimaxCache.get(key);
+  if (cached !== undefined) return cached;
+  const outcome = outcomeOf(board);
+  const empties = board.filter((c) => c === null).length;
+  let value: number;
+  if (outcome === me) value = 1 + empties;
+  else if (outcome === 'draw') value = 0;
+  else if (outcome !== null) value = -1 - empties;
+  else {
+    const next: Mark = toPlay === 'x' ? 'o' : 'x';
+    value = toPlay === me ? -Infinity : Infinity;
+    for (const cell of freeCells(board)) {
+      board[cell] = toPlay;
+      const v = minimax(board, me, next);
+      board[cell] = null;
+      value = toPlay === me ? Math.max(value, v) : Math.min(value, v);
+    }
+  }
+  minimaxCache.set(key, value);
+  return value;
+}
+
+/** Tous les coups optimaux pour `me` (le niveau fort en tire un au hasard, pour varier ses parties). */
+export function bestMoves(board: Board, me: Mark): number[] {
+  const work = [...board];
+  const opponent: Mark = me === 'x' ? 'o' : 'x';
+  let bestValue = -Infinity;
+  let moves: number[] = [];
+  for (const cell of freeCells(work)) {
+    work[cell] = me;
+    const value = minimax(work, me, opponent);
+    work[cell] = null;
+    if (value > bestValue) {
+      bestValue = value;
+      moves = [cell];
+    } else if (value === bestValue) moves.push(cell);
+  }
+  return moves;
+}
+
+/**
+ * Coup de pouce du niveau facile : les cases d'un alignement où `opponent` a déjà deux pions et où la
+ * troisième case est libre (la menace à bloquer). Vide s'il n'y a pas de menace.
+ */
+export function threatCells(board: Board, opponent: Mark): number[] {
+  const cells = new Set<number>();
+  for (const line of LINES) {
+    const mine = line.filter((i) => board[i] === opponent).length;
+    const empty = line.filter((i) => board[i] === null).length;
+    if (mine === 2 && empty === 1) line.forEach((i) => cells.add(i));
+  }
+  return [...cells].sort((a, b) => a - b);
 }
 
 /** Coup valable : la case existe, elle est libre, et la grille n'est pas déjà finie. */

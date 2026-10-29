@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '../../engine/rng';
 import {
   boardFromMoves,
+  bestMoves,
   chooseComputerMove,
   freeCells,
   isLegalMove,
   markForMove,
   nextMark,
+  type Level,
   outcomeOf,
+  threatCells,
   winningLine,
   winningMove,
 } from './logic';
@@ -52,43 +55,84 @@ describe('morpion — issue', () => {
   });
 });
 
+function playOut(levelX: Level | 'random', levelO: Level, seed: number, xStarts = true) {
+  const rng = createRng(seed);
+  const moves: number[] = [];
+  let board = boardFromMoves(moves, xStarts);
+  while (outcomeOf(board) === null) {
+    const mark = nextMark(moves, xStarts);
+    const level = mark === 'x' ? levelX : levelO;
+    const cell = level === 'random' ? rng.pick(freeCells(board)) : chooseComputerMove(board, mark, rng, level);
+    expect(isLegalMove(board, cell)).toBe(true);
+    moves.push(cell);
+    board = boardFromMoves(moves, xStarts);
+  }
+  return outcomeOf(board);
+}
+
 describe('morpion — coup du téléphone', () => {
-  it('gagne toujours quand il le peut (même si un blocage existe)', () => {
-    // o o _ / x x _ / x _ _ : o joue 2.
-    const board = boardFromMoves([3, 0, 4, 1, 6], true);
-    expect(winningMove(board, 'o')).toBe(2);
-    for (let seed = 0; seed < 50; seed += 1) {
-      expect(chooseComputerMove(board, 'o', createRng(seed))).toBe(2);
-    }
-  });
+  // o o _ / x x _ / x _ _ : o peut gagner en 2.
+  const canWin = boardFromMoves([3, 0, 4, 1, 6], true);
+  // x x _ / _ o _ / _ _ _ : o doit bloquer en 2.
+  const mustBlock = boardFromMoves([0, 4, 1], true);
 
-  it('bloque souvent, mais pas toujours (reste battable)', () => {
-    // x x _ / _ o _ / _ _ _ : blocage en 2.
-    const board = boardFromMoves([0, 4, 1], true);
-    let blocks = 0;
-    const tries = 400;
+  function rate(board: ReturnType<typeof boardFromMoves>, level: Level, cell: number, tries = 400) {
+    let hits = 0;
     for (let seed = 0; seed < tries; seed += 1) {
-      if (chooseComputerMove(board, 'o', createRng(seed)) === 2) blocks += 1;
+      if (chooseComputerMove(board, 'o', createRng(seed), level) === cell) hits += 1;
     }
-    expect(blocks / tries).toBeGreaterThan(0.6);
-    expect(blocks).toBeLessThan(tries);
+    return hits / tries;
+  }
+
+  it('facile : rate souvent son coup gagnant et bloque rarement', () => {
+    expect(rate(canWin, 'easy', 2)).toBeGreaterThan(0.4);
+    expect(rate(canWin, 'easy', 2)).toBeLessThan(0.75);
+    expect(rate(mustBlock, 'easy', 2)).toBeLessThan(0.55);
   });
 
-  it('joue toujours une case libre', () => {
-    for (let seed = 0; seed < 100; seed += 1) {
-      const rng = createRng(seed);
-      const moves: number[] = [];
-      let board = boardFromMoves(moves, true);
-      while (outcomeOf(board) === null) {
-        const cell = chooseComputerMove(board, nextMark(moves, true), rng);
-        expect(isLegalMove(board, cell)).toBe(true);
-        moves.push(cell);
-        board = boardFromMoves(moves, true);
-      }
+  it('moyen : gagne presque toujours et bloque plus d’une fois sur deux, sans être parfait', () => {
+    expect(rate(canWin, 'medium', 2)).toBeGreaterThan(0.85);
+    expect(rate(mustBlock, 'medium', 2)).toBeGreaterThan(0.55);
+    expect(rate(mustBlock, 'medium', 2)).toBeLessThan(0.9);
+  });
+
+  it('fort : gagne et bloque toujours', () => {
+    expect(rate(canWin, 'hard', 2, 50)).toBe(1);
+    expect(rate(mustBlock, 'hard', 2, 50)).toBe(1);
+    expect(bestMoves(canWin, 'o')).toEqual([2]);
+  });
+
+  it('fort : invaincu contre un joueur au hasard, qu’il commence ou non', () => {
+    for (let seed = 0; seed < 150; seed += 1) {
+      expect(playOut('random', 'hard', seed, seed % 2 === 0)).not.toBe('x');
     }
+  });
+
+  it('fort contre fort : toujours nul', () => {
+    for (let seed = 0; seed < 20; seed += 1) expect(playOut('hard', 'hard', seed)).toBe('draw');
+  });
+
+  it('l’ordre des niveaux se voit contre un joueur au hasard', () => {
+    const losses = (level: Level) => {
+      let n = 0;
+      for (let seed = 0; seed < 300; seed += 1) if (playOut('random', level, seed) === 'x') n += 1;
+      return n;
+    };
+    expect(losses('easy')).toBeGreaterThan(losses('medium'));
+    expect(losses('medium')).toBeGreaterThan(losses('hard'));
   });
 
   it('refuse une grille pleine', () => {
     expect(() => chooseComputerMove(boardFromMoves([0, 1, 2, 4, 3, 5, 7, 6, 8], true), 'o', createRng(1))).toThrow();
+  });
+});
+
+describe('morpion — coup de pouce (menaces)', () => {
+  it('repère l’alignement où l’adversaire a deux pions et une case libre', () => {
+    // o o _ / x _ _ / x _ _
+    expect(threatCells(boardFromMoves([3, 0, 6, 1], true), 'o')).toEqual([0, 1, 2]);
+    expect(threatCells(boardFromMoves([4], true), 'o')).toEqual([]);
+    // Ligne déjà bloquée : plus de menace.
+    expect(threatCells(boardFromMoves([3, 0, 6, 1, 2], true), 'o')).toEqual([]);
   });
 });

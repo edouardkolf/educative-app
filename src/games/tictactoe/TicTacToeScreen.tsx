@@ -1,4 +1,5 @@
-// Écran du morpion (docs/specs/MORPION-PENDU.md §2.1). Phases `choose` (contre le téléphone ou à deux),
+// Écran du morpion (docs/specs/MORPION-PENDU.md §2.1). Phases `choose` (contre le téléphone, au niveau
+// choisi — facile par défaut à chaque ouverture —, ou à deux),
 // puis `play` (une grille = une partie). Le premier joueur alterne d'une grille à l'autre ; en solo,
 // l'enfant joue les croix et commence la première grille. La logique est pure (`logic.ts`) : cet écran
 // exécute les effets (sons, délais, stockage) et la fin douce.
@@ -20,7 +21,19 @@ import {
   type TicTacToeOutcome,
 } from '../../storage/tictactoes';
 import type { GameEndReason } from '../../storage/types';
-import { boardFromMoves, chooseComputerMove, isLegalMove, nextMark, outcomeOf, winningLine, type Mark } from './logic';
+import {
+  boardFromMoves,
+  chooseComputerMove,
+  isLegalMove,
+  LEVELS,
+  nextMark,
+  outcomeOf,
+  threatCells,
+  winningLine,
+  type Level,
+  type Mark,
+} from './logic';
+import { LEVEL_LABELS } from './TicTacToeStats';
 import { useActiveClock } from '../useActiveClock';
 import './tictactoe.css';
 
@@ -43,6 +56,8 @@ interface Score {
 export function TicTacToeScreen() {
   const { profile } = useProfile();
   const [mode, setMode] = useState<TicTacToeMode | null>(null);
+  const [level, setLevel] = useState<Level>('easy');
+  const levelRef = useRef<Level>('easy');
   const [xStarts, setXStarts] = useState(true);
   const [moves, setMoves] = useState<number[]>([]);
   const [thinking, setThinking] = useState(false);
@@ -60,6 +75,12 @@ export function TicTacToeScreen() {
   const board = boardFromMoves(moves, xStarts);
   const outcome = outcomeOf(board);
   const win = winningLine(board);
+  const turnNow = nextMark(moves, xStarts);
+  // Coup de pouce (facile) : l'alignement que le téléphone menace clignote quand c'est à l'enfant de jouer.
+  const danger =
+    mode === 'solo' && level === 'easy' && outcome === null && !thinking && turnNow === 'x'
+      ? new Set(threatCells(board, 'o'))
+      : new Set<number>();
   const gridInProgress = mode !== null && outcome === null && (moves.length > 0 || thinking);
 
   const softEnd = useSoftEnd({
@@ -117,7 +138,12 @@ export function TicTacToeScreen() {
     enqueue(async () => {
       if (slot.closed || !profile) return;
       if (!slot.id) {
-        const created = await startTicTacToe(profile.id, { mode: gridMode, xStarts: gridXStarts, moves: snapshot });
+        const created = await startTicTacToe(profile.id, {
+          mode: gridMode,
+          xStarts: gridXStarts,
+          moves: snapshot,
+          ...(gridMode === 'solo' ? { level: levelRef.current } : {}),
+        });
         if (unmountedRef.current && !end) {
           slot.closed = true;
           await abandonTicTacToe(created.id, softEnd.exitReason(), activeMs);
@@ -165,7 +191,7 @@ export function TicTacToeScreen() {
       setThinking(false);
       const current = boardFromMoves(movesRef.current, gridXStarts);
       if (outcomeOf(current) !== null) return;
-      play(chooseComputerMove(current, 'o', rngRef.current), 'solo', gridXStarts);
+      play(chooseComputerMove(current, 'o', rngRef.current, levelRef.current), 'solo', gridXStarts);
     }, COMPUTER_DELAY_MS);
   }
 
@@ -202,13 +228,34 @@ export function TicTacToeScreen() {
           </IconButton>
         </div>
         <div class="ttt-modes">
-          <button type="button" class="ttt-mode" data-testid="ttt-mode-solo" onClick={() => startGrid('solo', true)}>
-            <span class="ttt-mode__players">
-              <Emoji char={profile.avatar} />
-              <PhoneGlyph size={56} />
-            </span>
-            <span class="ttt-mode__label">Contre le téléphone</span>
-          </button>
+          <div class="ttt-solo">
+            <button type="button" class="ttt-mode" data-testid="ttt-mode-solo" onClick={() => startGrid('solo', true)}>
+              <span class="ttt-mode__players">
+                <Emoji char={profile.avatar} />
+                <PhoneGlyph size={56} level={level} />
+              </span>
+              <span class="ttt-mode__label">Contre le téléphone</span>
+            </button>
+            <div class="ttt-levels" role="group" aria-label="Niveau du téléphone">
+              {LEVELS.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  class={`ttt-level${level === l ? ' ttt-level--on' : ''}`}
+                  aria-pressed={level === l}
+                  data-testid={`ttt-level-${l}`}
+                  onClick={() => {
+                    playTap();
+                    levelRef.current = l;
+                    setLevel(l);
+                  }}
+                >
+                  <PhoneGlyph size={36} level={l} />
+                  <span class="ttt-level__label">{LEVEL_LABELS[l]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <button type="button" class="ttt-mode" data-testid="ttt-mode-duo" onClick={() => startGrid('duo', true)}>
             <span class="ttt-mode__players">
               <MarkGlyph mark="x" size={52} />
@@ -225,7 +272,14 @@ export function TicTacToeScreen() {
   const showAgain = outcome !== null && !endAnimating && !softEnd.timeUp;
 
   return (
-    <div class="screen screen--tictactoe" data-testid="tictactoe" data-phase="play" data-mode={mode} data-outcome={outcome ?? undefined}>
+    <div
+      class="screen screen--tictactoe"
+      data-testid="tictactoe"
+      data-phase="play"
+      data-mode={mode}
+      data-level={mode === 'solo' ? level : undefined}
+      data-outcome={outcome ?? undefined}
+    >
       <div class="ttt-topbar">
         <IconButton size={56} onClick={goHome} aria-label="Retour à l'accueil" data-testid="to-hub">
           <Icon name="home" size={36} />
@@ -235,7 +289,14 @@ export function TicTacToeScreen() {
           <span class="ttt-score__value" data-testid="ttt-score-value">
             {score.x} – {score.o}
           </span>
-          <PlayerBadge mark="o" mode={mode} avatar={profile.avatar} active={outcome === null && turn === 'o'} thinking={thinking} />
+          <PlayerBadge
+            mark="o"
+            mode={mode}
+            avatar={profile.avatar}
+            active={outcome === null && turn === 'o'}
+            thinking={thinking}
+            level={level}
+          />
         </div>
       </div>
 
@@ -244,7 +305,7 @@ export function TicTacToeScreen() {
           <button
             key={i}
             type="button"
-            class={`ttt-cell${win?.line.includes(i) ? ' ttt-cell--win' : ''}`}
+            class={`ttt-cell${win?.line.includes(i) ? ' ttt-cell--win' : ''}${danger.has(i) ? ' ttt-cell--danger' : ''}`}
             data-testid={`ttt-cell-${i}`}
             data-mark={cell ?? undefined}
             aria-label={cell ? (cell === 'x' ? 'Croix' : 'Rond') : `Case ${i + 1}`}
@@ -284,16 +345,18 @@ function PlayerBadge({
   avatar,
   active,
   thinking = false,
+  level = 'medium',
 }: {
   mark: Mark;
   mode: TicTacToeMode;
   avatar: string;
   active: boolean;
   thinking?: boolean;
+  level?: Level;
 }) {
   return (
     <span class={`ttt-player${active ? ' ttt-player--active' : ''}${thinking ? ' ttt-player--thinking' : ''}`} data-testid={`ttt-player-${mark}`}>
-      {mode === 'solo' && <span class="ttt-player__who">{mark === 'x' ? <Emoji char={avatar} /> : <PhoneGlyph size={30} />}</span>}
+      {mode === 'solo' && <span class="ttt-player__who">{mark === 'x' ? <Emoji char={avatar} /> : <PhoneGlyph size={30} level={level} />}</span>}
       <MarkGlyph mark={mark} size={30} />
     </span>
   );
@@ -312,15 +375,36 @@ export function MarkGlyph({ mark, size }: { mark: Mark; size: number }) {
   );
 }
 
-/** Le téléphone adversaire : un petit téléphone souriant. */
-function PhoneGlyph({ size }: { size: number }) {
+/** Le téléphone adversaire, avec une tête par niveau : endormi et souriant, souriant, lunettes noires. */
+function PhoneGlyph({ size, level = 'medium' }: { size: number; level?: Level }) {
+  const body = level === 'easy' ? '#4fb3a9' : level === 'hard' ? '#3d2c6e' : '#6c63ff';
   return (
-    <svg class="ttt-phone" viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" focusable="false">
-      <rect x="12" y="4" width="24" height="40" rx="6" fill="#6c63ff" />
+    <svg class={`ttt-phone ttt-phone--${level}`} viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" focusable="false">
+      <rect x="12" y="4" width="24" height="40" rx="6" fill={body} />
       <rect x="15" y="9" width="18" height="27" rx="2.5" fill="#e9e7ff" />
-      <circle cx="20" cy="19" r="2" fill="#3d2c1e" />
-      <circle cx="28" cy="19" r="2" fill="#3d2c1e" />
-      <path d="M19.5 25Q24 29.5 28.5 25" fill="none" stroke="#3d2c1e" stroke-width="2" stroke-linecap="round" />
+      {level === 'easy' && (
+        <>
+          <path d="M18 19.5Q20 17 22 19.5M26 19.5Q28 17 30 19.5" fill="none" stroke="#3d2c1e" stroke-width="1.8" stroke-linecap="round" />
+          <circle cx="18.5" cy="23.5" r="1.6" fill="#ffb3c6" />
+          <circle cx="29.5" cy="23.5" r="1.6" fill="#ffb3c6" />
+          <path d="M20 25.5Q24 29.5 28 25.5" fill="none" stroke="#3d2c1e" stroke-width="2" stroke-linecap="round" />
+        </>
+      )}
+      {level === 'medium' && (
+        <>
+          <circle cx="20" cy="19" r="2" fill="#3d2c1e" />
+          <circle cx="28" cy="19" r="2" fill="#3d2c1e" />
+          <path d="M19.5 25Q24 29.5 28.5 25" fill="none" stroke="#3d2c1e" stroke-width="2" stroke-linecap="round" />
+        </>
+      )}
+      {level === 'hard' && (
+        <>
+          <path d="M16.5 17H31.5" stroke="#3d2c1e" stroke-width="1.6" />
+          <rect x="16.8" y="16.5" width="6.4" height="4.6" rx="2" fill="#3d2c1e" />
+          <rect x="24.8" y="16.5" width="6.4" height="4.6" rx="2" fill="#3d2c1e" />
+          <path d="M20 26.5Q24 28 28.5 25" fill="none" stroke="#3d2c1e" stroke-width="2" stroke-linecap="round" />
+        </>
+      )}
       <circle cx="24" cy="40" r="1.8" fill="#e9e7ff" />
     </svg>
   );

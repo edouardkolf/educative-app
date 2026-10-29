@@ -74,8 +74,12 @@ test('morpion : à deux, les croix gagnent ; contre le téléphone, la grille va
   // Contre le téléphone : retour au hub, nouveau morpion, on joue jusqu'à une issue.
   await backToHub(page);
   await page.getByTestId('hub-tile-tictactoe').click();
+  // Facile est présélectionné à chaque ouverture.
+  await expect(page.getByTestId('ttt-level-easy')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('ttt-level-hard')).toHaveAttribute('aria-pressed', 'false');
   await page.getByTestId('ttt-mode-solo').click();
   const screen = page.getByTestId('tictactoe');
+  await expect(screen).toHaveAttribute('data-level', 'easy');
   for (let turn = 0; turn < 5; turn += 1) {
     if ((await screen.getAttribute('data-outcome')) !== null) break;
     await expect(page.getByTestId('ttt-player-x')).toHaveClass(/ttt-player--active/);
@@ -96,6 +100,18 @@ test('morpion : à deux, les croix gagnent ; contre le téléphone, la grille va
   // Le téléphone commence la grille suivante.
   await page.getByTestId('ttt-again').click();
   await expect(page.locator('.ttt-cell[data-mark="o"]')).toHaveCount(1);
+
+  // Niveau fort : choisi par l'enfant, gardé pour la grille ; à la réouverture, retour à facile.
+  await backToHub(page);
+  await page.getByTestId('hub-tile-tictactoe').click();
+  await expect(page.getByTestId('ttt-level-easy')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('ttt-level-hard').click();
+  await expect(page.getByTestId('ttt-level-hard')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('ttt-mode-solo').click();
+  await expect(screen).toHaveAttribute('data-level', 'hard');
+  await page.getByTestId('ttt-cell-0').click();
+  // Le fort répond au coin par le centre (seule réponse qui ne perd pas).
+  await expect(page.getByTestId('ttt-cell-4')).toHaveAttribute('data-mark', 'o');
 });
 
 test('pendu : nombre de lettres et indice ; un mot trouvé, un mot perdu ; statistiques parent', async ({ page }) => {
