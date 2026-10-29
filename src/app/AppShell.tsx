@@ -15,6 +15,8 @@ import { ParentSpace } from '../parent/ParentSpace';
 import { Hub } from '../screens/Hub';
 import { DictationScreen } from '../games/dictation/DictationScreen';
 import { ColoringScreen } from '../games/coloring/ColoringScreen';
+import { TicTacToeScreen } from '../games/tictactoe/TicTacToeScreen';
+import { HangmanScreen } from '../games/hangman/HangmanScreen';
 
 export function AppShell() {
   // Premier rendu : pose `history.state.depth = 0` si l'entrée courante n'en a pas encore (HUB.md §4.1).
@@ -126,6 +128,10 @@ function renderRoute(route: Route, profile: Profile | null) {
       return profile ? <DictationScreen /> : null;
     case 'coloring':
       return profile ? <ColoringScreen /> : null;
+    case 'tictactoe':
+      return profile ? <TicTacToeScreen /> : null;
+    case 'hangman':
+      return profile ? <HangmanScreen /> : null;
     case 'parent':
       return <ParentSpace path={route.path} />;
     default:

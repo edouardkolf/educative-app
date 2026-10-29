@@ -181,6 +181,24 @@ describe('closeStaleGameRecords', () => {
     expect(stored?.endReason).toBe('time-up');
   });
 
+  it('morpion et pendu : grille ou mot avec une issue → completed ; sinon abandoned/closed', async () => {
+    await startGameRecord('tictactoes', 'p1', { mode: 'solo', xStarts: true, moves: [0, 3, 1, 4, 2], outcome: 'x' });
+    await startGameRecord('tictactoes', 'p1', { mode: 'duo', xStarts: true, moves: [4], outcome: null });
+    await startGameRecord('hangmans', 'p1', {
+      wordId: 'lion', word: 'lion', guesses: ['l', 'i', 'o', 'n'], mistakes: 0, maxMistakes: 8, outcome: 'found',
+    });
+    await startGameRecord('hangmans', 'p1', {
+      wordId: 'pomme', word: 'pomme', guesses: ['a'], mistakes: 1, maxMistakes: 8, outcome: null,
+    });
+
+    expect(await closeStaleGameRecords()).toBe(4);
+
+    const grids = await listGameRecords('tictactoes', 'p1');
+    expect(grids.map((g) => [g.status, g.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
+    const words = await listGameRecords('hangmans', 'p1');
+    expect(words.map((w) => [w.status, w.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
+  });
+
   it('ne touche pas aux parties déjà closes', async () => {
     const record = await startGameRecord('colorings', 'p1', coloringInit());
     await finishGameRecord('colorings', record.id, { status: 'completed' });

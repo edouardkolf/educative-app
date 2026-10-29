@@ -26,7 +26,12 @@ function arrayLength(data: unknown, key: string): number {
  */
 export function describeImportCounts(data: unknown): { profiles: number; runs: number } {
   const profiles = arrayLength(data, 'profiles');
-  const runs = arrayLength(data, 'runs') + arrayLength(data, 'dictations') + arrayLength(data, 'colorings');
+  const runs =
+    arrayLength(data, 'runs') +
+    arrayLength(data, 'dictations') +
+    arrayLength(data, 'colorings') +
+    arrayLength(data, 'tictactoes') +
+    arrayLength(data, 'hangmans');
   return { profiles, runs };
 }
 

@@ -7,8 +7,30 @@ import type { LevelStats, LevelStatus, MechanicId, SkillId } from '../engine';
 import { GAMES, visibleGameIds } from '../games';
 import { ColoringStats } from '../games/coloring/ColoringStats';
 import { DictationStats } from '../games/dictation/DictationStats';
-import { dayKey, getProfile, listColorings, listDictations, listOverrides, listRuns, listUsage, setOverride } from '../storage';
-import type { ColoringRecord, DictationRecord, GameRecordBase, LevelOverride, Profile, UsageDay } from '../storage';
+import { HangmanStats } from '../games/hangman/HangmanStats';
+import { TicTacToeStats } from '../games/tictactoe/TicTacToeStats';
+import {
+  dayKey,
+  getProfile,
+  listColorings,
+  listDictations,
+  listHangmans,
+  listOverrides,
+  listRuns,
+  listTicTacToes,
+  listUsage,
+  setOverride,
+} from '../storage';
+import type {
+  ColoringRecord,
+  DictationRecord,
+  GameRecordBase,
+  HangmanRecord,
+  LevelOverride,
+  Profile,
+  TicTacToeRecord,
+  UsageDay,
+} from '../storage';
 import { Emoji } from '../ui/Emoji';
 import { Icon } from '../ui/icons/Icon';
 import { BackToChildren } from './ParentShell';
@@ -102,6 +124,8 @@ interface StatsData {
   games: GroupSummary<MechanicId>[];
   dictations: DictationRecord[];
   colorings: ColoringRecord[];
+  tictactoes: TicTacToeRecord[];
+  hangmans: HangmanRecord[];
   usageDays: UsageDay[];
 }
 
@@ -109,11 +133,13 @@ async function loadStats(profileId: string): Promise<StatsData> {
   const profile = await getProfile(profileId);
   if (!profile) throw new Error('Cet enfant est introuvable.');
 
-  const [runs, overrides, dictations, colorings, usageDays] = await Promise.all([
+  const [runs, overrides, dictations, colorings, tictactoes, hangmans, usageDays] = await Promise.all([
     listRuns(profileId),
     listOverrides(profileId),
     listDictations(profileId),
     listColorings(profileId),
+    listTicTacToes(profileId),
+    listHangmans(profileId),
     listUsage(profileId),
   ]);
 
@@ -153,6 +179,8 @@ async function loadStats(profileId: string): Promise<StatsData> {
     games: summarizeByGroup(runs, groupLevels((l) => l.mechanic)),
     dictations,
     colorings,
+    tictactoes,
+    hangmans,
     usageDays,
   };
 }
@@ -224,14 +252,23 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
-  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, usageDays } = data;
+  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, tictactoes, hangmans, usageDays } =
+    data;
+  const recordsByGame: Record<string, readonly GameRecordBase[]> = {
+    dictation: dictations,
+    coloring: colorings,
+    tictactoe: tictactoes,
+    hangman: hangmans,
+  };
   const groups: Array<{ key: string; label: string; testId: string; summary: GroupSummary }> =
     groupBy === 'skill'
       ? skills.map((g) => ({ key: g.group, label: SKILL_LABELS[g.group], testId: `skill-${g.group}`, summary: g }))
       : games.map((g) => ({ key: g.group, label: MECHANIC_LABELS[g.group], testId: `game-${g.group}`, summary: g }));
 
   // Cadre A8 : « Temps de jeu total » = niveaux (summary.playTimeMs) + Σ activeMs des parties de jeu.
-  const freeGamesActiveMs = [...dictations, ...colorings].reduce((sum, r) => sum + r.activeMs, 0);
+  const freeGamesActiveMs = Object.values(recordsByGame)
+    .flat()
+    .reduce((sum, r) => sum + r.activeMs, 0);
 
   const activityTime = summarizeActivityTime(usageDays, dayKey());
   const visibleGames = new Set(visibleGameIds(profile));
@@ -243,7 +280,7 @@ export function ChildStats(props: { profileId: string }) {
 
   // Une section par jeu visible ou ayant au moins une partie (arbitrage A7/A8, HUB.md §6.4).
   const gameSections = GAMES.flatMap((game) => {
-    const records: readonly GameRecordBase[] = game.id === 'dictation' ? dictations : colorings;
+    const records: readonly GameRecordBase[] = recordsByGame[game.id] ?? [];
     if (!visibleGames.has(game.id) && records.length === 0) return [];
     return [{ game, records }];
   });
@@ -337,11 +374,14 @@ export function ChildStats(props: { profileId: string }) {
                 <dd>{formatDateTime(gameSummary.lastPlayedAt)}</dd>
               </div>
             </dl>
-            {game.id === 'dictation' ? (
+            {game.id === 'dictation' && (
               <DictationStats profile={profile} records={records as DictationRecord[]} />
-            ) : (
-              <ColoringStats profile={profile} records={records as ColoringRecord[]} />
             )}
+            {game.id === 'coloring' && <ColoringStats profile={profile} records={records as ColoringRecord[]} />}
+            {game.id === 'tictactoe' && (
+              <TicTacToeStats profile={profile} records={records as TicTacToeRecord[]} />
+            )}
+            {game.id === 'hangman' && <HangmanStats profile={profile} records={records as HangmanRecord[]} />}
           </section>
         );
       })}

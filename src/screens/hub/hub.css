@@ -35,8 +35,11 @@
   height: clamp(140px, 32dvh, 220px);
 }
 
-/* 3 tuiles : la carte en pleine largeur, puis les deux jeux côte à côte. */
-.hub-tiles[data-count='3'] {
+/* 3 tuiles et plus : grille de deux colonnes. Avec un nombre impair de tuiles, la carte prend toute la
+   largeur ; avec un nombre pair, elle a la même taille qu'un jeu (le hub ne pousse pas vers elle). */
+.hub-tiles[data-count='3'],
+.hub-tiles[data-count='4'],
+.hub-tiles[data-count='5'] {
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
@@ -45,8 +48,32 @@
   height: clamp(140px, 24dvh, 190px);
 }
 
-.hub-tiles[data-count='3'] [data-testid='hub-tile-map'] {
+/* 4 tuiles (CE1 par défaut : carte, dictée, morpion, pendu) : 2 × 2, toutes de même taille. */
+.hub-tiles[data-count='4'] .hub-tile {
+  height: clamp(140px, 30dvh, 200px);
+}
+
+/* 5 tuiles : la carte, puis 2 × 2. 80 px de barre + 3 × 140 px + espacements tiennent en 640 px. */
+.hub-tiles[data-count='5'] {
+  gap: 16px;
+}
+
+.hub-tiles[data-count='5'] .hub-tile {
+  height: clamp(140px, 22dvh, 170px);
+}
+
+.hub-tiles[data-count='3'] [data-testid='hub-tile-map'],
+.hub-tiles[data-count='5'] [data-testid='hub-tile-map'] {
   grid-column: 1 / -1;
+}
+
+/* Deux colonnes sur 360 px : le picto rétrécit pour garder une marge dans la tuile. */
+.hub-tiles[data-count='4'] .game-icon,
+.hub-tiles[data-count='4'] .hub-tile__icon,
+.hub-tiles[data-count='5'] .game-icon,
+.hub-tiles[data-count='5'] .hub-tile__icon {
+  max-width: 76%;
+  max-height: 76%;
 }
 
 .hub-tile {
@@ -92,6 +119,14 @@
 
 .hub-tile--coloring {
   background: #fff1de;
+}
+
+.hub-tile--tictactoe {
+  background: #f3ecfb;
+}
+
+.hub-tile--hangman {
+  background: #fdeef3;
 }
 
 .hub-tile__badge {

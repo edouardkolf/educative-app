@@ -9,7 +9,7 @@ beforeEach(async () => {
   await deleteDB(DB_NAME);
 });
 
-describe('db : mise à niveau v1 → v2 (docs/specs/HUB.md §8.1)', () => {
+describe('db : mises à niveau v1 → v3 (docs/specs/HUB.md §8.1, MORPION-PENDU.md §4)', () => {
   it('une base v1 réelle avec un profil, ouverte en v2, garde le profil et gagne les deux nouveaux stores', async () => {
     const v1 = await openDB(DB_NAME, 1, {
       upgrade(db) {
@@ -41,6 +41,32 @@ describe('db : mise à niveau v1 → v2 (docs/specs/HUB.md §8.1)', () => {
     expect(await v2.get('profiles', 'p1')).toMatchObject({ id: 'p1', name: 'Léo' });
     expect(await v2.getAll('dictations')).toEqual([]);
     expect(await v2.getAll('colorings')).toEqual([]);
+  });
+
+  it('une base v2 avec une dictée, ouverte en v3, la garde et gagne les stores du morpion et du pendu', async () => {
+    const v1Stores = (db: import('idb').IDBPDatabase<unknown>) => {
+      db.createObjectStore('profiles', { keyPath: 'id' });
+      const runs = db.createObjectStore('runs', { keyPath: 'id' });
+      runs.createIndex('profileId', 'profileId');
+      runs.createIndex('profileLevel', ['profileId', 'levelId']);
+      const overrides = db.createObjectStore('overrides', { keyPath: ['profileId', 'levelId'] });
+      overrides.createIndex('profileId', 'profileId');
+      const usage = db.createObjectStore('usage', { keyPath: ['profileId', 'day'] });
+      usage.createIndex('profileId', 'profileId');
+      db.createObjectStore('settings');
+      db.createObjectStore('dictations', { keyPath: 'id' }).createIndex('profileId', 'profileId');
+      db.createObjectStore('colorings', { keyPath: 'id' }).createIndex('profileId', 'profileId');
+    };
+    const v2 = await openDB(DB_NAME, 2, { upgrade: (db) => v1Stores(db) });
+    await v2.put('dictations', { id: 'd1', profileId: 'p1' });
+    v2.close();
+
+    const v3 = await getDB();
+    expect(v3.objectStoreNames.contains('tictactoes')).toBe(true);
+    expect(v3.objectStoreNames.contains('hangmans')).toBe(true);
+    expect(await v3.get('dictations', 'd1')).toMatchObject({ id: 'd1' });
+    expect(await v3.getAll('tictactoes')).toEqual([]);
+    expect(await v3.getAll('hangmans')).toEqual([]);
   });
 
   it('une promesse échouée n\'est jamais mise en cache : un nouvel essai reste possible', async () => {

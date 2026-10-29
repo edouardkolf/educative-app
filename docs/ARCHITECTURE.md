@@ -35,6 +35,8 @@ src/
   games/                     ← jeux libres hors parcours : registre (index.ts), fin douce partagée (useSoftEnd)
     dictation/               ← dictée quotidienne (CE1) : séries, tirage, machine d'état, clavier, écran, stats
     coloring/                ← coloriage magique (MS) : catalogue de dessins, récipient, paliers, écran, stats
+    tictactoe/               ← morpion (CE1) : contre le téléphone ou à deux (docs/specs/MORPION-PENDU.md)
+    hangman/                 ← pendu (CE1) : 114 mots avec indice, fleur à pétales (docs/specs/MORPION-PENDU.md)
   screens/                   ← écrans enfant : profils, hub, carte, partie, fin de niveau, écran de fin
   parent/                    ← espace parent : code, profils, stats, réglages, export/import
   storage/                   ← IndexedDB : profils, parties, parties de jeu, réglages ; export/import
@@ -114,6 +116,7 @@ Le conteneur de manche porte `data-answer` (utile aux tests e2e, invisible pour 
   reprendre un dessin crée une nouvelle partie liée. Au lancement, `closeStaleGameRecords` clôt les parties restées en
   cours (`completed` si tout était joué, sinon `time-up` ou `closed`), comme `closeStaleRuns`.
 - **Export v2** : ajoute `dictations` et `colorings`. L'import accepte les sauvegardes v1 (sans parties de jeu) et v2.
+- **IndexedDB v3 / export v3** : stores `tictactoes` et `hangmans` (morpion, pendu). L'import accepte v1, v2 et v3.
 
 La progression (étoiles, niveaux débloqués) est **recalculée à partir des parties** (`computeLevelStates`) : aucune donnée dupliquée qui pourrait diverger.
 De même, la série proposée en dictée et le palier du coloriage se déduisent des parties de jeu.

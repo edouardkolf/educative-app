@@ -1,0 +1,212 @@
+/* Morpion (docs/specs/MORPION-PENDU.md §2.1). Classes préfixées ttt-. Tient en 360 × 640 sans défiler :
+   barre 72 px + grille ≤ 360 px + pied 96 px. Cases ≥ 96 px (cible ≥ 72 px). */
+
+.screen--tictactoe {
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.ttt-topbar {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---------- Choix du mode ---------- */
+
+.ttt-modes {
+  flex: 1;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+.ttt-mode {
+  border: none;
+  border-radius: 28px;
+  background: #f3ecfb;
+  box-shadow: 0 6px 0 #e2d6f1, var(--shadow);
+  min-height: 150px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  animation: profile-card-in 480ms cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.ttt-mode + .ttt-mode {
+  animation-delay: 90ms;
+}
+
+.ttt-mode:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #e2d6f1, var(--shadow-sm);
+}
+
+.ttt-mode__players {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  font-size: 52px;
+}
+
+.ttt-mode__label {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- Partie ---------- */
+
+.ttt-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ttt-score__value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 64px;
+  text-align: center;
+}
+
+.ttt-player {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  font-size: 30px;
+  border: 3px solid transparent;
+  transition: border-color 200ms ease, transform 200ms ease;
+}
+
+.ttt-player--active {
+  border-color: var(--accent);
+  transform: scale(1.06);
+}
+
+.ttt-player--thinking .ttt-phone {
+  animation: ttt-wobble 0.6s ease-in-out infinite;
+}
+
+.ttt-player__who {
+  display: flex;
+  align-items: center;
+}
+
+.ttt-board {
+  width: min(100%, 360px, calc(100dvh - 260px));
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px;
+  border-radius: 28px;
+  background: #e2d6f1;
+  box-shadow: var(--shadow);
+}
+
+.ttt-cell {
+  border: none;
+  border-radius: 18px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 200ms ease, transform 120ms ease;
+}
+
+.ttt-cell:active:not(:disabled) {
+  transform: scale(0.94);
+  background: #fff3e6;
+}
+
+.ttt-cell:disabled {
+  cursor: default;
+}
+
+.ttt-cell .ttt-mark {
+  width: 72%;
+  height: 72%;
+  animation: pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.ttt-cell--win {
+  background: #fff1b8;
+  animation: ttt-win 700ms ease-in-out 2;
+}
+
+.ttt-board--over .ttt-cell:not(.ttt-cell--win) {
+  opacity: 0.55;
+}
+
+.ttt-footer {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.ttt-result {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+  animation: pop 360ms ease;
+}
+
+@keyframes ttt-win {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes ttt-wobble {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-8deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttt-cell .ttt-mark,
+  .ttt-cell--win,
+  .ttt-player--thinking .ttt-phone,
+  .ttt-result,
+  .ttt-mode {
+    animation: none;
+  }
+}

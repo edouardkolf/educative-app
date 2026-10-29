@@ -2,6 +2,8 @@
 // sauf via l'export JSON déclenché par le parent.
 import type { ColoringRecord, ColoringSettings } from './colorings';
 import type { DictationRecord } from './dictations';
+import type { HangmanRecord } from './hangmans';
+import type { TicTacToeRecord } from './tictactoes';
 
 export type AvatarId = string; // un emoji d'animal, ex. "🦊" (liste dans src/ui/avatars.ts)
 
@@ -103,7 +105,7 @@ export interface UsageDay {
 // ---------- Jeux hors parcours (docs/specs/HUB.md §5.2) ----------
 
 /** Stores IndexedDB des parties de jeu (un par jeu). */
-export type GameStoreName = 'dictations' | 'colorings';
+export type GameStoreName = 'dictations' | 'colorings' | 'tictactoes' | 'hangmans';
 
 /** Pourquoi une partie de jeu s'est arrêtée avant la fin : pas de vies dans ces jeux, donc jamais "out-of-lives". */
 export type GameEndReason = 'quit' | 'closed' | 'time-up';
@@ -150,10 +152,10 @@ export interface AppSettings {
 }
 
 export const EXPORT_FORMAT = 'petits-malins-export';
-/** Version écrite par l'export. v2 : parties de jeu (dictations, colorings). */
-export const EXPORT_VERSION = 2;
-/** Versions acceptées à l'import : v1 (sans parties de jeu, tableaux lus comme vides) et v2. */
-export const SUPPORTED_IMPORT_VERSIONS: readonly number[] = [1, 2];
+/** Version écrite par l'export. v2 : parties de jeu (dictations, colorings). v3 : morpion et pendu. */
+export const EXPORT_VERSION = 3;
+/** Versions acceptées à l'import : v1 (sans parties de jeu), v2 (sans morpion ni pendu) et v3 ; tableaux absents lus comme vides. */
+export const SUPPORTED_IMPORT_VERSIONS: readonly number[] = [1, 2, 3];
 
 /** Fichier d'export. Ne contient ni le code parent ni l'état de session. */
 export interface ExportBundle {
@@ -166,6 +168,8 @@ export interface ExportBundle {
   usage: UsageDay[];
   dictations: DictationRecord[];
   colorings: ColoringRecord[];
+  tictactoes: TicTacToeRecord[];
+  hangmans: HangmanRecord[];
   settings: { soundOn: boolean };
 }
 

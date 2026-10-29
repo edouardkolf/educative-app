@@ -1,0 +1,242 @@
+/* Pendu (docs/specs/MORPION-PENDU.md §2.2). Classes préfixées hm-. Tient en 360 × 640 sans défiler :
+   barre 56 + fleur ≤ 140 + indice ~64 + mot 52 + clavier 4 × 50. Touches de 44 px au moins à 360 px :
+   même exception assumée que le clavier de la dictée (README §3.7). */
+
+.screen--hangman {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.screen.screen--hangman {
+  padding-left: calc(env(safe-area-inset-left, 0px) + 12px);
+  padding-right: calc(env(safe-area-inset-right, 0px) + 12px);
+}
+
+.hm-topbar {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hm-count {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: #fff3e6;
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+
+/* ---------- Fleur ---------- */
+
+.hm-flower {
+  height: clamp(96px, 20dvh, 150px);
+  aspect-ratio: 120 / 140;
+  flex: none;
+}
+
+.hm-flower__svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hm-petal {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.hm-petal--fallen {
+  opacity: 0;
+  transform: translateY(-26px) rotate(40deg) scale(0.7);
+}
+
+/* ---------- Indice ---------- */
+
+.hm-hint {
+  width: 100%;
+  max-width: 420px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border-radius: 20px;
+  background: #fdeef3;
+  box-shadow: var(--shadow-sm);
+}
+
+.hm-hint__text {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.hm-hint__speak {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.hm-hint__speak[data-speaking] {
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+/* ---------- Mot ---------- */
+
+.hm-word {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.hm-slot {
+  flex: 0 1 44px;
+  min-width: 0;
+  height: 52px;
+  border-radius: 10px;
+  background: #ffffff;
+  border-bottom: 4px solid #c9bfad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Andika', var(--font-body);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hm-slot--shown {
+  border-bottom-color: #5aa469;
+  animation: pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Mot perdu : les lettres non trouvées apparaissent en orange, sans reproche. */
+.hm-slot--given {
+  color: #d9822b;
+  border-bottom-color: var(--accent);
+}
+
+.hm-word--len-9 .hm-slot,
+.hm-word--len-10 .hm-slot {
+  font-size: 24px;
+}
+
+/* ---------- Clavier : 26 lettres, 7 colonnes, ordre alphabétique ---------- */
+
+.hm-keyboard {
+  width: 100%;
+  max-width: 440px;
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.hm-key {
+  height: 50px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  font-family: 'Andika', var(--font-body);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 0;
+  cursor: pointer;
+  transition: transform 150ms ease, background 200ms ease, opacity 200ms ease;
+}
+
+/* 26 = 3 × 7 + 5 : la dernière rangée est centrée. */
+.hm-key[data-key='v'] {
+  grid-column: 2;
+}
+
+.hm-key:active:not(:disabled) {
+  transform: scale(0.92);
+  background: #ffe7c7;
+}
+
+.hm-key--hit {
+  background: #d8f0dc;
+  color: #2f6b3a;
+  box-shadow: none;
+}
+
+.hm-key--miss {
+  background: #eee7dc;
+  color: var(--locked-ink);
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.hm-key--shake {
+  animation: shake 320ms ease;
+}
+
+/* ---------- Fin du mot ---------- */
+
+.hm-end {
+  margin-top: auto;
+  margin-bottom: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.hm-end__text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hm-end__word {
+  margin: 0;
+  font-family: 'Andika', var(--font-body);
+  font-size: 34px;
+  font-weight: 700;
+  color: #d9822b;
+}
+
+@media (max-height: 700px) {
+  .hm-key {
+    height: 46px;
+    font-size: 24px;
+  }
+  .hm-hint__text {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-petal,
+  .hm-slot--shown,
+  .hm-key--shake,
+  .hm-hint__speak[data-speaking] {
+    animation: none;
+    transition: none;
+  }
+}

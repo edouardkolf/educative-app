@@ -3,6 +3,8 @@
 import { isColoringRecord, isColoringSettings, type ColoringRecord } from './colorings';
 import { getDB } from './db';
 import { isDictationRecord, type DictationRecord } from './dictations';
+import { isHangmanRecord, type HangmanRecord } from './hangmans';
+import { isTicTacToeRecord, type TicTacToeRecord } from './tictactoes';
 import { DEFAULT_SETTINGS } from './settings';
 import {
   EXPORT_FORMAT,
@@ -23,15 +25,18 @@ import { isFiniteNumber, isNonEmptyString, isPlainObject } from './validate';
 
 export async function exportAll(): Promise<ExportBundle> {
   const db = await getDB();
-  const [profiles, allRuns, allOverrides, allUsage, allDictations, allColorings, settings] = await Promise.all([
-    db.getAll('profiles'),
-    db.getAll('runs'),
-    db.getAll('overrides'),
-    db.getAll('usage'),
-    db.getAll('dictations'),
-    db.getAll('colorings'),
-    db.get('settings', 'app'),
-  ]);
+  const [profiles, allRuns, allOverrides, allUsage, allDictations, allColorings, allTicTacToes, allHangmans, settings] =
+    await Promise.all([
+      db.getAll('profiles'),
+      db.getAll('runs'),
+      db.getAll('overrides'),
+      db.getAll('usage'),
+      db.getAll('dictations'),
+      db.getAll('colorings'),
+      db.getAll('tictactoes'),
+      db.getAll('hangmans'),
+      db.get('settings', 'app'),
+    ]);
   // F2 : ne jamais exporter les lignes orphelines (parties/réglages/temps d'un enfant supprimé,
   // écrites via un profil resté en mémoire) — même si elles traînent encore dans cette base locale.
   const profileIds = new Set(profiles.map((profile) => profile.id));
@@ -40,6 +45,8 @@ export async function exportAll(): Promise<ExportBundle> {
   const usage = allUsage.filter((day) => profileIds.has(day.profileId));
   const dictations = allDictations.filter((record) => profileIds.has(record.profileId));
   const colorings = allColorings.filter((record) => profileIds.has(record.profileId));
+  const tictactoes = allTicTacToes.filter((record) => profileIds.has(record.profileId));
+  const hangmans = allHangmans.filter((record) => profileIds.has(record.profileId));
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
@@ -50,6 +57,8 @@ export async function exportAll(): Promise<ExportBundle> {
     usage,
     dictations,
     colorings,
+    tictactoes,
+    hangmans,
     settings: { soundOn: (settings ?? DEFAULT_SETTINGS).soundOn },
   };
 }
@@ -174,6 +183,8 @@ interface ValidatedBundle {
   usage: UsageDay[];
   dictations: DictationRecord[];
   colorings: ColoringRecord[];
+  tictactoes: TicTacToeRecord[];
+  hangmans: HangmanRecord[];
   soundOn: boolean;
   /** F2 : nombre de lignes ignorées parce qu'elles référencent un enfant absent de la sauvegarde. */
   skipped: number;
@@ -211,6 +222,18 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
     dictations = rawDictations;
     colorings = rawColorings;
   }
+  // v3 : morpion et pendu (tableaux obligatoires) ; v1 et v2 : lus comme vides.
+  let tictactoes: TicTacToeRecord[] = [];
+  let hangmans: HangmanRecord[] = [];
+  if (data.version !== 1 && data.version !== 2) {
+    const { tictactoes: rawTicTacToes, hangmans: rawHangmans } = data;
+    if (!Array.isArray(rawTicTacToes) || !rawTicTacToes.every(isTicTacToeRecord)) return { error: BAD_SHAPE };
+    if (!Array.isArray(rawHangmans) || !rawHangmans.every(isHangmanRecord)) return { error: BAD_SHAPE };
+    if (!hasUniqueIds(rawTicTacToes, (r) => r.id)) return { error: BAD_SHAPE };
+    if (!hasUniqueIds(rawHangmans, (r) => r.id)) return { error: BAD_SHAPE };
+    tictactoes = rawTicTacToes;
+    hangmans = rawHangmans;
+  }
 
   // F2 : une ligne dont l'enfant est absent de la sauvegarde (parties/réglages/temps écrits via un
   // profil resté en mémoire après suppression) est ignorée plutôt que de faire échouer tout l'import.
@@ -220,13 +243,17 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
   const keptUsage = usage.filter((day) => profileIds.has(day.profileId));
   const keptDictations = dictations.filter((record) => profileIds.has(record.profileId));
   const keptColorings = colorings.filter((record) => profileIds.has(record.profileId));
+  const keptTicTacToes = tictactoes.filter((record) => profileIds.has(record.profileId));
+  const keptHangmans = hangmans.filter((record) => profileIds.has(record.profileId));
   const skipped =
     runs.length -
     keptRuns.length +
     (overrides.length - keptOverrides.length) +
     (usage.length - keptUsage.length) +
     (dictations.length - keptDictations.length) +
-    (colorings.length - keptColorings.length);
+    (colorings.length - keptColorings.length) +
+    (tictactoes.length - keptTicTacToes.length) +
+    (hangmans.length - keptHangmans.length);
 
   return {
     bundle: {
@@ -236,6 +263,8 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
       usage: keptUsage,
       dictations: keptDictations,
       colorings: keptColorings,
+      tictactoes: keptTicTacToes,
+      hangmans: keptHangmans,
       soundOn,
       skipped,
     },
@@ -257,7 +286,7 @@ export async function importAll(data: unknown): Promise<ImportResult> {
 
   const db = await getDB();
   const tx = db.transaction(
-    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'settings'],
+    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'tictactoes', 'hangmans', 'settings'],
     'readwrite',
   );
   const profiles = tx.objectStore('profiles');
@@ -266,6 +295,8 @@ export async function importAll(data: unknown): Promise<ImportResult> {
   const usage = tx.objectStore('usage');
   const dictations = tx.objectStore('dictations');
   const colorings = tx.objectStore('colorings');
+  const tictactoes = tx.objectStore('tictactoes');
+  const hangmans = tx.objectStore('hangmans');
   const settings = tx.objectStore('settings');
 
   await Promise.all([
@@ -275,6 +306,8 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     usage.clear(),
     dictations.clear(),
     colorings.clear(),
+    tictactoes.clear(),
+    hangmans.clear(),
   ]);
   await Promise.all([
     ...bundle.profiles.map((profile) => profiles.put(profile)),
@@ -283,6 +316,8 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     ...bundle.usage.map((day) => usage.put(day)),
     ...bundle.dictations.map((record) => dictations.put(record)),
     ...bundle.colorings.map((record) => colorings.put(record)),
+    ...bundle.tictactoes.map((record) => tictactoes.put(record)),
+    ...bundle.hangmans.map((record) => hangmans.put(record)),
   ]);
 
   const existingSettings = (await settings.get('app')) ?? DEFAULT_SETTINGS;
@@ -300,7 +335,8 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     ok: true,
     profiles: bundle.profiles.length,
     runs: bundle.runs.length,
-    gameRecords: bundle.dictations.length + bundle.colorings.length,
+    gameRecords:
+      bundle.dictations.length + bundle.colorings.length + bundle.tictactoes.length + bundle.hangmans.length,
     skipped: bundle.skipped,
   };
 }

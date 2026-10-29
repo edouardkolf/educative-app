@@ -8,8 +8,8 @@ describe('defaultGameIds', () => {
     expect(defaultGameIds('ms')).toEqual(['coloring']);
   });
 
-  it("'ce1' donne la dictée", () => {
-    expect(defaultGameIds('ce1')).toEqual(['dictation']);
+  it("'ce1' donne la dictée, le morpion et le pendu", () => {
+    expect(defaultGameIds('ce1')).toEqual(['dictation', 'tictactoe', 'hangman']);
   });
 
   it('un parcours inconnu se replie sur le premier parcours (ms)', () => {
@@ -19,7 +19,7 @@ describe('defaultGameIds', () => {
 
 describe('visibleGameIds', () => {
   it('profile.games absent : le défaut du parcours', () => {
-    expect(visibleGameIds({ trackId: 'ce1', games: undefined })).toEqual(['dictation']);
+    expect(visibleGameIds({ trackId: 'ce1', games: undefined })).toEqual(['dictation', 'tictactoe', 'hangman']);
     expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual(['coloring']);
   });
 

@@ -43,6 +43,22 @@ export const GAMES: readonly GameDefinition[] = [
     defaultTracks: ['ms'],
     store: 'colorings',
   },
+  {
+    id: 'tictactoe',
+    route: { name: 'tictactoe' },
+    parentLabel: 'Morpion',
+    tileLabel: 'Morpion',
+    defaultTracks: ['ce1'],
+    store: 'tictactoes',
+  },
+  {
+    id: 'hangman',
+    route: { name: 'hangman' },
+    parentLabel: 'Pendu',
+    tileLabel: 'Pendu',
+    defaultTracks: ['ce1'],
+    store: 'hangmans',
+  },
 ];
 
 export function getGame(id: string): GameDefinition | undefined {

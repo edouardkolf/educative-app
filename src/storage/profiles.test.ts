@@ -9,6 +9,8 @@ import {
   getUsage,
   listColorings,
   listDictations,
+  listHangmans,
+  listTicTacToes,
   listOverrides,
   listProfiles,
   listRuns,
@@ -16,6 +18,8 @@ import {
   setOverride,
   startColoring,
   startDictation,
+  startHangman,
+  startTicTacToe,
   startRun,
   updateSettings,
 } from './index';
@@ -83,6 +87,8 @@ describe('deleteProfile : suppression en cascade', () => {
       paintedAtStart: [],
       missesAtStart: {},
     });
+    await startTicTacToe(profile.id, { mode: 'solo', xStarts: true, moves: [4] });
+    await startHangman(profile.id, { wordId: 'lion', word: 'lion', maxMistakes: 8, guesses: ['l'], mistakes: 0 });
     const otherSession = { profileId: other.id, startedAt: Date.now(), activeSeconds: 0, lastActiveAt: Date.now() };
     await updateSettings({
       sessions: {
@@ -107,6 +113,8 @@ describe('deleteProfile : suppression en cascade', () => {
     expect((await getUsage(profile.id, '2026-09-25')).activeSeconds).toBe(0);
     expect(await listDictations(profile.id)).toEqual([]);
     expect(await listColorings(profile.id)).toEqual([]);
+    expect(await listTicTacToes(profile.id)).toEqual([]);
+    expect(await listHangmans(profile.id)).toEqual([]);
 
     const settings = await getSettings();
     expect(settings.sessions[profile.id]).toBeUndefined();

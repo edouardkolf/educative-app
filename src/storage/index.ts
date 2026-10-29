@@ -41,6 +41,8 @@ export {
 export type { GameRecordByStore, GameOutcome } from './game-records';
 export * from './dictations';
 export * from './colorings';
+export * from './tictactoes';
+export * from './hangmans';
 
 // ---------- Export / import ----------
 export { exportAll, importAll } from './export-import';

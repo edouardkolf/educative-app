@@ -8,6 +8,7 @@ les trois specs le respectent, et en cas de désaccord entre deux specs, c'est l
 | Hub et socle commun | [HUB.md](HUB.md) | écran hub, navigation, routes, temps de jeu et fin douce, stockage v2 et export v2, registre des jeux, jeux visibles par enfant, place des statistiques côté parent |
 | Dictée quotidienne (CE1) | [DICTEE.md](DICTEE.md) | séries de mots, tirage, voix du téléphone, saisie, correction, enregistrements, statistiques |
 | Coloriage magique (MS) | [COLORIAGE.md](COLORIAGE.md) | dessins et zones, code magique, pots et récipient de mélange, progression, enregistrements, statistiques |
+| Morpion et pendu (CE1) | [MORPION-PENDU.md](MORPION-PENDU.md) | lot du 29/10/2026 : deux jeux libres de plus, hub à 4 tuiles, stockage v3 |
 
 ## 1. Pourquoi ce lot
 

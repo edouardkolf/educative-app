@@ -61,6 +61,8 @@ describe('parseHash / toHash', () => {
     { name: 'play', levelId: 'ms-01' },
     { name: 'dictation' },
     { name: 'coloring' },
+    { name: 'tictactoe' },
+    { name: 'hangman' },
     { name: 'locked' },
     { name: 'parent', path: ['children', 'p1'] },
   ])('aller-retour pour %o', async (route) => {
@@ -85,6 +87,8 @@ describe('prédicats', () => {
     const { isGameRoute } = await import('./routes');
     expect(isGameRoute('dictation')).toBe(true);
     expect(isGameRoute('coloring')).toBe(true);
+    expect(isGameRoute('tictactoe')).toBe(true);
+    expect(isGameRoute('hangman')).toBe(true);
     expect(isGameRoute('map')).toBe(false);
     expect(isGameRoute('n-importe-quoi')).toBe(false);
   });

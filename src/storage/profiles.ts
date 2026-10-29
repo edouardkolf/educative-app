@@ -36,7 +36,7 @@ export async function saveProfile(
 export async function deleteProfile(id: string): Promise<void> {
   const db = await getDB();
   const tx = db.transaction(
-    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'settings'],
+    ['profiles' as const, 'runs' as const, 'overrides' as const, 'usage' as const, ...GAME_STORES, 'settings' as const],
     'readwrite',
   );
   const profiles = tx.objectStore('profiles');

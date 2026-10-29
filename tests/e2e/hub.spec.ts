@@ -86,16 +86,22 @@ test('hub MS : carte et coloriage, sans texte visible, sans cadenas', async ({ p
   await expect(profileCard(page, 'Alice')).toBeVisible();
 });
 
-// ==================== 2. Hub d'un enfant CE1 : carte + dictée ====================
+// ==================== 2. Hub d'un enfant CE1 : carte, dictée, morpion, pendu ====================
 
-test('hub CE1 : carte et dictée', async ({ page }) => {
+test('hub CE1 : carte, dictée, morpion et pendu, en 2 × 2 sans défiler', async ({ page }) => {
   await onboardWithChild(page, 'Timéo', 'ce1');
   await chooseProfile(page, 'Timéo');
 
   const hub = page.getByTestId('hub');
   await expect(hub.getByTestId('hub-tile-map')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-dictation')).toBeVisible();
+  await expect(hub.getByTestId('hub-tile-tictactoe')).toBeVisible();
+  await expect(hub.getByTestId('hub-tile-hangman')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-coloring')).toHaveCount(0);
+  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '4');
+  await expect(hub).toHaveText(''); // toujours aucun texte visible
+  const scrolls = await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight);
+  expect(scrolls).toBe(false);
 });
 
 // ==================== 3. Historique : maison remonte sans empiler ====================

@@ -10,11 +10,18 @@ import { getDB, type StorageSchema } from './db';
 import type { IDBPDatabase } from 'idb';
 import { isColoringFinished, isColoringRecord, type ColoringRecord } from './colorings';
 import { isDictationFinished, isDictationRecord, type DictationRecord } from './dictations';
+import { isHangmanFinished, isHangmanRecord, type HangmanRecord } from './hangmans';
+import { isTicTacToeFinished, isTicTacToeRecord, type TicTacToeRecord } from './tictactoes';
 import type { GameEndReason, GameRecordBase, GameStoreName } from './types';
 
-export type GameRecordByStore = { dictations: DictationRecord; colorings: ColoringRecord };
+export type GameRecordByStore = {
+  dictations: DictationRecord;
+  colorings: ColoringRecord;
+  tictactoes: TicTacToeRecord;
+  hangmans: HangmanRecord;
+};
 
-export const GAME_STORES: readonly GameStoreName[] = ['dictations', 'colorings'];
+export const GAME_STORES: readonly GameStoreName[] = ['dictations', 'colorings', 'tictactoes', 'hangmans'];
 
 /** Issue d'une partie : terminée, ou abandonnée avec une raison. */
 export type GameOutcome = { status: 'completed' } | { status: 'abandoned'; endReason: GameEndReason };
@@ -27,6 +34,18 @@ function rulesFor<S extends GameStoreName>(
     return {
       isRecord: isDictationRecord as (value: unknown) => value is GameRecordByStore[S],
       isFinished: isDictationFinished as unknown as (record: GameRecordByStore[S]) => boolean,
+    };
+  }
+  if (store === 'tictactoes') {
+    return {
+      isRecord: isTicTacToeRecord as (value: unknown) => value is GameRecordByStore[S],
+      isFinished: isTicTacToeFinished as unknown as (record: GameRecordByStore[S]) => boolean,
+    };
+  }
+  if (store === 'hangmans') {
+    return {
+      isRecord: isHangmanRecord as (value: unknown) => value is GameRecordByStore[S],
+      isFinished: isHangmanFinished as unknown as (record: GameRecordByStore[S]) => boolean,
     };
   }
   return {
@@ -129,7 +148,7 @@ export async function listGameRecords<S extends GameStoreName>(
  */
 export async function closeStaleGameRecords(): Promise<number> {
   const db = await getDB();
-  const tx = db.transaction(['dictations', 'colorings', 'settings'], 'readwrite');
+  const tx = db.transaction([...GAME_STORES, 'settings' as const], 'readwrite');
   const lock = (await tx.objectStore('settings').get('app'))?.lock ?? null;
   let count = 0;
   for (const store of GAME_STORES) {

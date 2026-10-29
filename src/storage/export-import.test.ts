@@ -8,6 +8,8 @@ import {
   addActiveSeconds,
   completeColoring,
   completeDictation,
+  completeHangman,
+  completeTicTacToe,
   completeRun,
   exportAll,
   getSettings,
@@ -15,6 +17,8 @@ import {
   importAll,
   listColorings,
   listDictations,
+  listHangmans,
+  listTicTacToes,
   listOverrides,
   listProfiles,
   listRuns,
@@ -24,6 +28,8 @@ import {
   setOverride,
   startColoring,
   startDictation,
+  startHangman,
+  startTicTacToe,
   startRun,
   updateSettings,
 } from './index';
@@ -88,11 +94,16 @@ async function seed() {
   );
   await completeColoring(coloring.id, 100);
 
+  const ttt = await startTicTacToe(profile.id, { mode: 'solo', xStarts: true, moves: [4] });
+  await completeTicTacToe(ttt.id, [4, 0, 2, 6, 3, 5, 1, 7, 8], 'draw', 4200);
+  const hm = await startHangman(profile.id, { wordId: 'lion', word: 'lion', maxMistakes: 8, guesses: ['a'], mistakes: 1 });
+  await completeHangman(hm.id, ['a', 'l', 'i', 'o', 'n'], 1, 'found', 9000);
+
   return profile;
 }
 
 describe('export → import', () => {
-  it('aller-retour v2 : les données (dont les parties de jeu) reviennent identiques', async () => {
+  it('aller-retour v3 : les données (dont les parties de jeu) reviennent identiques', async () => {
     const profile = await seed();
     const bundle = await exportAll();
 
@@ -101,6 +112,8 @@ describe('export → import', () => {
     expect(bundle.settings).toEqual({ soundOn: false });
     expect(bundle.dictations).toHaveLength(1);
     expect(bundle.colorings).toHaveLength(1);
+    expect(bundle.tictactoes).toHaveLength(1);
+    expect(bundle.hangmans).toHaveLength(1);
 
     const before = {
       profiles: await listProfiles(),
@@ -109,17 +122,21 @@ describe('export → import', () => {
       usage: await getUsage(profile.id, '2026-09-25'),
       dictations: await listDictations(profile.id),
       colorings: await listColorings(profile.id),
+      tictactoes: await listTicTacToes(profile.id),
+      hangmans: await listHangmans(profile.id),
     };
 
     const result = await importAll(bundle);
 
-    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 2, skipped: 0 });
+    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 4, skipped: 0 });
     expect(await listProfiles()).toEqual(before.profiles);
     expect(await listRuns(profile.id)).toEqual(before.runs);
     expect(await listOverrides(profile.id)).toEqual(before.overrides);
     expect(await getUsage(profile.id, '2026-09-25')).toEqual(before.usage);
     expect(await listDictations(profile.id)).toEqual(before.dictations);
     expect(await listColorings(profile.id)).toEqual(before.colorings);
+    expect(await listTicTacToes(profile.id)).toEqual(before.tictactoes);
+    expect(await listHangmans(profile.id)).toEqual(before.hangmans);
   });
 
   it('conserve le code parent et remet sessions/lock à vide/null', async () => {
@@ -144,9 +161,11 @@ describe('export → import', () => {
   it('un fichier v1 (sans dictations/colorings) est accepté, avec 0 partie de jeu', async () => {
     await seed();
     const bundle = await exportAll();
-    const { dictations: _d, colorings: _c, ...v1Bundle } = bundle;
+    const { dictations: _d, colorings: _c, tictactoes: _t, hangmans: _h, ...v1Bundle } = bundle;
     void _d;
     void _c;
+    void _t;
+    void _h;
 
     const result = await importAll({ ...v1Bundle, version: 1 });
 
@@ -160,18 +179,54 @@ describe('export → import', () => {
   it('un fichier v2 sans les tableaux de jeu est refusé', async () => {
     await seed();
     const bundle = await exportAll();
-    const { dictations: _d, colorings: _c, ...v2WithoutGames } = bundle;
+    const { dictations: _d, colorings: _c, tictactoes: _t, hangmans: _h, ...v2WithoutGames } = bundle;
     void _d;
     void _c;
+    void _t;
+    void _h;
 
-    expect(await importAll(v2WithoutGames)).toMatchObject({ ok: false });
+    expect(await importAll({ ...v2WithoutGames, version: 2 })).toMatchObject({ ok: false });
   });
 
-  it('refuse la version 3 (inconnue)', async () => {
+  it('un fichier v2 (sans morpion ni pendu) est accepté, avec ses dictées et coloriages', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const { tictactoes: _t, hangmans: _h, ...v2Bundle } = bundle;
+    void _t;
+    void _h;
+
+    const result = await importAll({ ...v2Bundle, version: 2 });
+
+    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 2, skipped: 0 });
+    const [profile] = await listProfiles();
+    if (!profile) throw new Error('import invalide');
+    expect(await listTicTacToes(profile.id)).toEqual([]);
+    expect(await listHangmans(profile.id)).toEqual([]);
+  });
+
+  it('un fichier v3 sans les tableaux du morpion et du pendu est refusé', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const { tictactoes: _t, ...withoutTicTacToes } = bundle;
+    void _t;
+
+    expect(await importAll(withoutTicTacToes)).toMatchObject({ ok: false });
+  });
+
+  it('refuse une partie de pendu mal formée', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const [hm] = bundle.hangmans;
+    if (!hm) throw new Error('seed invalide');
+
+    expect(await importAll({ ...bundle, hangmans: [{ ...hm, guesses: ['é'] }] })).toMatchObject({ ok: false });
+  });
+
+  it('refuse la version 4 (inconnue)', async () => {
     await seed();
     const bundle = await exportAll();
 
-    expect(await importAll({ ...bundle, version: 3 })).toMatchObject({ ok: false });
+    expect(await importAll({ ...bundle, version: 4 })).toMatchObject({ ok: false });
   });
 });
 
@@ -344,7 +399,7 @@ describe('F2 : lignes orphelines (enfant absent de la sauvegarde)', () => {
       runs: 0,
       gameRecords: 0,
       skipped: bundle.runs.length + bundle.overrides.length + bundle.usage.length + bundle.dictations.length +
-        bundle.colorings.length,
+        bundle.colorings.length + bundle.tictactoes.length + bundle.hangmans.length,
     });
     expect(await listProfiles()).toEqual([]);
     // Les anciennes données du profil (avant cet import) ont bien été remplacées, pas conservées.
