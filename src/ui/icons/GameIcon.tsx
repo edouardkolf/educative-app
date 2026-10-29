@@ -83,6 +83,10 @@ const DRAWINGS: Record<GameId, () => JSX.Element> = {
       <path d="M8.5 39.4H13.5M34.5 39.4H39.5" stroke="#a6978a" stroke-width="1.8" stroke-linecap="round" />
     </>
   ),
+  // SOUCHES (T0) : remplacées par les vrais pictos (tâche T6, docs/specs/JEUX-LOGIQUE.md §5).
+  'guess-number': () => <circle cx="24" cy="24" r="18" fill="#ffc53d" />,
+  'code-breaker': () => <circle cx="24" cy="24" r="18" fill="#e63946" />,
+  robot: () => <circle cx="24" cy="24" r="18" fill="#6c63ff" />,
 };
 
 export function GameIcon({ id, size = 112 }: { id: GameId; size?: number }) {

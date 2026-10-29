@@ -37,6 +37,12 @@ export const MECHANICS = [
   'calc',
   'spelling',
   'read',
+  // Jeux de logique et de devinette (docs/specs/JEUX-LOGIQUE.md) : plusieurs coups par manche.
+  'guess-number',
+  'code-breaker',
+  'robot',
+  'tictactoe',
+  'hangman',
 ] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
@@ -53,6 +59,8 @@ export const SKILLS = [
   'multiplication',
   'spelling',
   'reading',
+  /** Raisonnement : déduction, anticipation, programmation (jeux de logique). */
+  'logic',
 ] as const;
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
@@ -307,6 +315,72 @@ export interface ReadParams {
   choices: number;
 }
 
+// ---------- Jeux de logique et de devinette (docs/specs/JEUX-LOGIQUE.md) ----------
+
+/**
+ * Choix envoyé au moteur par une mécanique « à plusieurs coups » quand la manche est ratée (budget dépassé,
+ * grille perdue…). La manche continue ensuite jusqu'à `onChoose(round.answer)`. Jamais égal à `round.answer`.
+ */
+export const MISS: ChoiceId = 'miss';
+
+/** Devine le nombre : le téléphone pense à un nombre, l'enfant propose, réponse « plus grand / plus petit ». */
+export interface GuessNumberParams {
+  /** Plage du nombre secret, bornes incluses (0 à 999, au moins 5 nombres). */
+  range: IntRange;
+  /** Propositions permises avant que la manche compte comme ratée (≥ 2 ; repère : ⌈log2(taille)⌉ + 1). */
+  maxGuesses: number;
+  /** "tiles" : tous les nombres en grille (plage de 30 nombres au plus) ; "keypad" : pavé numérique + ✓. */
+  input: 'tiles' | 'keypad';
+}
+
+/** Code secret : retrouver un code de pions colorés grâce aux indices de chaque essai. */
+export interface CodeBreakerParams {
+  /** Nombre de pions du code (2 à 4). */
+  length: number;
+  /** Couleurs possibles (3 à 6), proposées dans cet ordre. */
+  colors: Color[];
+  /** Une couleur peut revenir plusieurs fois dans le code. Faux : couleurs ≥ longueur. */
+  repeats: boolean;
+  /** "positional" : une marque par pion (bien placé / présent ailleurs) ; "counts" : nombres de bien et mal placés. */
+  feedback: 'positional' | 'counts';
+  /** Essais permis avant que la manche compte comme ratée (≥ 2). */
+  maxGuesses: number;
+}
+
+/** Robot à programmer : amener le robot au trésor avec des flèches (déplacements absolus). */
+export interface RobotParams {
+  /** Côté de la grille (4 à 6). */
+  size: number;
+  /** Rochers posés (0 à 10). */
+  obstacles: number;
+  /** "step" : chaque flèche déplace tout de suite (MS) ; "program" : on aligne les flèches puis ▶ (CE1). */
+  mode: 'step' | 'program';
+  /** Longueur du plus court chemin, tirée dans cette plage (2 à 12). */
+  pathLength: IntRange;
+  /** mode "program" : flèches au plus dans le programme (≥ pathLength.max). */
+  maxArrows?: number;
+}
+
+/** Morpion : gagner une grille contre le téléphone (une manche = une grille gagnée). */
+export interface TicTacToeParams {
+  level: 'easy' | 'medium' | 'hard';
+  /** Coup de pouce : l'alignement menacé par le téléphone clignote quand c'est à l'enfant de jouer. */
+  hint: boolean;
+  /** "always" : l'enfant commence chaque grille ; "alternate" : elle commence la première, puis on alterne. */
+  childStarts: 'always' | 'alternate';
+}
+
+/** Pendu : trouver un mot lettre par lettre, avec son nombre de lettres et un indice. */
+export interface HangmanParams {
+  /** Ids du catalogue src/games/hangman/words.ts ; absent : tout le catalogue. */
+  words?: string[];
+  /** Filtre sur la longueur du mot (lettres). */
+  minLength?: number;
+  maxLength?: number;
+  /** Pétales = erreurs permises (4 à 10). */
+  maxMistakes: number;
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
@@ -318,6 +392,11 @@ export interface MechanicParamsMap {
   calc: CalcParams;
   spelling: SpellingParams;
   read: ReadParams;
+  'guess-number': GuessNumberParams;
+  'code-breaker': CodeBreakerParams;
+  robot: RobotParams;
+  tictactoe: TicTacToeParams;
+  hangman: HangmanParams;
 }
 
 interface LevelBase {
@@ -329,7 +408,7 @@ interface LevelBase {
   skill: SkillId;
   /** Objectif pédagogique en une phrase, lisible par le parent. */
   objective: string;
-  /** Nombre de manches dans le niveau (3 à 10). */
+  /** Nombre de manches dans le niveau (2 à 10 ; 2 réservé aux jeux longs comme le morpion). */
   rounds: number;
   /** Affiche la main animée qui montre le geste pendant la première manche. */
   tutorial?: boolean;

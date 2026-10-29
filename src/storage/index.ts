@@ -43,6 +43,7 @@ export * from './dictations';
 export * from './colorings';
 export * from './tictactoes';
 export * from './hangmans';
+export * from './puzzles';
 
 // ---------- Export / import ----------
 export { exportAll, importAll } from './export-import';

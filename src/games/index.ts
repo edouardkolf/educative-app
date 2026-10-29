@@ -59,6 +59,31 @@ export const GAMES: readonly GameDefinition[] = [
     defaultTracks: ['ce1'],
     store: 'hangmans',
   },
+  // Jeux libres de logique : une mécanique en manches illimitées (docs/specs/JEUX-LOGIQUE.md §4).
+  {
+    id: 'guess-number',
+    route: { name: 'guess-number' },
+    parentLabel: 'Devine le nombre',
+    tileLabel: 'Devine le nombre',
+    defaultTracks: ['ce1'],
+    store: 'puzzles',
+  },
+  {
+    id: 'code-breaker',
+    route: { name: 'code-breaker' },
+    parentLabel: 'Code secret',
+    tileLabel: 'Code secret',
+    defaultTracks: ['ms', 'ce1'],
+    store: 'puzzles',
+  },
+  {
+    id: 'robot',
+    route: { name: 'robot' },
+    parentLabel: 'Robot à programmer',
+    tileLabel: 'Robot',
+    defaultTracks: ['ms', 'ce1'],
+    store: 'puzzles',
+  },
 ];
 
 export function getGame(id: string): GameDefinition | undefined {

@@ -3,6 +3,7 @@
 import type { ColoringRecord, ColoringSettings } from './colorings';
 import type { DictationRecord } from './dictations';
 import type { HangmanRecord } from './hangmans';
+import type { PuzzleRecord } from './puzzles';
 import type { TicTacToeRecord } from './tictactoes';
 
 export type AvatarId = string; // un emoji d'animal, ex. "🦊" (liste dans src/ui/avatars.ts)
@@ -105,7 +106,7 @@ export interface UsageDay {
 // ---------- Jeux hors parcours (docs/specs/HUB.md §5.2) ----------
 
 /** Stores IndexedDB des parties de jeu (un par jeu). */
-export type GameStoreName = 'dictations' | 'colorings' | 'tictactoes' | 'hangmans';
+export type GameStoreName = 'dictations' | 'colorings' | 'tictactoes' | 'hangmans' | 'puzzles';
 
 /** Pourquoi une partie de jeu s'est arrêtée avant la fin : pas de vies dans ces jeux, donc jamais "out-of-lives". */
 export type GameEndReason = 'quit' | 'closed' | 'time-up';
@@ -152,10 +153,10 @@ export interface AppSettings {
 }
 
 export const EXPORT_FORMAT = 'petits-malins-export';
-/** Version écrite par l'export. v2 : parties de jeu (dictations, colorings). v3 : morpion et pendu. */
-export const EXPORT_VERSION = 3;
-/** Versions acceptées à l'import : v1 (sans parties de jeu), v2 (sans morpion ni pendu) et v3 ; tableaux absents lus comme vides. */
-export const SUPPORTED_IMPORT_VERSIONS: readonly number[] = [1, 2, 3];
+/** Version écrite par l'export. v2 : parties de jeu (dictations, colorings). v3 : morpion et pendu. v4 : jeux libres de logique (puzzles). */
+export const EXPORT_VERSION = 4;
+/** Versions acceptées à l'import : v1 (sans parties de jeu), v2 (sans morpion ni pendu), v3 (sans puzzles) et v4 ; tableaux absents lus comme vides. */
+export const SUPPORTED_IMPORT_VERSIONS: readonly number[] = [1, 2, 3, 4];
 
 /** Fichier d'export. Ne contient ni le code parent ni l'état de session. */
 export interface ExportBundle {
@@ -170,6 +171,7 @@ export interface ExportBundle {
   colorings: ColoringRecord[];
   tictactoes: TicTacToeRecord[];
   hangmans: HangmanRecord[];
+  puzzles: PuzzleRecord[];
   settings: { soundOn: boolean };
 }
 

@@ -138,6 +138,12 @@ const DRAWINGS: Record<MechanicId, () => JSX.Element> = {
       <path d="M27.5 18.5Q32.5 16.5 37.5 17.5M27.5 23.5Q32.5 21.5 37.5 22.5M27.5 28.5Q32.5 26.5 37.5 27.5" stroke="#d6cbb8" stroke-width="1.8" stroke-linecap="round" fill="none" />
     </>
   ),
+  // SOUCHES (T0) : remplacées par les vrais pictos (tâche T6, docs/specs/JEUX-LOGIQUE.md §5).
+  'guess-number': () => <circle cx="24" cy="24" r="16" fill="#ffc53d" />,
+  'code-breaker': () => <circle cx="24" cy="24" r="16" fill="#e63946" />,
+  robot: () => <circle cx="24" cy="24" r="16" fill="#6c63ff" />,
+  tictactoe: () => <circle cx="24" cy="24" r="16" fill="#1d7fd8" />,
+  hangman: () => <circle cx="24" cy="24" r="16" fill="#ff8fab" />,
 };
 
 export function MechanicIcon({ mechanic, size = 44 }: { mechanic: MechanicId | undefined; size?: number }) {
