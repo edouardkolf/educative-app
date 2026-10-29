@@ -4,6 +4,9 @@ import { builder } from './builder';
 import { codeBreaker } from './code-breaker';
 import { guessNumber } from './guess-number';
 import { hangman } from './hangman';
+import { maze } from './maze';
+import { memory } from './memory';
+import { order } from './order';
 import { robot } from './robot';
 import { tictactoe } from './tictactoe';
 import { calc } from './calc';
@@ -35,6 +38,9 @@ const registry: Partial<Record<MechanicId, AnyMechanic>> = {
   robot,
   tictactoe,
   hangman,
+  memory,
+  order,
+  maze,
 };
 
 export function getMechanic(id: MechanicId): AnyMechanic | undefined {

@@ -72,6 +72,14 @@ export function chanceOfFirstTry(level: Level): number {
       const { length, colors, repeats, maxGuesses } = level.params;
       return 1 - (1 - 1 / codeCount(colors.length, length, repeats)) ** maxGuesses;
     }
+    case 'order': {
+      // Taper au hasard les éléments restants : tout dans l'ordre du premier coup avec la probabilité 1 / n!.
+      let factorial = 1;
+      for (let i = 2; i <= level.params.items; i += 1) factorial *= i;
+      return 1 / factorial;
+    }
+    case 'memory':
+    case 'maze':
     case 'robot':
     case 'tictactoe':
     case 'hangman':

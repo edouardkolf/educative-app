@@ -43,6 +43,10 @@ export const MECHANICS = [
   'robot',
   'tictactoe',
   'hangman',
+  // Jeux de maternelle (docs/specs/JEUX-MATERNELLE.md) : même contrat à plusieurs coups.
+  'memory',
+  'order',
+  'maze',
 ] as const;
 export type MechanicId = (typeof MECHANICS)[number];
 
@@ -61,6 +65,10 @@ export const SKILLS = [
   'reading',
   /** Raisonnement : déduction, anticipation, programmation (jeux de logique). */
   'logic',
+  /** Mémoire et attention (memory). */
+  'memory',
+  /** Se repérer dans l'espace, suivre un chemin (labyrinthe). */
+  'spatial',
 ] as const;
 /** Compétence visée, sert à regrouper les statistiques côté parent. */
 export type SkillId = (typeof SKILLS)[number];
@@ -381,6 +389,44 @@ export interface HangmanParams {
   maxMistakes: number;
 }
 
+// ---------- Jeux de maternelle (docs/specs/JEUX-MATERNELLE.md) ----------
+
+/** Memory : retrouver toutes les paires de cartes, seule. */
+export interface MemoryParams {
+  /** Paires sur la table (2 à 8). */
+  pairs: number;
+  /** Réservoir d'objets du catalogue (au moins `pairs`), une paire = deux fois le même objet. */
+  objects: ObjectId[];
+  /** Essais ratés permis avant que la manche compte comme ratée (≥ 1). */
+  maxMisses: number;
+  /** Aperçu : toutes les cartes visibles au début pendant ce temps (ms, 0 à 3000). Absent : pas d'aperçu. */
+  peekMs?: number;
+}
+
+/** Ranger du plus petit au plus grand, en tapant les éléments dans l'ordre. */
+export interface OrderParams {
+  /** Éléments à ranger (3 à 5). */
+  items: number;
+  /** "size" : le même objet à des tailles différentes ; "quantity" : des cartes de 1 à 9 points. */
+  mode: 'size' | 'quantity';
+  /** mode "size" : objets possibles (un par manche). */
+  objects?: ObjectId[];
+  /** mode "size" : écart minimal entre deux tailles consécutives, en % de la plus grande (10 à 40). */
+  minGap?: number;
+  /** mode "quantity" : valeurs possibles (1 à 9), distinctes dans une manche. */
+  range?: IntRange;
+}
+
+/** Labyrinthe : amener l'animal jusqu'à sa nourriture. */
+export interface MazeParams {
+  /** Côté de la grille (4 à 7). */
+  size: number;
+  /** "tap" : taper la case voisine pour avancer ; "trace" : glisser le doigt le long du chemin. */
+  mode: 'tap' | 'trace';
+  /** Longueur minimale du chemin solution, en cases parcourues (≥ size). */
+  minPath: number;
+}
+
 export interface MechanicParamsMap {
   sequence: SequenceParams;
   count: CountParams;
@@ -397,6 +443,9 @@ export interface MechanicParamsMap {
   robot: RobotParams;
   tictactoe: TicTacToeParams;
   hangman: HangmanParams;
+  memory: MemoryParams;
+  order: OrderParams;
+  maze: MazeParams;
 }
 
 interface LevelBase {

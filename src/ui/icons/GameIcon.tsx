@@ -141,6 +141,8 @@ const DRAWINGS: Record<GameId, () => JSX.Element> = {
       <path d="M33.5 6.5H35M38 3.5V5" stroke="#ffd34d" stroke-width="1.4" stroke-linecap="round" />
     </>
   ),
+  // SOUCHE (M0) : remplacée par le vrai picto (tâche M1, docs/specs/JEUX-MATERNELLE.md).
+  memory: () => <rect x="8" y="8" width="32" height="32" rx="6" fill="#8ecfe8" />,
 };
 
 export function GameIcon({ id, size = 112 }: { id: GameId; size?: number }) {

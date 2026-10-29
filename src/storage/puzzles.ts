@@ -6,7 +6,7 @@ import { finishGameRecord, isGameRecordBase, listGameRecords, startGameRecord, u
 import type { GameEndReason, GameRecordBase } from './types';
 import { isPlainObject } from './validate';
 
-export const PUZZLE_GAMES = ['guess-number', 'code-breaker', 'robot'] as const;
+export const PUZZLE_GAMES = ['guess-number', 'code-breaker', 'robot', 'memory'] as const;
 export type PuzzleGameId = (typeof PUZZLE_GAMES)[number];
 
 /** Difficulté choisie par l'enfant (une, deux ou trois étoiles) ; « easy » présélectionné. */

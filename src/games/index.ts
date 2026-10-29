@@ -84,6 +84,14 @@ export const GAMES: readonly GameDefinition[] = [
     defaultTracks: ['ms', 'ce1'],
     store: 'puzzles',
   },
+  {
+    id: 'memory',
+    route: { name: 'memory' },
+    parentLabel: 'Memory',
+    tileLabel: 'Memory',
+    defaultTracks: ['ms'],
+    store: 'puzzles',
+  },
 ];
 
 export function getGame(id: string): GameDefinition | undefined {

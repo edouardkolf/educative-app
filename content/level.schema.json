@@ -15,11 +15,11 @@
     },
     "title": { "type": "string", "minLength": 1, "description": "Titre lisible par le parent." },
     "skill": {
-      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling", "reading", "logic"],
-      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables, reading = lire une phrase et montrer l'image, logic = raisonnement (déduction, anticipation, programmation)."
+      "enum": ["patterns", "counting", "visual-discrimination", "categorization", "color-mixing", "shapes", "comparison", "addition", "subtraction", "multiplication", "spelling", "reading", "logic", "memory", "spatial"],
+      "description": "Compétence visée : patterns = algorithmes/suites, counting = dénombrement, visual-discrimination = repérer une différence, categorization = trier par catégorie, color-mixing = mélanger des couleurs primaires, shapes = reconnaître des formes géométriques et les placer, comparison = comparer des nombres (<, =, >), addition, subtraction, multiplication = tables, spelling = orthographe des mots invariables, reading = lire une phrase et montrer l'image, logic = raisonnement (déduction, anticipation, programmation), memory = mémoire et attention, spatial = se repérer et suivre un chemin."
     },
     "objective": { "type": "string", "minLength": 1, "description": "Objectif pédagogique en une phrase, lisible par le parent." },
-    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling", "read", "guess-number", "code-breaker", "robot", "tictactoe", "hangman"], "description": "Mécanique de jeu. Détermine la forme de params." },
+    "mechanic": { "enum": ["sequence", "count", "odd-one-out", "color-mix", "sort", "builder", "compare", "calc", "spelling", "read", "guess-number", "code-breaker", "robot", "tictactoe", "hangman", "memory", "order", "maze"], "description": "Mécanique de jeu. Détermine la forme de params." },
     "rounds": { "type": "integer", "minimum": 2, "maximum": 10, "description": "Nombre de manches dans le niveau (2 réservé aux jeux longs comme le morpion)." },
     "tutorial": { "type": "boolean", "description": "Affiche la main animée qui montre le geste pendant la première manche." },
     "stars": {
@@ -93,7 +93,10 @@
     { "if": { "type": "object", "properties": { "mechanic": { "const": "code-breaker" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/codeBreakerParams" } } } },
     { "if": { "type": "object", "properties": { "mechanic": { "const": "robot" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/robotParams" } } } },
     { "if": { "type": "object", "properties": { "mechanic": { "const": "tictactoe" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/tictactoeParams" } } } },
-    { "if": { "type": "object", "properties": { "mechanic": { "const": "hangman" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/hangmanParams" } } } }
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "hangman" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/hangmanParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "memory" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/memoryParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "order" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/orderParams" } } } },
+    { "if": { "type": "object", "properties": { "mechanic": { "const": "maze" } } }, "then": { "type": "object", "properties": { "params": { "$ref": "#/definitions/mazeParams" } } } }
   ],
   "definitions": {
     "color": { "enum": ["red", "blue", "yellow", "green", "purple", "orange"] },
@@ -358,6 +361,42 @@
         "minLength": { "type": "integer", "minimum": 3, "maximum": 10 },
         "maxLength": { "type": "integer", "minimum": 3, "maximum": 10 },
         "maxMistakes": { "type": "integer", "minimum": 4, "maximum": 10 }
+      }
+    },
+    "memoryParams": {
+      "type": "object",
+      "description": "Memory (docs/specs/JEUX-MATERNELLE.md §3.1).",
+      "required": ["pairs", "objects", "maxMisses"],
+      "additionalProperties": false,
+      "properties": {
+        "pairs": { "type": "integer", "minimum": 2, "maximum": 8 },
+        "objects": { "type": "array", "items": { "$ref": "#/definitions/objectId" }, "minItems": 2, "uniqueItems": true },
+        "maxMisses": { "type": "integer", "minimum": 1, "maximum": 30 },
+        "peekMs": { "type": "integer", "minimum": 0, "maximum": 3000 }
+      }
+    },
+    "orderParams": {
+      "type": "object",
+      "description": "Ranger du plus petit au plus grand (docs/specs/JEUX-MATERNELLE.md §3.2).",
+      "required": ["items", "mode"],
+      "additionalProperties": false,
+      "properties": {
+        "items": { "type": "integer", "minimum": 3, "maximum": 5 },
+        "mode": { "enum": ["size", "quantity"] },
+        "objects": { "type": "array", "items": { "$ref": "#/definitions/objectId" }, "minItems": 1, "uniqueItems": true },
+        "minGap": { "type": "integer", "minimum": 10, "maximum": 40 },
+        "range": { "$ref": "#/definitions/intRange" }
+      }
+    },
+    "mazeParams": {
+      "type": "object",
+      "description": "Labyrinthe (docs/specs/JEUX-MATERNELLE.md §3.3).",
+      "required": ["size", "mode", "minPath"],
+      "additionalProperties": false,
+      "properties": {
+        "size": { "type": "integer", "minimum": 4, "maximum": 7 },
+        "mode": { "enum": ["tap", "trace"] },
+        "minPath": { "type": "integer", "minimum": 4, "maximum": 40 }
       }
     }
   }

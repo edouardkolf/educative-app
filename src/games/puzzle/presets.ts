@@ -1,12 +1,13 @@
 // Difficultés des trois jeux libres de logique (docs/specs/JEUX-LOGIQUE.md §4) : un jeu de paramètres de la
 // mécanique par palier (1, 2 ou 3 étoiles), contrôlé par le même validateur que les niveaux.
-import type { CodeBreakerParams, GuessNumberParams, RobotParams } from '../../engine/types';
+import type { CodeBreakerParams, GuessNumberParams, MemoryParams, RobotParams } from '../../engine/types';
 import type { PuzzleGameId, PuzzlePreset } from '../../storage/puzzles';
 
 export interface PuzzleParamsMap {
   'guess-number': GuessNumberParams;
   'code-breaker': CodeBreakerParams;
   robot: RobotParams;
+  memory: MemoryParams;
 }
 
 export const PUZZLE_PRESET_PARAMS: { [G in PuzzleGameId]: Record<PuzzlePreset, PuzzleParamsMap[G]> } = {
@@ -36,5 +37,11 @@ export const PUZZLE_PRESET_PARAMS: { [G in PuzzleGameId]: Record<PuzzlePreset, P
     easy: { size: 4, obstacles: 2, mode: 'step', pathLength: { min: 2, max: 4 } },
     medium: { size: 5, obstacles: 5, mode: 'program', pathLength: { min: 4, max: 6 }, maxArrows: 8 },
     hard: { size: 6, obstacles: 8, mode: 'program', pathLength: { min: 6, max: 9 }, maxArrows: 12 },
+  },
+  // Memory (docs/specs/JEUX-MATERNELLE.md §4) — valeurs provisoires, affinées par la tâche M1.
+  memory: {
+    easy: { pairs: 3, objects: ['apple', 'banana', 'pear', 'strawberry', 'cherries', 'grapes'], maxMisses: 6, peekMs: 1500 },
+    medium: { pairs: 6, objects: ['dog', 'cat', 'rabbit', 'fish', 'bird', 'ladybug', 'cow', 'pig'], maxMisses: 10 },
+    hard: { pairs: 8, objects: ['dog', 'cat', 'rabbit', 'fish', 'bird', 'ladybug', 'cow', 'pig', 'sheep', 'chicken'], maxMisses: 14 },
   },
 };

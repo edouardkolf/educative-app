@@ -211,6 +211,10 @@ const DRAWINGS: Record<MechanicId, () => JSX.Element> = {
       <path d="M21.5 39.5L24 34.5L26.5 39.5M22.4 37.6H25.6" fill="none" stroke="#1d7fd8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
     </>
   ),
+  // SOUCHES (M0) : remplacées par les pictos fournis par les tâches M1 à M3 (docs/specs/JEUX-MATERNELLE.md).
+  memory: () => <rect x="8" y="8" width="32" height="32" rx="6" fill="#8ecfe8" />,
+  order: () => <rect x="8" y="20" width="32" height="20" rx="4" fill="#ffc53d" />,
+  maze: () => <rect x="8" y="8" width="32" height="32" rx="4" fill="#7cc48a" />,
 };
 
 export function MechanicIcon({ mechanic, size = 44 }: { mechanic: MechanicId | undefined; size?: number }) {
