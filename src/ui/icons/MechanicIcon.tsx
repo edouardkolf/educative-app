@@ -3,6 +3,7 @@
 // (Icon.tsx) : aplats, un reflet clair, pas de contour noir. Lisible sur disque blanc comme orange.
 import type { JSX } from 'preact';
 import { memoryMechanicIcon } from '../../mechanics/memory/icon';
+import { orderMechanicIcon } from '../../mechanics/order/icon';
 import type { MechanicId } from '../../engine/types';
 
 const SHADOW = 'rgba(61, 44, 30, 0.14)';
@@ -214,7 +215,7 @@ const DRAWINGS: Record<MechanicId, () => JSX.Element> = {
   ),
   // SOUCHES (M0) : remplacées par les pictos fournis par les tâches M1 à M3 (docs/specs/JEUX-MATERNELLE.md).
   memory: memoryMechanicIcon,
-  order: () => <rect x="8" y="20" width="32" height="20" rx="4" fill="#ffc53d" />,
+  order: orderMechanicIcon,
   maze: () => <rect x="8" y="8" width="32" height="32" rx="4" fill="#7cc48a" />,
 };
 
