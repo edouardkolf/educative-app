@@ -5,7 +5,7 @@ import type { GameDefinition } from './index';
 
 describe('defaultGameIds', () => {
   it("'ms' donne le coloriage", () => {
-    expect(defaultGameIds('ms')).toEqual(['coloring', 'code-breaker', 'robot']);
+    expect(defaultGameIds('ms')).toEqual(['coloring', 'code-breaker', 'robot', 'memory']);
   });
 
   it("'ce1' donne la dictée, le morpion, le pendu et les jeux de logique", () => {
@@ -13,7 +13,7 @@ describe('defaultGameIds', () => {
   });
 
   it('un parcours inconnu se replie sur le premier parcours (ms)', () => {
-    expect(defaultGameIds('inconnu')).toEqual(['coloring', 'code-breaker', 'robot']);
+    expect(defaultGameIds('inconnu')).toEqual(['coloring', 'code-breaker', 'robot', 'memory']);
   });
 });
 
@@ -27,7 +27,7 @@ describe('visibleGameIds', () => {
       'code-breaker',
       'robot',
     ]);
-    expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual(['coloring', 'code-breaker', 'robot']);
+    expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual(['coloring', 'code-breaker', 'robot', 'memory']);
   });
 
   it('[] : aucun jeu', () => {

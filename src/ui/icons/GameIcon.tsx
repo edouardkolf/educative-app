@@ -1,6 +1,7 @@
 // Pictos des tuiles de jeu du hub (docs/specs/HUB.md §2.1). Même style que MechanicIcon : aplats, un
 // reflet clair, pas de contour noir, viewBox 48. Doivent se distinguer de la fiole de `color-mix`.
 import type { JSX } from 'preact';
+import { memoryGameIcon } from '../../mechanics/memory/icon';
 import type { GameId } from '../../games';
 
 const SHADOW = 'rgba(61, 44, 30, 0.14)';
@@ -141,6 +142,8 @@ const DRAWINGS: Record<GameId, () => JSX.Element> = {
       <path d="M33.5 6.5H35M38 3.5V5" stroke="#ffd34d" stroke-width="1.4" stroke-linecap="round" />
     </>
   ),
+  // Memory : deux cartes retournées sur la même pomme, une carte de dos (docs/specs/JEUX-MATERNELLE.md).
+  memory: memoryGameIcon,
 };
 
 export function GameIcon({ id, size = 112 }: { id: GameId; size?: number }) {

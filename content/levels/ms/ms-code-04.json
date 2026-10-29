@@ -1,0 +1,16 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-code-04",
+  "title": "Code secret : 3 couleurs à trouver",
+  "skill": "logic",
+  "objective": "Trouver le code secret de 3 couleurs en utilisant les indices de place.",
+  "mechanic": "code-breaker",
+  "rounds": 3,
+  "params": {
+    "length": 3,
+    "colors": ["red", "blue", "yellow", "green", "purple"],
+    "repeats": false,
+    "feedback": "positional",
+    "maxGuesses": 7
+  }
+}

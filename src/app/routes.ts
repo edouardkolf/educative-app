@@ -12,12 +12,13 @@ export type Route =
   | { name: 'guess-number' }
   | { name: 'code-breaker' }
   | { name: 'robot' }
+  | { name: 'memory' }
   | { name: 'locked' }
   /** Espace parent : `path` = segments après "#/parent", interprétés par le module parent. */
   | { name: 'parent'; path: string[] };
 
 /** Jeux hors parcours : une route du même nom par jeu (registre : src/games/index.ts). */
-export const GAME_ROUTES = ['dictation', 'coloring', 'tictactoe', 'hangman', 'guess-number', 'code-breaker', 'robot'] as const;
+export const GAME_ROUTES = ['dictation', 'coloring', 'tictactoe', 'hangman', 'guess-number', 'code-breaker', 'robot', 'memory'] as const;
 export type GameRouteName = (typeof GAME_ROUTES)[number];
 
 export function isGameRoute(name: string): name is GameRouteName {
@@ -58,6 +59,8 @@ export function parseHash(hash: string): Route {
       return { name: 'code-breaker' };
     case 'robot':
       return { name: 'robot' };
+    case 'memory':
+      return { name: 'memory' };
     case 'locked':
       return { name: 'locked' };
     case 'parent':
@@ -91,6 +94,8 @@ export function toHash(route: Route): string {
       return '#/code-breaker';
     case 'robot':
       return '#/robot';
+    case 'memory':
+      return '#/memory';
     case 'locked':
       return '#/locked';
     case 'parent':

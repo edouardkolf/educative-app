@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-04",
+  "title": "Robot : grille 5 × 5",
+  "skill": "logic",
+  "objective": "Guider le robot jusqu'au trésor en contournant quelques obstacles.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "params": {
+    "size": 5,
+    "obstacles": 3,
+    "mode": "step",
+    "pathLength": {
+      "min": 4,
+      "max": 6
+    }
+  }
+}

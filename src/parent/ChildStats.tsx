@@ -72,6 +72,8 @@ const SKILL_LABELS: Record<SkillId, string> = {
   spelling: 'Orthographe',
   reading: 'Lecture',
   logic: 'Raisonnement',
+  memory: 'Mémoire',
+  spatial: 'Se repérer',
 };
 
 const MECHANIC_LABELS: Record<MechanicId, string> = {
@@ -90,6 +92,9 @@ const MECHANIC_LABELS: Record<MechanicId, string> = {
   robot: 'Robot à programmer',
   tictactoe: 'Morpion',
   hangman: 'Pendu',
+  memory: 'Memory',
+  order: 'Ranger',
+  maze: 'Labyrinthe',
 };
 
 type GroupBy = 'skill' | 'mechanic';
@@ -275,6 +280,7 @@ export function ChildStats(props: { profileId: string }) {
     'guess-number': puzzles.filter((r) => r.game === 'guess-number'),
     'code-breaker': puzzles.filter((r) => r.game === 'code-breaker'),
     robot: puzzles.filter((r) => r.game === 'robot'),
+    memory: puzzles.filter((r) => r.game === 'memory'),
   };
   const groups: Array<{ key: string; label: string; testId: string; summary: GroupSummary }> =
     groupBy === 'skill'
@@ -398,7 +404,7 @@ export function ChildStats(props: { profileId: string }) {
               <TicTacToeStats profile={profile} records={records as TicTacToeRecord[]} />
             )}
             {game.id === 'hangman' && <HangmanStats profile={profile} records={records as HangmanRecord[]} />}
-            {(game.id === 'guess-number' || game.id === 'code-breaker' || game.id === 'robot') && (
+            {(game.id === 'guess-number' || game.id === 'code-breaker' || game.id === 'robot' || game.id === 'memory') && (
               <PuzzleStats profile={profile} records={records as PuzzleRecord[]} />
             )}
           </section>

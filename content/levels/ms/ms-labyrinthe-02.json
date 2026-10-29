@@ -1,0 +1,14 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-labyrinthe-02",
+  "title": "Labyrinthe : grand chemin",
+  "skill": "spatial",
+  "objective": "Guider l'animal jusqu'à sa nourriture sur une grille 5 × 5.",
+  "mechanic": "maze",
+  "rounds": 3,
+  "params": {
+    "size": 5,
+    "mode": "tap",
+    "minPath": 10
+  }
+}

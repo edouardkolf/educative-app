@@ -14,6 +14,9 @@ import { validateParams as validateSpelling } from '../mechanics/spelling/valida
 import { validateCodeBreaker } from '../mechanics/code-breaker/validate';
 import { validateGuessNumber } from '../mechanics/guess-number/validate';
 import { validateHangman } from '../mechanics/hangman/validate';
+import { validateMaze } from '../mechanics/maze/validate';
+import { validateMemory } from '../mechanics/memory/validate';
+import { validateOrder } from '../mechanics/order/validate';
 import { validateRobot } from '../mechanics/robot/validate';
 import { validateTicTacToe } from '../mechanics/tictactoe/validate';
 import { createRng } from './rng';
@@ -152,6 +155,15 @@ function semanticErrors(level: Level): string[] {
       break;
     case 'hangman':
       errors.push(...validateHangman(level.params).map((e) => `hangman : ${e}`));
+      break;
+    case 'memory':
+      errors.push(...validateMemory(level.params).map((e) => `memory : ${e}`));
+      break;
+    case 'order':
+      errors.push(...validateOrder(level.params).map((e) => `order : ${e}`));
+      break;
+    case 'maze':
+      errors.push(...validateMaze(level.params).map((e) => `maze : ${e}`));
       break;
     default:
       break;

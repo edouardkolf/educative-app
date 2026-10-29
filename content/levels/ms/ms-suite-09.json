@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-09",
+  "title": "Trou dans une suite AABC",
+  "skill": "patterns",
+  "objective": "Retrouver l'élément manquant au milieu d'une suite AABC de formes et de couleurs.",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "AABC",
+    "vary": "both",
+    "colors": ["blue", "red", "green", "yellow"],
+    "shapes": ["circle", "square", "triangle", "star"],
+    "length": 8,
+    "blank": "middle",
+    "choices": 4
+  }
+}

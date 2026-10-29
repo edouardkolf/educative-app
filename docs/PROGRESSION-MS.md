@@ -72,7 +72,7 @@ Deux corrections possibles : ajouter un niveau intermédiaire (du JSON) ou reblo
 ## Raisonnement : jeux de logique (29/10/2026)
 
 Une place sur cinq (5, 10… 40) est un niveau de raisonnement, sans texte (docs/specs/JEUX-LOGIQUE.md). La carte compte
-désormais 20 niveaux par monde : forêt (1–20), mer (21–40). Un test vérifie l'alternance au build.
+désormais 20 niveaux par monde : forêt (1–20), mer (21–40), montagne (41–60). Un test vérifie l'alternance au build.
 
 | Place | id | Monde | Contenu |
 |---|---|---|---|
@@ -84,6 +84,37 @@ désormais 20 niveaux par monde : forêt (1–20), mer (21–40). Un test vérif
 | 30 | ms-morpion-02 | Mer | Morpion facile, coup de pouce, on commence une grille sur deux |
 | 35 | ms-robot-03 | Mer | Robot pas à pas 4×4, 3 rochers, chemin 4–6 |
 | 40 | ms-code-03 | Mer | Code secret 3 pions / 4 couleurs, 6 essais |
+
+## Monde 3 : la montagne — memory, ranger, labyrinthe (29/10/2026)
+
+Choix du PM : « 3, 5 et 6 vu ce que la petite aime bien » (docs/specs/JEUX-MATERNELLE.md). 20 niveaux (41–60), sans
+texte, avec l'alternance habituelle : un niveau de raisonnement aux places 45, 50, 55, 60. Chaque nouveau jeu commence
+par un niveau avec tutoriel ; le labyrinthe passe de « taper les cases » à « tracer au doigt » au niveau 52.
+
+| Place | id | Contenu |
+|---|---|---|
+| 41 | ms-memoire-01 | Memory 2 paires, aperçu 2 s, **tutoriel** |
+| 42 | ms-ranger-01 | Ranger 3 tailles très différentes, **tutoriel** |
+| 43 | ms-labyrinthe-01 | Labyrinthe 4×4, taper les cases, **tutoriel** |
+| 44 | ms-memoire-02 | Memory 3 paires, aperçu 1,5 s |
+| 45 | ms-robot-04 | Robot pas à pas 5×5, 3 rochers, chemin 4–6 |
+| 46 | ms-ranger-02 | Ranger 4 tailles |
+| 47 | ms-labyrinthe-02 | Labyrinthe 5×5, taper |
+| 48 | ms-intrus-07 | Intrus par catégorie, 6 éléments, avec distracteurs |
+| 49 | ms-memoire-03 | Memory 4 paires, aperçu 1 s |
+| 50 | ms-code-04 | Code secret 3 pions / 5 couleurs |
+| 51 | ms-ranger-03 | Ranger 3 quantités (1 à 6 points), **tutoriel** |
+| 52 | ms-labyrinthe-03 | Labyrinthe 5×5, **tracer au doigt**, **tutoriel** |
+| 53 | ms-suite-09 | Suite AABC, couleur et forme, trou au milieu |
+| 54 | ms-memoire-04 | Memory 5 paires, sans aperçu |
+| 55 | ms-morpion-03 | Morpion facile, sans coup de pouce, on commence une grille sur deux |
+| 56 | ms-ranger-04 | Ranger 5 tailles proches |
+| 57 | ms-labyrinthe-04 | Labyrinthe 6×6, tracer |
+| 58 | ms-ranger-05 | Ranger 4 quantités (1 à 9 points) |
+| 59 | ms-memoire-05 | Memory 6 paires |
+| 60 | ms-robot-05 | Robot pas à pas 5×5, 5 rochers, chemin 6–8 |
+
+**Jeu libre memory** (hub de la petite) : ★ 3 paires avec aperçu, ★★ 6 paires, ★★★ 8 paires.
 
 ## Jeu libre : le coloriage magique (hors carte)
 

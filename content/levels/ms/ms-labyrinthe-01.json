@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-labyrinthe-01",
+  "title": "Labyrinthe : petit chemin",
+  "skill": "spatial",
+  "objective": "Guider l'animal jusqu'à sa nourriture en tapant les cases une à une.",
+  "mechanic": "maze",
+  "rounds": 3,
+  "tutorial": true,
+  "params": {
+    "size": 4,
+    "mode": "tap",
+    "minPath": 6
+  }
+}

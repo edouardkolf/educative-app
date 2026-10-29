@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-ranger-04",
+  "title": "Ranger : 5 objets",
+  "skill": "comparison",
+  "objective": "Ranger 5 objets de tailles très proches du plus petit au plus grand.",
+  "mechanic": "order",
+  "rounds": 4,
+  "params": {
+    "items": 5,
+    "mode": "size",
+    "objects": ["apple", "teddy", "car", "ball", "cat", "tree"],
+    "minGap": 15
+  }
+}

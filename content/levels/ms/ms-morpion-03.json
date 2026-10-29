@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-morpion-03",
+  "title": "Morpion : contre le téléphone",
+  "skill": "logic",
+  "objective": "Aligner trois symboles contre le téléphone en anticipant son coup.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "lives": 3,
+  "params": {
+    "level": "easy",
+    "hint": false,
+    "childStarts": "alternate"
+  }
+}

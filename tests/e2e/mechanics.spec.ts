@@ -1,6 +1,6 @@
 // Mécaniques « compter », « intrus », « sort » (le trieur magique) et « builder » (le constructeur),
 // dispositions de comptage (dé, éparpillé), trou de suite au milieu, progression sur la carte à 32
-// niveaux, tableau de bord parent et mise en page des 32 niveaux sur deux tailles d'écran (voir
+// niveaux, tableau de bord parent et mise en page des niveaux MS sur deux tailles d'écran (voir
 // docs/ARCHITECTURE.md §3, §5, §7, §9 et docs/PROGRESSION-MS.md).
 // Chaque test démarre avec un contexte Playwright neuf, donc un stockage IndexedDB vierge.
 // Aides de navigation copiées de vertical-slice.spec.ts (même convention : non partagées entre fichiers).
@@ -15,7 +15,7 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
-// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte a 32 niveaux ----------
+// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte MS a 60 niveaux ----------
 
 interface TrackJson {
   levels: string[];
@@ -429,7 +429,7 @@ test('ms-suite-07 : trou au milieu d\'une suite AB', async ({ page }) => {
 
 // ==================== 5. Progression sur la carte + tableau de bord (captures pleine page) ====================
 
-test('progression sur la carte à 32 niveaux et tableau de bord parent', async ({ page }) => {
+test('progression sur la carte MS et tableau de bord parent', async ({ page }) => {
   test.slow();
   await onboardWithChild(page, 'Yanis', { sessionMinutes: '', dailyMinutes: '' });
   await enterMap(page, 'Yanis');
@@ -457,7 +457,7 @@ test('progression sur la carte à 32 niveaux et tableau de bord parent', async (
   if (!lastLevelId) throw new Error('content/tracks/ms.json : parcours vide.');
 
   // La carte défile dans un conteneur interne (.map-scroll), pas dans le document : on agrandit
-  // temporairement le viewport pour que la capture "pleine page" montre les 32 niveaux sans coupe.
+  // temporairement le viewport pour que la capture "pleine page" montre tous les niveaux sans coupe.
   await page.setViewportSize({ width: defaultViewport.width, height: 3600 });
   await expect(mapNode(page, lastLevelId)).toBeVisible(); // le dernier niveau de la carte est bien rendu
   await page.screenshot({ path: shot('17-carte-20-niveaux.png'), fullPage: true });
@@ -487,14 +487,14 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
   await page.screenshot({ path: shot('16-ecran-de-fin.png') });
 });
 
-// ==================== 7. Mise en page des 32 niveaux (test paramétré, standard + petit téléphone) ====================
+// ==================== 7. Mise en page des niveaux MS (test paramétré, standard + petit téléphone) ====================
 
 test('mise en page : tous les niveaux MS tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(240_000); // 40 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+  test.setTimeout(420_000); // 60 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
-  // aussi valide que de rejouer les 32 niveaux dans l'ordre pour un test purement visuel.
+  // aussi valide que de rejouer tous les niveaux dans l'ordre pour un test purement visuel.
   await openChildStats(page, 'Zoé');
   for (const levelId of TRACK.levels) {
     await page.getByTestId(`override-${levelId}-unlocked`).click();
@@ -511,7 +511,15 @@ test('mise en page : tous les niveaux MS tiennent à l\'écran, en standard et s
     await test.step(`niveau ${levelId}`, async () => {
       await openLevelHash(page, levelId);
       // Mécaniques de logique (JEUX-LOGIQUE.md §2) : cibles ≥ 56 px (flèches, pots, cases) au lieu de 72 px.
-      const minTarget = /^ms-(robot|code|morpion)-/.test(levelId) ? 56 : 72;
+      // Maternelle (JEUX-MATERNELLE.md §2) : memory ≥ 64 px (16 cartes), ranger 72 px (zones fixes),
+      // labyrinthe ≥ 44 px (cases d'une grille, assumé dans la spec).
+      const minTarget = /^ms-(robot|code|morpion)-/.test(levelId)
+        ? 56
+        : /^ms-memoire-/.test(levelId)
+          ? 64
+          : /^ms-labyrinthe-/.test(levelId)
+            ? 44
+            : 72;
       await assertRoundFitsScreen(page, minTarget);
 
       await page.setViewportSize({ width: 360, height: 640 });

@@ -2,6 +2,9 @@
 // entrer (dé = compter, loupe = intrus, panier = trier…). Même style que les pictos d'interface
 // (Icon.tsx) : aplats, un reflet clair, pas de contour noir. Lisible sur disque blanc comme orange.
 import type { JSX } from 'preact';
+import { memoryMechanicIcon } from '../../mechanics/memory/icon';
+import { orderMechanicIcon } from '../../mechanics/order/icon';
+import { mazeMechanicIcon } from '../../mechanics/maze/icon';
 import type { MechanicId } from '../../engine/types';
 
 const SHADOW = 'rgba(61, 44, 30, 0.14)';
@@ -211,6 +214,10 @@ const DRAWINGS: Record<MechanicId, () => JSX.Element> = {
       <path d="M21.5 39.5L24 34.5L26.5 39.5M22.4 37.6H25.6" fill="none" stroke="#1d7fd8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
     </>
   ),
+  // Jeux de maternelle : pictos fournis par chaque mécanique (docs/specs/JEUX-MATERNELLE.md).
+  memory: memoryMechanicIcon,
+  order: () => orderMechanicIcon,
+  maze: mazeMechanicIcon,
 };
 
 export function MechanicIcon({ mechanic, size = 44 }: { mechanic: MechanicId | undefined; size?: number }) {
