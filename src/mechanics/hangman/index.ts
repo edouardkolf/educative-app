@@ -1,11 +1,19 @@
-// SOUCHE (T0) — mécanique « hangman », écrite par sa tâche (docs/specs/JEUX-LOGIQUE.md §3, contrat §2).
-// Remplacer generateRounds et View ; garder le nom d'export `hangman` et l'id.
+// Mécanique « pendu » : trouver un mot lettre par lettre (docs/specs/JEUX-LOGIQUE.md §3.5).
 import type { MechanicDefinition } from '../../engine/types';
+import { generateRounds } from './generate';
+import { HangmanView } from './HangmanView';
+import type { HangmanRoundData } from './types';
 
-export const hangman: MechanicDefinition<'hangman', unknown> = {
+export const hangman: MechanicDefinition<'hangman', HangmanRoundData> = {
   id: 'hangman',
-  generateRounds() {
-    throw new Error('mécanique hangman : pas encore implémentée');
+  generateRounds,
+  View: HangmanView,
+  solvedDelayMs: 1200,
+  tutorialTargets: (round) => {
+    const word = round.data.words[0];
+    return word ? [`letter-${Array.from(word.word)[0]}`] : [];
   },
-  View: () => null,
 };
+
+export type { HangmanRoundData } from './types';
+export { validateHangman } from './validate';
