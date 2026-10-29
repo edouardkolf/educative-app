@@ -62,9 +62,9 @@ async function longPressClock(page: Page, locator: ReturnType<Page['getByTestId'
   await page.mouse.up();
 }
 
-// ==================== 1. Hub d'une enfant MS : carte + coloriage ====================
+// ==================== 1. Hub d'une enfant MS : carte, coloriage, code secret, robot ====================
 
-test('hub MS : carte et coloriage, sans texte visible, sans cadenas', async ({ page }) => {
+test('hub MS : carte, coloriage, code secret et robot, sans texte visible, sans cadenas', async ({ page }) => {
   await onboardWithChild(page, 'Alice');
   await chooseProfile(page, 'Alice');
 
@@ -73,6 +73,9 @@ test('hub MS : carte et coloriage, sans texte visible, sans cadenas', async ({ p
   await expect(hub.getByTestId('hub-tile-map')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-coloring')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-dictation')).toHaveCount(0);
+  await expect(hub.getByTestId('hub-tile-code-breaker')).toBeVisible();
+  await expect(hub.getByTestId('hub-tile-robot')).toBeVisible();
+  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '4');
   await expect(page.getByTestId('parent-access')).toHaveCount(0);
   await expect(hub).toHaveText(''); // aucun texte visible (règle 2, HUB.md §3)
 
@@ -86,20 +89,29 @@ test('hub MS : carte et coloriage, sans texte visible, sans cadenas', async ({ p
   await expect(profileCard(page, 'Alice')).toBeVisible();
 });
 
-// ==================== 2. Hub d'un enfant CE1 : carte, dictée, morpion, pendu ====================
+// ==================== 2. Hub d'un enfant CE1 : carte + 6 jeux, grille de 3 colonnes ====================
 
-test('hub CE1 : carte, dictée, morpion et pendu, en 2 × 2 sans défiler', async ({ page }) => {
+test('hub CE1 : carte, dictée, morpion, pendu et les trois jeux de logique, en 3 colonnes sans défiler', async ({
+  page,
+}) => {
   await onboardWithChild(page, 'Timéo', 'ce1');
   await chooseProfile(page, 'Timéo');
 
   const hub = page.getByTestId('hub');
-  await expect(hub.getByTestId('hub-tile-map')).toBeVisible();
-  await expect(hub.getByTestId('hub-tile-dictation')).toBeVisible();
-  await expect(hub.getByTestId('hub-tile-tictactoe')).toBeVisible();
-  await expect(hub.getByTestId('hub-tile-hangman')).toBeVisible();
+  for (const id of ['map', 'dictation', 'tictactoe', 'hangman', 'guess-number', 'code-breaker', 'robot']) {
+    await expect(hub.getByTestId(`hub-tile-${id}`)).toBeVisible();
+  }
   await expect(hub.getByTestId('hub-tile-coloring')).toHaveCount(0);
-  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '4');
+  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '7');
   await expect(hub).toHaveText(''); // toujours aucun texte visible
+  const cols = await page
+    .locator('.hub-tiles')
+    .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+  expect(cols).toBe(3);
+  // 7 tuiles : la carte s'étend sur les 3 colonnes (pas de trou), JEUX-LOGIQUE.md §5.
+  const mapBox = await hub.getByTestId('hub-tile-map').boundingBox();
+  const gridBox = await page.locator('.hub-tiles').boundingBox();
+  expect(mapBox!.width).toBeGreaterThan(gridBox!.width * 0.9);
   const scrolls = await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight);
   expect(scrolls).toBe(false);
 });

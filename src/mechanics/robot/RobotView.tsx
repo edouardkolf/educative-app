@@ -183,7 +183,14 @@ function RobotBoard({ round, solved, onChoose }: BoardProps) {
   const slots = isProgram ? Array.from({ length: data.maxArrows }, (_, i) => program[i]) : [];
 
   return (
-    <div class="robot-view" data-mode={data.mode}>
+    <div
+      class="robot-view"
+      data-mode={data.mode}
+      data-size={data.size}
+      data-start={`${data.start.x},${data.start.y}`}
+      data-goal={`${data.goal.x},${data.goal.y}`}
+      data-rocks={data.rocks.map((r) => `${r.x},${r.y}`).join(';')}
+    >
       <div class="robot-board-wrap">
         <svg class="robot-board" viewBox={`0 0 ${side} ${side}`} role="img" aria-label="Grille du robot">
           <rect width={side} height={side} rx="24" fill="#bfe3a8" />

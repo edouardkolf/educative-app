@@ -91,9 +91,10 @@ const DRAWINGS: Record<GameId, () => JSX.Element> = {
       <path d="M8 8H40Q44 8 44 12V15H4V12Q4 8 8 8Z" fill="#ffd978" />
       <path d="M18.5 16.5Q18.5 11.5 24 11.5Q29.5 11.5 29.5 16Q29.5 19.5 24 21.5V24" fill="none" stroke="#7a4b00" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" />
       <circle cx="24" cy="28.6" r="2.2" fill="#7a4b00" />
-      <g font-size="9" font-weight="700" text-anchor="middle" style={{ fontFamily: 'var(--font-display)' }}>
-        <text x="11" y="25" fill="#e63946">7</text>
-        <text x="37" y="25" fill="#1d7fd8">3</text>
+      {/* Chiffres dessinés en traits (pas de <text>) : le hub ne contient aucun texte (HUB.md §3, règle 2). */}
+      <g fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 18H14.5L10.5 26" stroke="#e63946" />
+        <path d="M33.5 18H40L36.8 21.4Q41 21.6 41 24Q41 26.4 37.2 26.4Q34.8 26.4 33.6 25" stroke="#1d7fd8" />
       </g>
     </>
   ),

@@ -271,7 +271,7 @@ async function openLevelWithAtLeastObjects(page: Page, levelId: string, minObjec
  * fait au moins 72 × 72 px et tient entièrement dans l'écran, sans qu'il faille défiler pour
  * l'atteindre (§9 : cibles tactiles ≥ 72 px pour les choix de jeu).
  */
-async function assertRoundFitsScreen(page: Page): Promise<void> {
+async function assertRoundFitsScreen(page: Page, minTarget = 72): Promise<void> {
   const metrics = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     innerWidth: window.innerWidth,
@@ -290,8 +290,8 @@ async function assertRoundFitsScreen(page: Page): Promise<void> {
     if (!(await choice.isVisible())) continue;
     const box = await choice.boundingBox();
     if (!box) continue;
-    expect(box.width, `choix ${i} : largeur ${box.width}px < 72px`).toBeGreaterThanOrEqual(72);
-    expect(box.height, `choix ${i} : hauteur ${box.height}px < 72px`).toBeGreaterThanOrEqual(72);
+    expect(box.width, `choix ${i} : largeur ${box.width}px < ${minTarget}px`).toBeGreaterThanOrEqual(minTarget);
+    expect(box.height, `choix ${i} : hauteur ${box.height}px < ${minTarget}px`).toBeGreaterThanOrEqual(minTarget);
     expect(box.y, `choix ${i} : dépasse en haut de l'écran (y=${box.y})`).toBeGreaterThanOrEqual(0);
     expect(box.x, `choix ${i} : dépasse à gauche de l'écran (x=${box.x})`).toBeGreaterThanOrEqual(0);
     expect(
@@ -488,8 +488,8 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
 
 // ==================== 7. Mise en page des 32 niveaux (test paramétré, standard + petit téléphone) ====================
 
-test('mise en page : les 32 niveaux tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(180_000); // 32 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+test('mise en page : tous les niveaux MS tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
+  test.setTimeout(240_000); // 40 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout
@@ -509,13 +509,15 @@ test('mise en page : les 32 niveaux tiennent à l\'écran, en standard et sur pe
   for (const levelId of TRACK.levels) {
     await test.step(`niveau ${levelId}`, async () => {
       await openLevelHash(page, levelId);
-      await assertRoundFitsScreen(page);
+      // Mécaniques de logique (JEUX-LOGIQUE.md §2) : cibles ≥ 56 px (flèches, pots, cases) au lieu de 72 px.
+      const minTarget = /^ms-(robot|code|morpion)-/.test(levelId) ? 56 : 72;
+      await assertRoundFitsScreen(page, minTarget);
 
       await page.setViewportSize({ width: 360, height: 640 });
       if (levelId === 'ms-intrus-06') {
         await page.screenshot({ path: shot('19-petit-ecran-intrus-06.png') });
       }
-      await assertRoundFitsScreen(page);
+      await assertRoundFitsScreen(page, minTarget);
       await page.setViewportSize(defaultViewport);
     });
   }
