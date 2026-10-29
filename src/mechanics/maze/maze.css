@@ -129,4 +129,7 @@
 @media (prefers-reduced-motion: reduce) {
   .maze-glow { animation: none; }
   .maze-joy { animation: none; }
+  .maze-shake { animation: none; }
+  .maze-food--eaten { animation: none; opacity: 0; }
+  .maze-mover { transition: none; }
 }

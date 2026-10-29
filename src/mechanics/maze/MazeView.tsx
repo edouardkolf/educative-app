@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import type { MechanicViewProps } from '../../engine/types';
 import { MISS } from '../../engine/types';
 import { emojiUrl } from '../../ui/emoji';
-import { addStrike, isNeighbor, sameCell, stepTrail } from './logic';
+import { addStrike, isNeighbor, sameCell, stepTrail, stepTrailLenient } from './logic';
 import type { Cell, Maze, MazeRoundData } from './types';
 import './maze.css';
 
@@ -104,7 +104,7 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   };
 
   const traceTo = (target: Cell) => {
-    const res = stepTrail(maze, trailRef.current, target);
+    const res = stepTrailLenient(maze, trailRef.current, target);
     if (res.kind === 'blocked') {
       dragging.current = false;
       strike();
@@ -164,7 +164,15 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   const corridors = corridorPath(maze);
 
   return (
-    <div class="maze-view" data-mode={d.mode} data-size={maze.size}>
+    <div
+      class="maze-view"
+      data-mode={d.mode}
+      data-size={maze.size}
+      data-start={`${d.start.r},${d.start.c}`}
+      data-goal={`${d.goal.r},${d.goal.c}`}
+      data-right={maze.right.map((v) => (v ? '1' : '0')).join('')}
+      data-down={maze.down.map((v) => (v ? '1' : '0')).join('')}
+    >
       <div class="maze-board-wrap">
         <div class="maze-board-box">
           <svg

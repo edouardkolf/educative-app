@@ -121,3 +121,22 @@ export function stepTrail(m: Maze, trail: readonly Cell[], target: Cell): { kind
   if (canMove(m, head, target)) return { kind: 'forward', trail: [...trail, target] };
   return { kind: 'blocked', trail: trail.slice() };
 }
+
+/**
+ * Comme `stepTrail`, mais tolère un virage coupé au doigt : si la case visée est en diagonale du bout du trait et
+ * qu'une des deux cases de coin permet deux pas légaux (en avant ou en arrière), on passe par elle au lieu de compter
+ * un choc (revue du 29/10 : le doigt traverse la zone neutre du coin).
+ */
+export function stepTrailLenient(m: Maze, trail: readonly Cell[], target: Cell): { kind: StepKind; trail: Cell[] } {
+  const direct = stepTrail(m, trail, target);
+  if (direct.kind !== 'blocked') return direct;
+  const head = trail[trail.length - 1] as Cell;
+  if (Math.abs(head.r - target.r) !== 1 || Math.abs(head.c - target.c) !== 1) return direct;
+  for (const corner of [{ r: head.r, c: target.c }, { r: target.r, c: head.c }]) {
+    const first = stepTrail(m, trail, corner);
+    if (first.kind === 'blocked' || first.kind === 'same') continue;
+    const second = stepTrail(m, first.trail, target);
+    if (second.kind !== 'blocked' && second.kind !== 'same') return second;
+  }
+  return direct;
+}

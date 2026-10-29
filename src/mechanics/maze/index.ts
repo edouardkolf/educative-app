@@ -13,7 +13,9 @@ export const maze: MechanicDefinition<'maze', MazeRoundData> = {
   tutorialTargets(round) {
     const d = round.data;
     const path = solutionPath(d.maze, d.start, d.goal) ?? [];
-    return path.slice(1, 4).map((p) => `cell-${p.r}-${p.c}`);
+    // Tracé : la main commence sur l'animal (on pose le doigt dessus), puis suit le chemin.
+    const from = d.mode === 'trace' ? 0 : 1;
+    return path.slice(from, from + 3).map((p) => `cell-${p.r}-${p.c}`);
   },
 };
 

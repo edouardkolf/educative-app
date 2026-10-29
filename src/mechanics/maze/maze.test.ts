@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '../../engine/rng';
 import type { MazeParams } from '../../engine/types';
 import { generateRounds } from './generate';
-import { addStrike, canMove, createMaze, distancesFrom, solutionPath, stepTrail } from './logic';
+import { addStrike, canMove, createMaze, distancesFrom, solutionPath, stepTrail, stepTrailLenient } from './logic';
 import { maze as mazeMechanic } from './index';
 import type { Cell } from './types';
 import { validateMaze } from './validate';
@@ -125,5 +125,31 @@ describe('validateMaze', () => {
     expect(validateMaze({ size: 3, mode: 'tap', minPath: 5 })).not.toEqual([]);
     expect(validateMaze({ size: 5, mode: 'tap', minPath: 4 })).not.toEqual([]);
     expect(validateMaze({ size: 4, mode: 'tap', minPath: 12 })).not.toEqual([]);
+  });
+});
+
+describe('stepTrailLenient (virage coupé au doigt)', () => {
+  it('passe par la case de coin quand les deux pas sont légaux, sans compter de choc', () => {
+    for (let seed = 1; seed <= 40; seed += 1) {
+      const m = createMaze(5, createRng(seed));
+      const path = solutionPath(m, { r: 0, c: 0 }, { r: 4, c: 4 }) as Cell[];
+      for (let i = 0; i + 2 < path.length; i += 1) {
+        const [a, b, c] = [path[i]!, path[i + 1]!, path[i + 2]!];
+        if (a.r === c.r || a.c === c.c) continue; // pas un virage
+        const trail = path.slice(0, i + 1);
+        expect(stepTrail(m, trail, c).kind).toBe('blocked');
+        const res = stepTrailLenient(m, trail, c);
+        expect(res.kind).toBe('forward');
+        expect(res.trail).toEqual([...trail, b, c]);
+        return;
+      }
+    }
+  });
+
+  it("garde le choc quand aucune case de coin ne relie les deux (vrai mur)", () => {
+    const m = createMaze(5, createRng(7));
+    const trail = [{ r: 0, c: 0 }];
+    const res = stepTrailLenient(m, trail, { r: 2, c: 2 });
+    expect(res.kind).toBe('blocked');
   });
 });

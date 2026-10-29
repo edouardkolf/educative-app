@@ -1,5 +1,6 @@
 // Probabilité de réussir une manche du premier coup en tapant au hasard, par niveau.
 // Sert à lire un taux de réussite : 50 % sur un jeu à 2 choix, c'est le hasard ; sur un jeu à 4 choix, c'est deux fois mieux.
+import { createRng } from './rng';
 import type { Color, Level } from './types';
 
 const PRIMARIES: readonly Color[] = ['red', 'blue', 'yellow'];
@@ -37,6 +38,38 @@ export function randomNarrowingChance(n: number, k: number): number {
   }
   narrowingCache.set(key, sum);
   return sum;
+}
+
+const memoryCache = new Map<string, number>();
+const MEMORY_TRIALS = 4000;
+
+/**
+ * Memory joué au hasard, sans rien retenir : à chaque essai, deux cartes cachées tirées au hasard. Probabilité de tout
+ * trouver avec au plus `maxMisses` essais ratés. Simulation déterministe (graine fixe), mise en cache : sur 2 paires et
+ * 6 ratés permis, le hasard réussit presque toujours (revue du 29/10).
+ */
+export function memoryRandomChance(pairs: number, maxMisses: number): number {
+  const key = `${pairs}:${maxMisses}`;
+  const cached = memoryCache.get(key);
+  if (cached !== undefined) return cached;
+  const rng = createRng(0x5eed + pairs * 97 + maxMisses);
+  let wins = 0;
+  for (let t = 0; t < MEMORY_TRIALS; t += 1) {
+    let hidden: number[] = [];
+    for (let p = 0; p < pairs; p += 1) hidden.push(p, p);
+    let misses = 0;
+    while (hidden.length > 0 && misses <= maxMisses) {
+      const i = rng.int(0, hidden.length - 1);
+      let j = rng.int(0, hidden.length - 2);
+      if (j >= i) j += 1;
+      if (hidden[i] === hidden[j]) hidden = hidden.filter((_, k) => k !== i && k !== j);
+      else misses += 1;
+    }
+    if (hidden.length === 0 && misses <= maxMisses) wins += 1;
+  }
+  const chance = wins / MEMORY_TRIALS;
+  memoryCache.set(key, chance);
+  return chance;
 }
 
 export function chanceOfFirstTry(level: Level): number {
@@ -79,6 +112,7 @@ export function chanceOfFirstTry(level: Level): number {
       return 1 / factorial;
     }
     case 'memory':
+      return memoryRandomChance(level.params.pairs, level.params.maxMisses);
     case 'maze':
     case 'robot':
     case 'tictactoe':

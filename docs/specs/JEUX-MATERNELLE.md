@@ -56,6 +56,9 @@ l'arrivée (paires fixes du catalogue : lapin-carotte, chien-os si disponibles�
 un mur ou non voisine : l'animal secoue la tête. `mode: 'trace'` : l'enfant pose le doigt sur l'animal et glisse ; le
 trait suit les cases franchies ; s'il franchit un mur, le trait revient à la dernière case valide. Raté (`MISS`, une
 fois) au 3e choc contre un mur (`tap`) ou à la 3e coupure (`trace`). `minPath` : longueur minimale du chemin (cases).
+Taille des cases : en 360 × 640, le plateau fait ~320 px, soit ~64 px par case en 5 × 5 et ~53 px en 6 × 6. Dérogation
+assumée sous 56 px pour le 6 × 6 : réservé au mode `trace` (on glisse, on ne vise pas une case), un virage coupé en
+diagonale est accepté (`stepTrailLenient`). 7 × 7 (~45 px) autorisé par le schéma mais non utilisé par les niveaux.
 
 ## 4. Jeu libre memory
 

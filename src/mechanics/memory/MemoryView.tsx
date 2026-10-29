@@ -50,9 +50,14 @@ function MemoryBoard({ round, solved, onChoose }: MechanicViewProps<MemoryRoundD
   }, []);
 
   const table = tableRef.current;
-  const locked = solved || peeking || party || table.flipped.length >= 2;
+  const locked = solved || party || table.flipped.length >= 2;
 
   const onTap = (index: number) => {
+    // Un tap pendant l'aperçu le termine (l'enfant est prête) sans retourner de carte.
+    if (peeking) {
+      setPeeking(false);
+      return;
+    }
     if (locked) return;
     const outcome = flip(table, index);
     if (outcome === 'ignored') return;
@@ -90,6 +95,7 @@ function MemoryBoard({ round, solved, onChoose }: MechanicViewProps<MemoryRoundD
                 type="button"
                 class={cls}
                 data-choice={`card-${i}`}
+                data-object={id}
                 aria-label="Carte"
                 onClick={() => onTap(i)}
               >

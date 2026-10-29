@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aboveChance, chanceOfFirstTry, randomNarrowingChance } from './chance';
+import { aboveChance, chanceOfFirstTry, memoryRandomChance, randomNarrowingChance } from './chance';
 import { getLevel, getTracks } from './content';
 import type { Level } from './types';
 
@@ -63,5 +63,13 @@ describe('hasard des jeux de logique (JEUX-LOGIQUE.md, revue)', () => {
     // 1–20 en 7 propositions : le hasard « guidé » trouve presque toujours.
     expect(randomNarrowingChance(20, 7)).toBeGreaterThan(0.9);
     expect(randomNarrowingChance(20, 7)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('hasard du memory (revue du lot maternelle)', () => {
+  it('2 paires, 6 ratés permis : le hasard réussit presque toujours ; 6 paires, 12 ratés : rarement', () => {
+    expect(memoryRandomChance(2, 6)).toBeGreaterThan(0.85);
+    expect(memoryRandomChance(6, 12)).toBeLessThan(0.3);
+    expect(memoryRandomChance(3, 8)).toBe(memoryRandomChance(3, 8));
   });
 });
