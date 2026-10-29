@@ -1,6 +1,6 @@
 // Difficultés des trois jeux libres de logique (docs/specs/JEUX-LOGIQUE.md §4) : un jeu de paramètres de la
 // mécanique par palier (1, 2 ou 3 étoiles), contrôlé par le même validateur que les niveaux.
-import type { CodeBreakerParams, GuessNumberParams, MemoryParams, RobotParams } from '../../engine/types';
+import type { CodeBreakerParams, GuessNumberParams, MazeParams, MemoryParams, OrderParams, RobotParams } from '../../engine/types';
 import type { PuzzleGameId, PuzzlePreset } from '../../storage/puzzles';
 
 export interface PuzzleParamsMap {
@@ -8,6 +8,8 @@ export interface PuzzleParamsMap {
   'code-breaker': CodeBreakerParams;
   robot: RobotParams;
   memory: MemoryParams;
+  order: OrderParams;
+  maze: MazeParams;
 }
 
 export const PUZZLE_PRESET_PARAMS: { [G in PuzzleGameId]: Record<PuzzlePreset, PuzzleParamsMap[G]> } = {
@@ -58,5 +60,17 @@ export const PUZZLE_PRESET_PARAMS: { [G in PuzzleGameId]: Record<PuzzlePreset, P
       ],
       maxMisses: 16,
     },
+  },
+  // Ranger : tailles bien écartées, puis plus d'éléments, puis des quantités (points).
+  order: {
+    easy: { items: 3, mode: 'size', objects: ['apple', 'teddy', 'car', 'ball'], minGap: 30 },
+    medium: { items: 4, mode: 'size', objects: ['apple', 'teddy', 'car', 'ball', 'cat'], minGap: 20 },
+    hard: { items: 4, mode: 'quantity', range: { min: 1, max: 9 } },
+  },
+  // Labyrinthe : taper les cases, puis tracer au doigt, puis un plus grand (6 × 6 réservé au tracé, spec §3.3).
+  maze: {
+    easy: { size: 4, mode: 'tap', minPath: 6 },
+    medium: { size: 5, mode: 'trace', minPath: 10 },
+    hard: { size: 6, mode: 'trace', minPath: 14 },
   },
 };

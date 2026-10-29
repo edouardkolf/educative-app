@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-morpion-05",
+  "title": "Morpion : sans coup de pouce",
+  "skill": "logic",
+  "objective": "Gagner deux grilles contre le téléphone sans coup de pouce, en commençant toujours.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "lives": 3,
+  "params": {
+    "level": "easy",
+    "hint": false,
+    "childStarts": "always"
+  }
+}

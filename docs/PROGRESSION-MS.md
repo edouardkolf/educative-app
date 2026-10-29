@@ -71,19 +71,21 @@ Deux corrections possibles : ajouter un niveau intermédiaire (du JSON) ou reblo
 
 ## Raisonnement : jeux de logique (29/10/2026)
 
-Une place sur cinq (5, 10… 40) est un niveau de raisonnement, sans texte (docs/specs/JEUX-LOGIQUE.md). La carte compte
+Une place sur cinq (5, 10… 60) est un niveau de raisonnement, sans texte (docs/specs/JEUX-LOGIQUE.md). Le code secret
+a été retiré de la carte MS le 29/10 (« trop compliqué en maternelle », retour du PM) : robot et morpion seulement ; il
+reste au CE1. Les quatre places du code (10, 25, 40, 50) ont reçu des niveaux intermédiaires de robot et de morpion. La carte compte
 désormais 20 niveaux par monde : forêt (1–20), mer (21–40), montagne (41–60). Un test vérifie l'alternance au build.
 
 | Place | id | Monde | Contenu |
 |---|---|---|---|
 | 5 | ms-robot-01 | Forêt | Robot pas à pas 4×4, sans rocher, chemin 2–3, 4 manches, **tutoriel** |
-| 10 | ms-code-01 | Forêt | Code secret 2 pions / 3 couleurs, une marque par pion, 5 essais, **tutoriel** |
+| 10 | ms-robot-06 | Forêt | Robot pas à pas 4×4, sans rocher, chemin 3–4 |
 | 15 | ms-morpion-01 | Forêt | Morpion contre le téléphone facile, coup de pouce, 2 grilles gagnantes, 3 vies, **tutoriel** |
 | 20 | ms-robot-02 | Forêt | Robot pas à pas 4×4, 1 rocher, chemin 3–4 |
-| 25 | ms-code-02 | Mer | Code secret 2 pions / 4 couleurs, 5 essais |
+| 25 | ms-morpion-04 | Mer | Morpion facile, coup de pouce, on commence toujours |
 | 30 | ms-morpion-02 | Mer | Morpion facile, coup de pouce, on commence une grille sur deux |
 | 35 | ms-robot-03 | Mer | Robot pas à pas 4×4, 3 rochers, chemin 4–6 |
-| 40 | ms-code-03 | Mer | Code secret 3 pions / 4 couleurs, 6 essais |
+| 40 | ms-morpion-05 | Mer | Morpion facile, sans coup de pouce, on commence toujours |
 
 ## Monde 3 : la montagne — memory, ranger, labyrinthe (29/10/2026)
 
@@ -102,7 +104,7 @@ par un niveau avec tutoriel ; le labyrinthe passe de « taper les cases » à «
 | 47 | ms-labyrinthe-02 | Labyrinthe 5×5, taper |
 | 48 | ms-intrus-07 | Intrus par catégorie, 6 éléments, avec distracteurs |
 | 49 | ms-memoire-03 | Memory 4 paires, aperçu 1 s |
-| 50 | ms-code-04 | Code secret 3 pions / 5 couleurs |
+| 50 | ms-robot-07 | Robot pas à pas 5×5, 4 rochers, chemin 5–7 |
 | 51 | ms-ranger-03 | Ranger 3 quantités (1 à 6 points), **tutoriel** |
 | 52 | ms-labyrinthe-03 | Labyrinthe 5×5, **tracer au doigt**, **tutoriel** |
 | 53 | ms-suite-09 | Suite AABC, couleur et forme, trou au milieu |

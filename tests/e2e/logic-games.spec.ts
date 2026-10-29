@@ -544,9 +544,9 @@ test.describe('niveaux de raisonnement', () => {
     await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
   });
 
-  test('ms-code-01 : 3 manches, 3 étoiles', async ({ page }) => {
-    await setupLevel(page, 'Alba', 'ms', 'ms-code-01');
-    await playLevelRounds(page, 3, () => solveRound(page, 'code-breaker'));
+  test('ms-robot-07 (pas à pas, 5×5) : 4 trajets, 3 étoiles', async ({ page }) => {
+    await setupLevel(page, 'Alba', 'ms', 'ms-robot-07');
+    await playLevelRounds(page, 4, () => solveRound(page, 'robot'));
     await waitForLevelEnd(page);
     await expect(page.getByTestId('level-end')).toHaveAttribute('data-stars', '3');
   });

@@ -137,6 +137,8 @@ function renderRoute(route: Route, profile: Profile | null) {
     case 'code-breaker':
     case 'robot':
     case 'memory':
+    case 'order':
+    case 'maze':
       return profile ? <PuzzleScreen game={route.name} key={route.name} /> : null;
     case 'parent':
       return <ParentSpace path={route.path} />;

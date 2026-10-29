@@ -214,9 +214,9 @@ test.describe('jeu libre memory', () => {
   test('★ : 3 paires (aperçu), toutes retrouvées, une manche résolue, nouvelle manche', async ({ page }) => {
     await onboardMs(page, 'Mila');
     await chooseProfile(page, 'Mila');
-    // Hub MS : 5 tuiles par défaut, dont le memory.
-    await expect(page.getByTestId('hub').locator('[data-testid^="hub-tile-"]')).toHaveCount(5);
-    for (const tile of ['map', 'coloring', 'code-breaker', 'robot', 'memory']) {
+    // Hub MS : 6 tuiles par défaut (carte + coloriage, robot, memory, ranger, labyrinthe).
+    await expect(page.getByTestId('hub').locator('[data-testid^="hub-tile-"]')).toHaveCount(6);
+    for (const tile of ['map', 'coloring', 'robot', 'memory', 'order', 'maze']) {
       await expect(page.getByTestId(`hub-tile-${tile}`)).toBeVisible();
     }
     await openFreeMemory(page);
@@ -593,6 +593,28 @@ test.describe('niveaux de maternelle', () => {
     await waitForLevelEnd(page);
     await expectStars(page, 3); // une seule coupure : pas de raté
   });
+
+  // Jeux libres du hub (29/10) : ranger et labyrinthe, une manche résolue en ★ puis une nouvelle manche.
+  for (const game of ['order', 'maze'] as const) {
+    test(`jeu libre ${game} : tuile du hub, ★ présélectionné, une manche résolue, nouvelle manche`, async ({ page }) => {
+      await onboardMs(page, 'Nina');
+      await chooseProfile(page, 'Nina');
+      await page.getByTestId(`hub-tile-${game}`).click();
+      await expect(page).toHaveURL(new RegExp(`#/${game}$`));
+      await expect(page.getByTestId('puzzle-preset-easy')).toHaveAttribute('aria-pressed', 'true');
+      await startFreeGame(page);
+      const handle = await viewHandle(page);
+      if (game === 'order') {
+        await playOrderRound(page, false);
+      } else {
+        const m = await readMaze(page);
+        await expect(page.locator('.maze-view')).toHaveAttribute('data-mode', 'tap');
+        await tapPath(page, solution(m).slice(1));
+      }
+      await expect(page.getByTestId('puzzle-solved')).toHaveAttribute('data-count', '1', { timeout: 10_000 });
+      await expectNewRound(page, handle);
+    });
+  }
 });
 
 // ==================== 3. Alternance et monde de la montagne sur la carte MS ====================
@@ -608,7 +630,7 @@ test('carte MS : 60 niveaux, alternance (45, 50, 55, 60) et décor de la montagn
   const ids = await nodes.evaluateAll((els) => els.map((el) => el.getAttribute('data-level')));
   expect(ids).toHaveLength(60);
   expect(ids[44]).toBe('ms-robot-04');
-  expect(ids[49]).toBe('ms-code-04');
+  expect(ids[49]).toBe('ms-robot-07');
   expect(ids[54]).toBe('ms-morpion-03');
   expect(ids[59]).toBe('ms-robot-05');
   expect(ids).toEqual(TRACK.levels);
