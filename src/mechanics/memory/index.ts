@@ -1,11 +1,19 @@
-// SOUCHE (M0) — mécanique « memory », écrite par sa tâche (docs/specs/JEUX-MATERNELLE.md §3 ; contrat :
-// docs/specs/JEUX-LOGIQUE.md §2). Remplacer generateRounds et View ; garder le nom d'export `memory` et l'id.
+// Mécanique « memory » : retrouver toutes les paires, seule (docs/specs/JEUX-MATERNELLE.md §3.1).
 import type { MechanicDefinition } from '../../engine/types';
+import { generateRounds } from './generate';
+import { MemoryView } from './MemoryView';
+import type { MemoryRoundData } from './types';
 
-export const memory: MechanicDefinition<'memory', unknown> = {
+export const memory: MechanicDefinition<'memory', MemoryRoundData> = {
   id: 'memory',
-  generateRounds() {
-    throw new Error('mécanique memory : pas encore implémentée');
+  generateRounds,
+  View: MemoryView,
+  solvedDelayMs: 1200,
+  tutorialTargets(round) {
+    const first = round.data.cards[0];
+    return round.data.cards.flatMap((id, i) => (id === first ? [`card-${i}`] : []));
   },
-  View: () => null,
 };
+
+export type { MemoryRoundData } from './types';
+export { validateMemory } from './validate';

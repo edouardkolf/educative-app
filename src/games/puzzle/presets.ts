@@ -38,10 +38,25 @@ export const PUZZLE_PRESET_PARAMS: { [G in PuzzleGameId]: Record<PuzzlePreset, P
     medium: { size: 5, obstacles: 5, mode: 'program', pathLength: { min: 4, max: 6 }, maxArrows: 8 },
     hard: { size: 6, obstacles: 8, mode: 'program', pathLength: { min: 6, max: 9 }, maxArrows: 12 },
   },
-  // Memory (docs/specs/JEUX-MATERNELLE.md §4) — valeurs provisoires, affinées par la tâche M1.
+  // Memory (docs/specs/JEUX-MATERNELLE.md §4) : objets bien distincts à l'œil, essais ratés généreux.
   memory: {
-    easy: { pairs: 3, objects: ['apple', 'banana', 'pear', 'strawberry', 'cherries', 'grapes'], maxMisses: 6, peekMs: 1500 },
-    medium: { pairs: 6, objects: ['dog', 'cat', 'rabbit', 'fish', 'bird', 'ladybug', 'cow', 'pig'], maxMisses: 10 },
-    hard: { pairs: 8, objects: ['dog', 'cat', 'rabbit', 'fish', 'bird', 'ladybug', 'cow', 'pig', 'sheep', 'chicken'], maxMisses: 14 },
+    easy: {
+      pairs: 3,
+      objects: ['apple', 'dog', 'car', 'balloon', 'sunflower', 'fish'],
+      maxMisses: 8,
+      peekMs: 1500,
+    },
+    medium: {
+      pairs: 6,
+      objects: ['apple', 'banana', 'dog', 'fish', 'car', 'boat', 'ball', 'teddy', 'sunflower', 'butterfly'],
+      maxMisses: 12,
+    },
+    hard: {
+      pairs: 8,
+      objects: [
+        'apple', 'strawberry', 'dog', 'rabbit', 'fish', 'butterfly', 'car', 'boat', 'ball', 'teddy', 'sunflower', 'balloon',
+      ],
+      maxMisses: 16,
+    },
   },
 };

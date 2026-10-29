@@ -1,11 +1,16 @@
-// SOUCHE (M0) — mécanique « order », écrite par sa tâche (docs/specs/JEUX-MATERNELLE.md §3 ; contrat :
-// docs/specs/JEUX-LOGIQUE.md §2). Remplacer generateRounds et View ; garder le nom d'export `order` et l'id.
+// Mécanique « ranger du plus petit au plus grand » (moyenne section), sans texte.
 import type { MechanicDefinition } from '../../engine/types';
+import { generateRounds } from './generate';
+import { OrderView } from './OrderView';
+import type { OrderRoundData } from './types';
 
-export const order: MechanicDefinition<'order', unknown> = {
+export const order: MechanicDefinition<'order', OrderRoundData> = {
   id: 'order',
-  generateRounds() {
-    throw new Error('mécanique order : pas encore implémentée');
-  },
-  View: () => null,
+  generateRounds,
+  View: OrderView,
+  solvedDelayMs: 1100,
+  tutorialTargets: (round) => round.answer.split('-').map((id) => `item-${id}`),
 };
+
+export type { OrderRoundData, OrderItem } from './types';
+export { validateOrder } from './validate';

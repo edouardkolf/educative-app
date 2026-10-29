@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '../../engine/rng';
 import { getMechanic } from '../../mechanics';
 import { validateCodeBreaker } from '../../mechanics/code-breaker/validate';
+import { validateMemory } from '../../mechanics/memory/validate';
 import { validateGuessNumber } from '../../mechanics/guess-number/validate';
 import { validateRobot } from '../../mechanics/robot/validate';
 import { PUZZLE_GAMES, PUZZLE_PRESETS } from '../../storage/puzzles';
@@ -12,6 +13,7 @@ const validators: Record<string, (params: any) => string[]> = {
   'guess-number': validateGuessNumber,
   'code-breaker': validateCodeBreaker,
   robot: validateRobot,
+  memory: validateMemory,
 };
 
 describe('PUZZLE_PRESET_PARAMS', () => {
