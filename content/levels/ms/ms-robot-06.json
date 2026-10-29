@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-06",
+  "title": "Robot : un peu plus loin",
+  "skill": "logic",
+  "objective": "Guider le robot jusqu'au trésor en 3 à 4 pas, sans obstacle.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "params": {
+    "size": 4,
+    "obstacles": 0,
+    "mode": "step",
+    "pathLength": {
+      "min": 3,
+      "max": 4
+    }
+  }
+}

@@ -180,6 +180,18 @@
   background: #e8e6ff;
 }
 
+.hub-tile--memory {
+  background: #fdeceb;
+}
+
+.hub-tile--order {
+  background: #e6f3fd;
+}
+
+.hub-tile--maze {
+  background: #e9f7e6;
+}
+
 .hub-tile__badge {
   position: absolute;
   top: 10px;

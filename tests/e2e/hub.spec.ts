@@ -62,9 +62,9 @@ async function longPressClock(page: Page, locator: ReturnType<Page['getByTestId'
   await page.mouse.up();
 }
 
-// ==================== 1. Hub d'une enfant MS : carte, coloriage, code secret, robot ====================
+// ==================== 1. Hub d'une enfant MS : carte, coloriage, robot, memory, ranger, labyrinthe ====================
 
-test('hub MS : carte, coloriage, code secret, robot et memory, sans texte visible, sans cadenas', async ({ page }) => {
+test('hub MS : carte, coloriage, robot, memory, ranger et labyrinthe (pas de code secret), sans texte visible, sans cadenas', async ({ page }) => {
   await onboardWithChild(page, 'Alice');
   await chooseProfile(page, 'Alice');
 
@@ -73,10 +73,9 @@ test('hub MS : carte, coloriage, code secret, robot et memory, sans texte visibl
   await expect(hub.getByTestId('hub-tile-map')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-coloring')).toBeVisible();
   await expect(hub.getByTestId('hub-tile-dictation')).toHaveCount(0);
-  await expect(hub.getByTestId('hub-tile-code-breaker')).toBeVisible();
-  await expect(hub.getByTestId('hub-tile-robot')).toBeVisible();
-  await expect(hub.getByTestId('hub-tile-memory')).toBeVisible();
-  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '5');
+  await expect(hub.getByTestId('hub-tile-code-breaker')).toHaveCount(0);
+  for (const id of ['robot', 'memory', 'order', 'maze']) await expect(hub.getByTestId(`hub-tile-${id}`)).toBeVisible();
+  await expect(hub.locator('.hub-tiles')).toHaveAttribute('data-count', '6');
   await expect(page.getByTestId('parent-access')).toHaveCount(0);
   await expect(hub).toHaveText(''); // aucun texte visible (règle 2, HUB.md §3)
 

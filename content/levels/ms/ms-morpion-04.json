@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-morpion-04",
+  "title": "Morpion : on recommence",
+  "skill": "logic",
+  "objective": "Gagner deux grilles contre le téléphone en alignant trois croix, avec le coup de pouce.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "lives": 3,
+  "params": {
+    "level": "easy",
+    "hint": true,
+    "childStarts": "always"
+  }
+}

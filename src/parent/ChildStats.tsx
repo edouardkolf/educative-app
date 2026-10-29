@@ -281,6 +281,8 @@ export function ChildStats(props: { profileId: string }) {
     'code-breaker': puzzles.filter((r) => r.game === 'code-breaker'),
     robot: puzzles.filter((r) => r.game === 'robot'),
     memory: puzzles.filter((r) => r.game === 'memory'),
+    order: puzzles.filter((r) => r.game === 'order'),
+    maze: puzzles.filter((r) => r.game === 'maze'),
   };
   const groups: Array<{ key: string; label: string; testId: string; summary: GroupSummary }> =
     groupBy === 'skill'
@@ -404,7 +406,7 @@ export function ChildStats(props: { profileId: string }) {
               <TicTacToeStats profile={profile} records={records as TicTacToeRecord[]} />
             )}
             {game.id === 'hangman' && <HangmanStats profile={profile} records={records as HangmanRecord[]} />}
-            {(game.id === 'guess-number' || game.id === 'code-breaker' || game.id === 'robot' || game.id === 'memory') && (
+            {(game.id === 'guess-number' || game.id === 'code-breaker' || game.id === 'robot' || game.id === 'memory' || game.id === 'order' || game.id === 'maze') && (
               <PuzzleStats profile={profile} records={records as PuzzleRecord[]} />
             )}
           </section>

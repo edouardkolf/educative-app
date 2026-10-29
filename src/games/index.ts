@@ -73,7 +73,8 @@ export const GAMES: readonly GameDefinition[] = [
     route: { name: 'code-breaker' },
     parentLabel: 'Code secret',
     tileLabel: 'Code secret',
-    defaultTracks: ['ms', 'ce1'],
+    // Trop abstrait en maternelle (retour du PM, 29/10) : CE1 seulement, sur le hub comme sur la carte.
+    defaultTracks: ['ce1'],
     store: 'puzzles',
   },
   {
@@ -89,6 +90,22 @@ export const GAMES: readonly GameDefinition[] = [
     route: { name: 'memory' },
     parentLabel: 'Memory',
     tileLabel: 'Memory',
+    defaultTracks: ['ms'],
+    store: 'puzzles',
+  },
+  {
+    id: 'order',
+    route: { name: 'order' },
+    parentLabel: 'Ranger du plus petit au plus grand',
+    tileLabel: 'Ranger',
+    defaultTracks: ['ms'],
+    store: 'puzzles',
+  },
+  {
+    id: 'maze',
+    route: { name: 'maze' },
+    parentLabel: 'Labyrinthe',
+    tileLabel: 'Labyrinthe',
     defaultTracks: ['ms'],
     store: 'puzzles',
   },
