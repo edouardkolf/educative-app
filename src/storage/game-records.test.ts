@@ -1,13 +1,16 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { getDB } from './db';
 import { resetStorageForTests } from './test-helpers';
 import {
   closeStaleGameRecords,
+  completePuzzle,
   finishGameRecord,
   isGameRecordBase,
   listGameRecords,
   saveProfile,
   startGameRecord,
+  startPuzzle,
   updateGameRecord,
   updateSettings,
 } from './index';
@@ -197,6 +200,20 @@ describe('closeStaleGameRecords', () => {
     expect(grids.map((g) => [g.status, g.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
     const words = await listGameRecords('hangmans', 'p1');
     expect(words.map((w) => [w.status, w.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
+  });
+
+  it('puzzles : manche résolue → completed ; sinon abandoned/closed', async () => {
+    const solved = await startPuzzle('p1', { game: 'guess-number', preset: 'easy' });
+    await completePuzzle(solved.id, 100);
+    // Rouvre la partie comme un onglet fermé juste après la résolution.
+    const raw = await getDB();
+    await raw.put('puzzles', { ...(await raw.get('puzzles', solved.id))!, status: 'in_progress', endedAt: null });
+    await startPuzzle('p1', { game: 'robot', preset: 'hard' });
+
+    expect(await closeStaleGameRecords()).toBe(2);
+
+    const all = await listGameRecords('puzzles', 'p1');
+    expect(all.map((r) => [r.status, r.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
   });
 
   it('ne touche pas aux parties déjà closes', async () => {

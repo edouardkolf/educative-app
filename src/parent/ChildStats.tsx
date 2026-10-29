@@ -8,6 +8,7 @@ import { GAMES, visibleGameIds } from '../games';
 import { ColoringStats } from '../games/coloring/ColoringStats';
 import { DictationStats } from '../games/dictation/DictationStats';
 import { HangmanStats } from '../games/hangman/HangmanStats';
+import { PuzzleStats } from '../games/puzzle/PuzzleStats';
 import { TicTacToeStats } from '../games/tictactoe/TicTacToeStats';
 import {
   dayKey,
@@ -16,6 +17,7 @@ import {
   listDictations,
   listHangmans,
   listOverrides,
+  listPuzzles,
   listRuns,
   listTicTacToes,
   listUsage,
@@ -28,6 +30,7 @@ import type {
   HangmanRecord,
   LevelOverride,
   Profile,
+  PuzzleRecord,
   TicTacToeRecord,
   UsageDay,
 } from '../storage';
@@ -132,6 +135,7 @@ interface StatsData {
   colorings: ColoringRecord[];
   tictactoes: TicTacToeRecord[];
   hangmans: HangmanRecord[];
+  puzzles: PuzzleRecord[];
   usageDays: UsageDay[];
 }
 
@@ -139,13 +143,14 @@ async function loadStats(profileId: string): Promise<StatsData> {
   const profile = await getProfile(profileId);
   if (!profile) throw new Error('Cet enfant est introuvable.');
 
-  const [runs, overrides, dictations, colorings, tictactoes, hangmans, usageDays] = await Promise.all([
+  const [runs, overrides, dictations, colorings, tictactoes, hangmans, puzzles, usageDays] = await Promise.all([
     listRuns(profileId),
     listOverrides(profileId),
     listDictations(profileId),
     listColorings(profileId),
     listTicTacToes(profileId),
     listHangmans(profileId),
+    listPuzzles(profileId),
     listUsage(profileId),
   ]);
 
@@ -187,6 +192,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
     colorings,
     tictactoes,
     hangmans,
+    puzzles,
     usageDays,
   };
 }
@@ -258,13 +264,17 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
-  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, tictactoes, hangmans, usageDays } =
+  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, tictactoes, hangmans, puzzles, usageDays } =
     data;
   const recordsByGame: Record<string, readonly GameRecordBase[]> = {
     dictation: dictations,
     coloring: colorings,
     tictactoe: tictactoes,
     hangman: hangmans,
+    // Les trois jeux de logique partagent le store ; chacun a sa section (filtre par `game`).
+    'guess-number': puzzles.filter((r) => r.game === 'guess-number'),
+    'code-breaker': puzzles.filter((r) => r.game === 'code-breaker'),
+    robot: puzzles.filter((r) => r.game === 'robot'),
   };
   const groups: Array<{ key: string; label: string; testId: string; summary: GroupSummary }> =
     groupBy === 'skill'
@@ -388,6 +398,9 @@ export function ChildStats(props: { profileId: string }) {
               <TicTacToeStats profile={profile} records={records as TicTacToeRecord[]} />
             )}
             {game.id === 'hangman' && <HangmanStats profile={profile} records={records as HangmanRecord[]} />}
+            {(game.id === 'guess-number' || game.id === 'code-breaker' || game.id === 'robot') && (
+              <PuzzleStats profile={profile} records={records as PuzzleRecord[]} />
+            )}
           </section>
         );
       })}

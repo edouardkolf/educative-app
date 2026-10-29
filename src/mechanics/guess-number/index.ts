@@ -1,11 +1,21 @@
-// SOUCHE (T0) — mécanique « guess-number », écrite par sa tâche (docs/specs/JEUX-LOGIQUE.md §3, contrat §2).
-// Remplacer generateRounds et View ; garder le nom d'export `guessNumber` et l'id.
+// Mécanique « Devine le nombre » (CE1) : bornes qui se resserrent, plus grand / plus petit.
 import type { MechanicDefinition } from '../../engine/types';
+import { generateRounds } from './generate';
+import { GuessNumberView } from './GuessNumberView';
+import type { GuessNumberRoundData } from './types';
 
-export const guessNumber: MechanicDefinition<'guess-number', unknown> = {
+export const guessNumber: MechanicDefinition<'guess-number', GuessNumberRoundData> = {
   id: 'guess-number',
-  generateRounds() {
-    throw new Error('mécanique guess-number : pas encore implémentée');
+  generateRounds,
+  View: GuessNumberView,
+  // Laisse voir l'animation du nombre trouvé.
+  solvedDelayMs: 1200,
+  // Tutoriel : la main tape directement le nombre secret.
+  tutorialTargets(round) {
+    const { secret, input } = round.data;
+    return input === 'tiles' ? [`num-${secret}`] : [...String(secret)].map((d) => `key-${d}`).concat('key-ok');
   },
-  View: () => null,
 };
+
+export type { GuessNumberRoundData } from './types';
+export { validateGuessNumber } from './validate';
