@@ -215,7 +215,7 @@ const DRAWINGS: Record<MechanicId, () => JSX.Element> = {
   ),
   // SOUCHES (M0) : remplacées par les pictos fournis par les tâches M1 à M3 (docs/specs/JEUX-MATERNELLE.md).
   memory: memoryMechanicIcon,
-  order: orderMechanicIcon,
+  order: () => orderMechanicIcon,
   maze: () => <rect x="8" y="8" width="32" height="32" rx="4" fill="#7cc48a" />,
 };
 

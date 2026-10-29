@@ -199,37 +199,23 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
             </g>
           </g>
 
-          {!isTrace &&
-            Array.from({ length: maze.size * maze.size }, (_, i) => {
-              const r = Math.floor(i / maze.size);
-              const c = i % maze.size;
-              return (
-                <rect
-                  key={i}
-                  class="maze-hit"
-                  data-choice={`cell-${r}-${c}`}
-                  x={c * CELL}
-                  y={r * CELL}
-                  width={CELL}
-                  height={CELL}
-                  fill="transparent"
-                  onClick={() => tapCell({ r, c })}
-                />
-              );
-            })}
-          {isTrace &&
-            Array.from({ length: maze.size * maze.size }, (_, i) => (
+          {Array.from({ length: maze.size * maze.size }, (_, i) => {
+            const r = Math.floor(i / maze.size);
+            const c = i % maze.size;
+            return (
               <rect
                 key={i}
                 class="maze-hit"
-                data-choice={`cell-${Math.floor(i / maze.size)}-${i % maze.size}`}
-                x={(i % maze.size) * CELL}
-                y={Math.floor(i / maze.size) * CELL}
+                data-choice={`cell-${r}-${c}`}
+                x={c * CELL}
+                y={r * CELL}
                 width={CELL}
                 height={CELL}
                 fill="transparent"
+                onClick={isTrace ? undefined : () => tapCell({ r, c })}
               />
-            ))}
+            );
+          })}
         </svg>
       </div>
     </div>
