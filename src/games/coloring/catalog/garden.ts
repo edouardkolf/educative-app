@@ -13,7 +13,7 @@ export const garden: Drawing = {
     zone('sun', [circle(13, 13, 9)], { x: 13, y: 13 }, 2, ['yellow', 'orange'], { life: 'pulse' }),
     ink(rays(13, 13, 11.3, 13.8, 10), 2, { life: 'pulse' }),
     blank(
-      [path('M87 31 C84.5 29 84.3 25 87 26.5 C87.3 21.3 91.5 20.3 93.2 24.7 C95.2 21.5 97.6 23.3 96.8 27.5 C98 26.3 97.8 29 96 31 Z')],
+      [path('M86.5 31 C84 31 83.8 27 86.5 26.5 C86.8 23.3 91 22.3 92.7 24.7 C94.7 23.5 97.1 25.3 96.3 27.5 C97.5 28.3 97.3 31 95.5 31 Z')],
       2,
       { life: 'drift' },
     ),
@@ -29,8 +29,8 @@ export const garden: Drawing = {
       figure: 'house',
       endAnimation: 'pop',
       layers: [
-        blank([circle(43.5, 7, 1.8), circle(46.5, 3.6, 2.4)], 3, { endOnly: true, thin: true, life: 'drift' }),
-        zone('chimney', [rect(35, 14, 13, 34), rect(33.5, 11.5, 16, 4.5, 1)], { x: 41.5, y: 22.5 }, 3, ['red', 'orange'], {
+        blank([circle(42.5, 11.5, 1.8), circle(45.5, 7.8, 2.4)], 3, { endOnly: true, thin: true, life: 'drift' }),
+        zone('chimney', [rect(34, 18, 13, 28), rect(32.5, 15.5, 16, 4.5, 1)], { x: 40.5, y: 26.5 }, 3, ['red', 'orange'], {
           differentFrom: ['roof'],
         }),
         zone('wall', [rect(6, 48, 40, 32, 1)], { x: 16, y: 72.5 }, 1, ['yellow', 'orange', 'red', 'blue'], {
