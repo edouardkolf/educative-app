@@ -4,8 +4,8 @@ import { defaultGameIds, getGame, resolveAvailability, visibleGameIds } from './
 import type { GameDefinition } from './index';
 
 describe('defaultGameIds', () => {
-  it("'ms' donne le coloriage", () => {
-    expect(defaultGameIds('ms')).toEqual(['coloring', 'robot', 'memory', 'order', 'maze']);
+  it("'ms' donne le coloriage, la lecture (juste après) et les jeux de logique", () => {
+    expect(defaultGameIds('ms')).toEqual(['coloring', 'reading', 'robot', 'memory', 'order', 'maze']);
   });
 
   it("'ce1' donne la dictée, le morpion, le pendu et les jeux de logique", () => {
@@ -13,7 +13,7 @@ describe('defaultGameIds', () => {
   });
 
   it('un parcours inconnu se replie sur le premier parcours (ms)', () => {
-    expect(defaultGameIds('inconnu')).toEqual(['coloring', 'robot', 'memory', 'order', 'maze']);
+    expect(defaultGameIds('inconnu')).toEqual(['coloring', 'reading', 'robot', 'memory', 'order', 'maze']);
   });
 });
 
@@ -27,7 +27,14 @@ describe('visibleGameIds', () => {
       'code-breaker',
       'robot',
     ]);
-    expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual(['coloring', 'robot', 'memory', 'order', 'maze']);
+    expect(visibleGameIds({ trackId: 'ms', games: undefined })).toEqual([
+      'coloring',
+      'reading',
+      'robot',
+      'memory',
+      'order',
+      'maze',
+    ]);
   });
 
   it('[] : aucun jeu', () => {

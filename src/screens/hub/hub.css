@@ -160,6 +160,10 @@
   background: #fff1de;
 }
 
+.hub-tile--reading {
+  background: #e3f4ee;
+}
+
 .hub-tile--tictactoe {
   background: #f3ecfb;
 }

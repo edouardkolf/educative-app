@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { ReadingAnswer } from '../games/reading/types';
 import { getDB } from './db';
 import { resetStorageForTests } from './test-helpers';
 import {
@@ -10,6 +11,7 @@ import {
   completeDictation,
   completeHangman,
   completePuzzle,
+  completeReading,
   completeTicTacToe,
   completeRun,
   exportAll,
@@ -23,6 +25,7 @@ import {
   listOverrides,
   listPuzzles,
   listProfiles,
+  listReadings,
   listRuns,
   recordPaint,
   saveDictationItem,
@@ -32,6 +35,7 @@ import {
   startDictation,
   startHangman,
   startPuzzle,
+  startReading,
   startTicTacToe,
   startRun,
   updateSettings,
@@ -40,6 +44,20 @@ import {
 beforeEach(async () => {
   await resetStorageForTests();
 });
+
+const READING_ANSWER: ReadingAnswer = {
+  itemId: 'g:a',
+  game: 'letter-sound',
+  target: 'a',
+  correct: true,
+  chosen: null,
+  choiceCount: 2,
+  replays: 0,
+  hinted: false,
+  retry: false,
+  ms: 1800,
+  at: 1000,
+};
 
 async function seed() {
   const profile = await saveProfile({
@@ -103,12 +121,21 @@ async function seed() {
   await completeHangman(hm.id, ['a', 'l', 'i', 'o', 'n'], 1, 'found', 9000);
   const pz = await startPuzzle(profile.id, { game: 'code-breaker', preset: 'medium' });
   await completePuzzle(pz.id, 7000);
+  const rd = await startReading(profile.id, {
+    stage: 2,
+    planned: 1,
+    newItemId: 'g:a',
+    demos: ['letter-sound'],
+    answers: [],
+    review: false,
+  });
+  await completeReading(rd.id, [READING_ANSWER], ['letter-sound'], 5000);
 
   return profile;
 }
 
 describe('export → import', () => {
-  it('aller-retour v4 : les données (dont les parties de jeu) reviennent identiques', async () => {
+  it('aller-retour v5 : les données (dont les parties de jeu) reviennent identiques', async () => {
     const profile = await seed();
     const bundle = await exportAll();
 
@@ -120,6 +147,7 @@ describe('export → import', () => {
     expect(bundle.tictactoes).toHaveLength(1);
     expect(bundle.hangmans).toHaveLength(1);
     expect(bundle.puzzles).toHaveLength(1);
+    expect(bundle.readings).toHaveLength(1);
 
     const before = {
       profiles: await listProfiles(),
@@ -131,11 +159,12 @@ describe('export → import', () => {
       tictactoes: await listTicTacToes(profile.id),
       hangmans: await listHangmans(profile.id),
       puzzles: await listPuzzles(profile.id),
+      readings: await listReadings(profile.id),
     };
 
     const result = await importAll(bundle);
 
-    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 5, skipped: 0 });
+    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 6, skipped: 0 });
     expect(await listProfiles()).toEqual(before.profiles);
     expect(await listRuns(profile.id)).toEqual(before.runs);
     expect(await listOverrides(profile.id)).toEqual(before.overrides);
@@ -145,6 +174,7 @@ describe('export → import', () => {
     expect(await listTicTacToes(profile.id)).toEqual(before.tictactoes);
     expect(await listHangmans(profile.id)).toEqual(before.hangmans);
     expect(await listPuzzles(profile.id)).toEqual(before.puzzles);
+    expect(await listReadings(profile.id)).toEqual(before.readings);
   });
 
   it('conserve le code parent et remet sessions/lock à vide/null', async () => {
@@ -247,6 +277,61 @@ describe('export → import', () => {
     expect(await listPuzzles(profile.id)).toEqual([]);
   });
 
+  it('un fichier v4 (sans lecture) est accepté : 5 parties de jeu et 0 séance de lecture', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const { readings: _r, ...v4Bundle } = bundle;
+    void _r;
+
+    const result = await importAll({ ...v4Bundle, version: 4 });
+
+    expect(result).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 5, skipped: 0 });
+    const [profile] = await listProfiles();
+    if (!profile) throw new Error('import invalide');
+    expect(await listReadings(profile.id)).toEqual([]);
+    expect(await listPuzzles(profile.id)).toHaveLength(1);
+  });
+
+  it('un fichier v5 sans le tableau des séances de lecture est refusé', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const { readings: _r, ...withoutReadings } = bundle;
+    void _r;
+
+    expect(await importAll(withoutReadings)).toMatchObject({ ok: false });
+  });
+
+  it('refuse une séance de lecture mal formée (étape 6, jeu inconnu, item mal formé)', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const [rd] = bundle.readings;
+    if (!rd) throw new Error('seed invalide');
+
+    expect(await importAll({ ...bundle, readings: [{ ...rd, stage: 6 }] })).toMatchObject({ ok: false });
+    expect(
+      await importAll({ ...bundle, readings: [{ ...rd, answers: [{ ...READING_ANSWER, game: 'inconnu' }] }] }),
+    ).toMatchObject({ ok: false });
+    expect(
+      await importAll({ ...bundle, readings: [{ ...rd, answers: [{ ...READING_ANSWER, itemId: 'x:a' }] }] }),
+    ).toMatchObject({ ok: false });
+  });
+
+  it('ignore les séances de lecture orphelines et refuse un réglage de lecture invalide', async () => {
+    await seed();
+    const bundle = await exportAll();
+    const [rd] = bundle.readings;
+    const [pr] = bundle.profiles;
+    if (!rd || !pr) throw new Error('seed invalide');
+
+    const orphan = await importAll({ ...bundle, readings: [rd, { ...rd, id: 'orphan', profileId: 'absent' }] });
+    expect(orphan).toEqual({ ok: true, profiles: 1, runs: 1, gameRecords: 6, skipped: 1 });
+
+    const good = { ...bundle, profiles: [{ ...pr, gameSettings: { reading: { startStage: 3 } } }] };
+    expect(await importAll(good)).toMatchObject({ ok: true });
+    const bad = { ...bundle, profiles: [{ ...pr, gameSettings: { reading: { startStage: 9 } } }] };
+    expect(await importAll(bad)).toMatchObject({ ok: false });
+  });
+
   it('un fichier v4 sans le tableau des puzzles est refusé', async () => {
     await seed();
     const bundle = await exportAll();
@@ -265,11 +350,11 @@ describe('export → import', () => {
     expect(await importAll({ ...bundle, puzzles: [{ ...pz, game: 'chess' }] })).toMatchObject({ ok: false });
   });
 
-  it('refuse la version 5 (inconnue)', async () => {
+  it('refuse la version 6 (inconnue)', async () => {
     await seed();
     const bundle = await exportAll();
 
-    expect(await importAll({ ...bundle, version: 5 })).toMatchObject({ ok: false });
+    expect(await importAll({ ...bundle, version: 6 })).toMatchObject({ ok: false });
   });
 });
 
@@ -442,7 +527,7 @@ describe('F2 : lignes orphelines (enfant absent de la sauvegarde)', () => {
       runs: 0,
       gameRecords: 0,
       skipped: bundle.runs.length + bundle.overrides.length + bundle.usage.length + bundle.dictations.length +
-        bundle.colorings.length + bundle.tictactoes.length + bundle.hangmans.length + bundle.puzzles.length,
+        bundle.colorings.length + bundle.tictactoes.length + bundle.hangmans.length + bundle.puzzles.length + bundle.readings.length,
     });
     expect(await listProfiles()).toEqual([]);
     // Les anciennes données du profil (avant cet import) ont bien été remplacées, pas conservées.

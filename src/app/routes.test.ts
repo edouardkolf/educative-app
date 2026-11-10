@@ -63,6 +63,7 @@ describe('parseHash / toHash', () => {
     { name: 'coloring' },
     { name: 'tictactoe' },
     { name: 'hangman' },
+    { name: 'reading' },
     { name: 'locked' },
     { name: 'parent', path: ['children', 'p1'] },
   ])('aller-retour pour %o', async (route) => {
@@ -89,6 +90,7 @@ describe('prédicats', () => {
     expect(isGameRoute('coloring')).toBe(true);
     expect(isGameRoute('tictactoe')).toBe(true);
     expect(isGameRoute('hangman')).toBe(true);
+    expect(isGameRoute('reading')).toBe(true);
     expect(isGameRoute('map')).toBe(false);
     expect(isGameRoute('n-importe-quoi')).toBe(false);
   });
@@ -100,6 +102,7 @@ describe('prédicats', () => {
     expect(isChildRoute('play')).toBe(true);
     expect(isChildRoute('dictation')).toBe(true);
     expect(isChildRoute('coloring')).toBe(true);
+    expect(isChildRoute('reading')).toBe(true);
     expect(isChildRoute('profiles')).toBe(false);
     expect(isChildRoute('locked')).toBe(false);
     expect(isChildRoute('parent')).toBe(false);
@@ -110,6 +113,7 @@ describe('prédicats', () => {
     expect(isSoftEndRoute('play')).toBe(true);
     expect(isSoftEndRoute('dictation')).toBe(true);
     expect(isSoftEndRoute('coloring')).toBe(true);
+    expect(isSoftEndRoute('reading')).toBe(true);
     expect(isSoftEndRoute('hub')).toBe(false);
     expect(isSoftEndRoute('map')).toBe(false);
   });

@@ -17,6 +17,7 @@ import { DictationScreen } from '../games/dictation/DictationScreen';
 import { ColoringScreen } from '../games/coloring/ColoringScreen';
 import { TicTacToeScreen } from '../games/tictactoe/TicTacToeScreen';
 import { HangmanScreen } from '../games/hangman/HangmanScreen';
+import { ReadingScreen } from '../games/reading/ReadingScreen';
 import { PuzzleScreen } from '../games/puzzle/PuzzleScreen';
 
 export function AppShell() {
@@ -133,6 +134,8 @@ function renderRoute(route: Route, profile: Profile | null) {
       return profile ? <TicTacToeScreen /> : null;
     case 'hangman':
       return profile ? <HangmanScreen /> : null;
+    case 'reading':
+      return profile ? <ReadingScreen /> : null;
     case 'guess-number':
     case 'code-breaker':
     case 'robot':

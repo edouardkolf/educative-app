@@ -96,6 +96,34 @@ describe('db : mises à niveau v1 → v4 (docs/specs/HUB.md §8.1, MORPION-PENDU
     expect(await v4.getAllFromIndex('puzzles', 'profileId', 'p1')).toEqual([]);
   });
 
+  it('une base v4 avec un puzzle, ouverte en v5, le garde et gagne le store des lectures', async () => {
+    const v4 = await openDB(DB_NAME, 4, {
+      upgrade(db) {
+        db.createObjectStore('profiles', { keyPath: 'id' });
+        const runs = db.createObjectStore('runs', { keyPath: 'id' });
+        runs.createIndex('profileId', 'profileId');
+        runs.createIndex('profileLevel', ['profileId', 'levelId']);
+        const overrides = db.createObjectStore('overrides', { keyPath: ['profileId', 'levelId'] });
+        overrides.createIndex('profileId', 'profileId');
+        const usage = db.createObjectStore('usage', { keyPath: ['profileId', 'day'] });
+        usage.createIndex('profileId', 'profileId');
+        db.createObjectStore('settings');
+        for (const name of ['dictations', 'colorings', 'tictactoes', 'hangmans', 'puzzles']) {
+          db.createObjectStore(name, { keyPath: 'id' }).createIndex('profileId', 'profileId');
+        }
+      },
+    });
+    await v4.put('puzzles', { id: 'z1', profileId: 'p1' });
+    v4.close();
+
+    const v5 = await getDB();
+    expect(v5.version).toBe(5);
+    expect(v5.objectStoreNames.contains('readings')).toBe(true);
+    expect(await v5.get('puzzles', 'z1')).toMatchObject({ id: 'z1' });
+    expect(await v5.getAll('readings')).toEqual([]);
+    expect(await v5.getAllFromIndex('readings', 'profileId', 'p1')).toEqual([]);
+  });
+
   it('une promesse échouée n\'est jamais mise en cache : un nouvel essai reste possible', async () => {
     // getDB() ne doit jamais laisser dbPromise pointer vers un rejet permanent (voir le .catch
     // interne) : si l'ouverture précédente a échoué, l'appel suivant doit pouvoir réessayer.

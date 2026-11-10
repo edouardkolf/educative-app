@@ -7,7 +7,9 @@ import type { Track } from '../engine';
 import { GAMES, defaultGameIds, resolveAvailability } from '../games';
 import type { Availability, GameId } from '../games';
 import { ColoringSettings } from '../games/coloring/ColoringSettings';
+import { ReadingSettings } from '../games/reading/ReadingSettings';
 import type { ColoringSettings as ColoringSettingsValue } from '../storage/colorings';
+import type { ReadingSettingsValue } from '../storage/readings';
 import { deleteProfile, getProfile, getSettings, saveProfile } from '../storage';
 import type { AvatarId, GameSettingsMap, Profile, ProfileLimits } from '../storage';
 import { AVATARS, AVATAR_NAMES } from '../ui/avatars';
@@ -133,6 +135,15 @@ export function ChildForm(props: ChildFormProps) {
       const updated = { ...prev };
       if (next === undefined) delete updated.coloring;
       else updated.coloring = next;
+      return Object.keys(updated).length > 0 ? updated : undefined;
+    });
+  }
+
+  function handleReadingSettingsChange(next: ReadingSettingsValue | undefined) {
+    setGameSettings((prev) => {
+      const updated = { ...prev };
+      if (next === undefined) delete updated.reading;
+      else updated.reading = next;
       return Object.keys(updated).length > 0 ? updated : undefined;
     });
   }
@@ -332,6 +343,9 @@ export function ChildForm(props: ChildFormProps) {
                   )}
                   {checked && game.id === 'coloring' && (
                     <ColoringSettings value={gameSettings?.coloring} onChange={handleColoringSettingsChange} />
+                  )}
+                  {checked && game.id === 'reading' && (
+                    <ReadingSettings value={gameSettings?.reading} onChange={handleReadingSettingsChange} />
                   )}
                 </div>
               );

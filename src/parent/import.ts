@@ -32,7 +32,8 @@ export function describeImportCounts(data: unknown): { profiles: number; runs: n
     arrayLength(data, 'colorings') +
     arrayLength(data, 'tictactoes') +
     arrayLength(data, 'hangmans') +
-    arrayLength(data, 'puzzles');
+    arrayLength(data, 'puzzles') +
+    arrayLength(data, 'readings');
   return { profiles, runs };
 }
 
