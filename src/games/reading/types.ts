@@ -180,7 +180,7 @@ export interface ReadingAnswer {
   correct: boolean;
   /** Premier choix faux (id du choix), ou null si juste du premier coup. */
   chosen: string | null;
-  /** Nombre de choix proposés (hasard : 1 / choiceCount) ; 0 pour le tambour. */
+  /** Nombre de choix proposés (hasard : 1 / choiceCount) ; 3 pour le tambour (1, 2 ou 3 syllabes). */
   choiceCount: number;
   /** Appuis sur le haut-parleur avant la première tentative. */
   replays: number;
