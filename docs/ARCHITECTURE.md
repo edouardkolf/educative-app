@@ -37,6 +37,7 @@ src/
     coloring/                ← coloriage magique (MS) : catalogue de dessins, récipient, paliers, écran, stats
     tictactoe/               ← morpion (CE1) : contre le téléphone ou à deux (docs/specs/MORPION-PENDU.md)
     hangman/                 ← pendu (CE1) : 114 mots avec indice, fleur à pétales (docs/specs/MORPION-PENDU.md)
+    reading/                 ← « J'apprends à lire » (MS) : programme en 5 étapes, 8 jeux, logique pure, écran, stats (docs/specs/LECTURE.md)
     puzzle/                  ← écran générique « une mécanique en manches illimitées » (devine le nombre, code secret, robot)
   screens/                   ← écrans enfant : profils, hub, carte, partie, fin de niveau, écran de fin
   parent/                    ← espace parent : code, profils, stats, réglages, export/import
@@ -110,6 +111,7 @@ Le conteneur de manche porte `data-answer` (utile aux tests e2e, invisible pour 
 | `settings` | `"app"` | empreinte du code parent, son, session en cours de chaque enfant, écran de fin actif |
 | `dictations` | `id` (index `profileId`) | une dictée : série, graine du tirage, mots prévus, un item par mot validé (saisie, juste du premier coup, réécoutes, durées) |
 | `colorings` | `id` (index `profileId`) | une séance sur un dessin : dessin, palier, couleurs et légende figées, essais de peinture ; `resumedFrom` relie la reprise d'un dessin à la séance précédente |
+| `readings` | `id` (index `profileId`) | une séance de lecture : étape, questions prévues, item nouveau, démonstrations vues, une ligne par première tentative (jeu, cible, juste, choix faux, relance) |
 
 - Base en **version 2** (`src/storage/db.ts`) : la montée v1 → v2 crée les deux stores de jeu, vides ; rien n'est migré.
 - Les parties de jeu partagent un socle (`GameRecordBase`, `src/storage/game-records.ts`) : même statut et même raison
@@ -120,6 +122,21 @@ Le conteneur de manche porte `data-answer` (utile aux tests e2e, invisible pour 
 - **IndexedDB v3 / export v3** : stores `tictactoes` et `hangmans` (morpion, pendu). L'import accepte v1, v2 et v3.
 - **IndexedDB v4 / export v4** : store `puzzles`, partagé par les jeux libres de logique (devine le nombre, code
   secret, robot ; docs/specs/JEUX-LOGIQUE.md §4). L'import accepte v1 à v4.
+- **IndexedDB v5 / export v5** : store `readings` (« J'apprends à lire », docs/specs/LECTURE.md §7), créé par
+  `if (oldVersion < 5)`. L'import accepte v1 à v5 (`readings` absent avant v5 = vide). Réglage parent :
+  `gameSettings.reading = { startStage? }`.
+
+### Le jeu `reading`
+
+- **Logique pure dans `src/games/reading/`**, sans React ni stockage : `curriculum.ts` (graphèmes, syllabes, mots à
+  lire, items par étape), `pictures.ts` (images Noto), `speech.ts` (textes dits, banc d'écoute), `progress.ts`
+  (`computeProgress`), `session.ts` (`planSession`, déterministe pour une graine), `flow.ts` (file de questions,
+  démonstrations, questions reposées), `stats.ts`. Contrat de types : `types.ts`.
+- **Écran** : `ReadingScreen` (accueil → séance → fête), `ReadingSession` + `useQuestionFlow` (voix, relance, enregistrement,
+  fin douce), `views/` (une vue par jeu, qui n'affiche que : pas de voix, pas de stockage ; `data-choice` sur chaque
+  cible). Parent : `ReadingStats`, `ReadingSettings`, `VoiceBench`.
+- **La progression n'est jamais stockée** : `computeProgress(listReadings(profileId), settings)` la rejoue à chaque ouverture.
+- Tests e2e : `tests/e2e/reading.spec.ts` (fausse voix et lecteur de séance dans `reading-helpers.ts`).
 
 La progression (étoiles, niveaux débloqués) est **recalculée à partir des parties** (`computeLevelStates`) : aucune donnée dupliquée qui pourrait diverger.
 De même, la série proposée en dictée et le palier du coloriage se déduisent des parties de jeu.

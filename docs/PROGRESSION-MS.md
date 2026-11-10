@@ -172,3 +172,25 @@ Le **code magique** se complique par paliers ; aucun code n'est en couleur au-de
   ratée souvent (le violet, par exemple) se retravaille au labo, sur la carte.
 
 Détails : `docs/specs/COLORIAGE.md`. Contenu : `docs/CONTENU.md`.
+
+## Programme de lecture : « J'apprends à lire » (hors carte)
+
+Une **piste à part**, sans étoile ni niveau sur la carte : une tuile du hub MS (juste après le coloriage) ouvre un
+programme en cinq étapes, de zéro lecture à l'entrée en CP. Le rythme visé est de trois séances de 5 minutes par
+semaine ; **la maîtrise décide, pas le calendrier**. Une séance de 8 à 10 questions se joue seule, à la voix.
+
+| Étape | Titre | Contenu |
+|---|---|---|
+| 1 | J'écoute | compter les syllabes (tambour), qui commence pareil, qui finit pareil (rime) |
+| 2 | Les voyelles | a, i, o, u, é : la lettre qui chante |
+| 3 | Les consonnes qui durent | l, r, f, m, s, e, j, v, n, z, ou, ch ; la fusion consonne + voyelle |
+| 4 | Les consonnes brèves | p, t, b, d, c, g (durs) ; la fusion avec une consonne brève |
+| 5 | Je lis | mots entiers (mot mystère), capitale / minuscule, lettres rares |
+
+- Une étape est validée quand ses items sont acquis **et** que les deux dernières séances sont réussies à 80 %.
+  « Étape de départ » (fiche de l'enfant) saute les étapes que l'enfant connaît déjà.
+- **À observer dans les statistiques** : l'étape en cours, la grille des items, la table des confusions (m/n, b/d…) et
+  l'alerte « à accompagner » quand elle répond au hasard à un jeu. Le **banc d'écoute** sert à repérer les sons que la
+  voix du téléphone prononce mal.
+
+Détails : `docs/specs/LECTURE.md`. Contenu : `docs/CONTENU.md`.

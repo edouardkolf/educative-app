@@ -151,7 +151,8 @@
 
 .rd-medal__badge--lock {
   background: #fff;
-  padding: 18%;
+  /* Pas de padding en % : il se calcule sur la largeur du médaillon et écrasait le cadenas en un point. */
+  padding: 0;
 }
 
 /* En cours : plus grosse, elle pulse. */
