@@ -581,7 +581,17 @@ function allocate(progress: ReadingProgress, stage: ReadingStage, review: boolea
   const rev = byOldest(progress, all.filter((i) => stateOf(progress, i) === 'acquired'));
 
   let newCount = newItem ? NEW_ITEM_QUESTIONS : 0;
-  if (newItem && cur.length === 0 && rev.length === 0) newCount = SESSION_MIN_QUESTIONS;
+  if (newItem && cur.length === 0 && rev.length === 0) {
+    // Toute première séance (rien en cours, rien à réviser) : plutôt que 9 questions du même jeu d'affilée,
+    // on mêle un second item de l'étape (ex. tambour + « qui commence pareil »). Seule exception à
+    // « un item nouveau par séance » (LECTURE.md §5.4).
+    const second = stageIts.find((i) => i !== newItem && stateOf(progress, i) === 'new');
+    if (second) {
+      const firstCount = Math.ceil(SESSION_QUESTIONS / 2);
+      return { newItem, items: Array.from({ length: SESSION_QUESTIONS - firstCount }, () => second), newCount: firstCount };
+    }
+    newCount = SESSION_MIN_QUESTIONS;
+  }
   const rest = SESSION_QUESTIONS - newCount;
   const curWant = rev.length === 0 ? rest : cur.length === 0 ? 0 : Math.round(rest * 0.6);
   const items: ItemId[] = roundRobin(cur, curWant, counts, 3);

@@ -58,7 +58,18 @@ function check(plan: ReturnType<typeof planSession>, progress: ReadingProgress, 
   else expect(news.length, label).toBe(0);
   const itemsOf = new Set(qs.map((q) => q.itemId));
   const newItems = [...itemsOf].filter((i) => progress.items[i]?.state === 'new');
-  if (!review) expect(newItems.every((i) => i === plan.newItemId), `${label} : items neufs ${newItems.join(',')}`).toBe(true);
+  // Exception §5.4 : la toute première séance (rien en cours ni acquis) mêle deux items neufs de l'étape.
+  const blank = Object.values(progress.items).every((p) => p.state === 'new');
+  if (!review) {
+    expect(newItems.filter((i) => i !== plan.newItemId).length, `${label} : items neufs ${newItems.join(',')}`).toBeLessThanOrEqual(blank ? 1 : 0);
+  }
+  if (!review && blank) {
+    let run = 1;
+    for (let i = 1; i < qs.length; i += 1) {
+      run = qs[i]?.game === qs[i - 1]?.game ? run + 1 : 1;
+      expect(run, `${label} : même jeu d'affilée`).toBeLessThanOrEqual(3);
+    }
+  }
 
   for (const q of qs) {
     expect(gamesForItem(q.itemId), `${label} : jeu ${q.game} pour ${q.itemId}`).toContain(q.game);
