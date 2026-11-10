@@ -187,6 +187,8 @@ Les réponses `retry: true` et les exemples guidés ne comptent jamais.
 - 9 questions (8 à 10 acceptées), déterministe pour une graine.
 - **Un seul item nouveau par séance**, introduit seulement si au plus 1 item de l'étape est `learning` ; il reçoit
   3 questions (la première `isNew`), jamais deux de suite sauf la présentation.
+  Exception : la toute première séance (rien en cours, rien à réviser) mêle deux items nouveaux de l'étape
+  (5 + 4 questions), pour ne pas enchaîner 9 fois le même jeu.
 - Le reste : ~60 % sur les items `learning` de l'étape en cours (les moins réussis d'abord), ~40 % de révision d'items
   `acquired` de toutes les étapes (les plus anciens d'abord — les jeux d'écoute de l'étape 1 reviennent jusqu'au bout).
   S'il n'y a rien à réviser, tout va à l'étape en cours ; s'il n'y a rien en cours, tout va à la révision.

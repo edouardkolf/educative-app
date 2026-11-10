@@ -204,7 +204,6 @@ const ROWS: readonly Row[] = [
   ['🦍', 'gorille', 'un', 'go.rille', 'g', 'ij'],
   ['🧤', 'gant', 'un', 'gant', 'g', 'an'],
   ['🐸', 'grenouille', 'une', 'gre.nouille', 'g', 'uy'],
-  ['🥤', 'gobelet', 'un', 'go.be.let', 'g', 'è'],
   ['🍦', 'glace', 'une', 'glace', 'g', 'as'],
   ['🧇', 'gaufre', 'une', 'gaufre', 'g', 'of'],
   ['💧', 'goutte', 'une', 'goutte', 'g', 'ut'],
@@ -228,7 +227,6 @@ const ROWS: readonly Row[] = [
   ['🥚', 'œuf', 'un', 'œuf', null, 'euf'],
   ['🐌', 'escargot', 'un', 'es.car.got', null, 'o'],
   ['🧶', 'laine', 'de la', 'laine', 'l', 'èn'],
-  ['🎮', 'jeu', 'un', 'jeu', 'j', 'eu'],
 ];
 
 /** Catalogue des images de lecture. */
@@ -272,7 +270,6 @@ const DRUM_AMBIGUOUS_WORDS: ReadonlySet<string> = new Set([
   'oie',
   'roue',
   'tortue',
-  'gobelet',
   'biberon',
   'assiette',
   'noël',
