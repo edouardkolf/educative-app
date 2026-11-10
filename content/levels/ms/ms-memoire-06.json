@@ -1,0 +1,22 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-memoire-06",
+  "title": "Memory : 6 paires dans le ciel",
+  "skill": "memory",
+  "objective": "Retrouver six paires d'images du ciel avec un peu moins d'essais ratés permis.",
+  "mechanic": "memory",
+  "rounds": 2,
+  "params": {
+    "pairs": 6,
+    "objects": [
+      "bird",
+      "butterfly",
+      "bee",
+      "owl",
+      "ladybug",
+      "kite",
+      "balloon"
+    ],
+    "maxMisses": 9
+  }
+}

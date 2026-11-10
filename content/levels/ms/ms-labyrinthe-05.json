@@ -1,0 +1,14 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-labyrinthe-05",
+  "title": "Labyrinthe : au doigt, plus long",
+  "skill": "spatial",
+  "objective": "Tracer au doigt un chemin encore plus long dans une grille 6 × 6 jusqu'à la nourriture.",
+  "mechanic": "maze",
+  "rounds": 3,
+  "params": {
+    "size": 6,
+    "mode": "trace",
+    "minPath": 16
+  }
+}

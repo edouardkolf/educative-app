@@ -1,0 +1,24 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-07",
+  "title": "Compter jusqu'à 6, 4 choix",
+  "skill": "counting",
+  "objective": "Dénombrer 3 à 6 objets du ciel éparpillés et reconnaître le chiffre parmi quatre.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 3,
+    "max": 6,
+    "objects": [
+      "bird",
+      "butterfly",
+      "bee",
+      "ladybug",
+      "kite",
+      "balloon"
+    ],
+    "layout": "scatter",
+    "choices": 4,
+    "answers": "digits"
+  }
+}

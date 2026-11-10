@@ -18,6 +18,10 @@ export const TOP_PAD = 120;
 export const BOTTOM_PAD = 140;
 /** Largeur visible du chemin (bordure comprise) : un sentier, plus étroit que les niveaux posés dessus. */
 export const PATH_WIDTH = 38;
+/** Fin du parcours (hors montagne) : le chemin monte encore END_RISE au-dessus du dernier niveau, jusqu'à sa
+ * destination, et END_ROOM laisse la place, au-dessus, au lieu qui l'accueille (château de nuages…). */
+export const END_RISE = 190;
+export const END_ROOM = 250;
 
 /** Nombre de niveaux d'un monde avant de changer d'univers : 16 de compétence + 4 de raisonnement (docs/specs/JEUX-LOGIQUE.md). */
 export const LEVELS_PER_WORLD = 20;
@@ -33,8 +37,9 @@ export interface Point {
 
 export function trackHeightFor(count: number): number {
   // Parcours qui s'achève en montagne : de la place au-dessus du dernier niveau pour le sommet et le ciel.
-  const summit = count > 0 && isMountainLevel(count - 1) ? SUMMIT_RISE + 70 : 0;
-  return TOP_PAD + summit + BOTTOM_PAD + nodeRise(Math.max(0, count - 1));
+  // Ailleurs, le chemin mène à une destination : de la place pour elle au-dessus du dernier niveau.
+  const extra = count === 0 ? 0 : isMountainLevel(count - 1) ? SUMMIT_RISE + 70 : END_RISE + END_ROOM - TOP_PAD;
+  return TOP_PAD + extra + BOTTOM_PAD + nodeRise(Math.max(0, count - 1));
 }
 
 /** Demi-hauteur de la bande frontière (rivière, plage, crête), et demi-longueur du passage rectiligne. */
@@ -227,9 +232,20 @@ export function buildRoute(count: number, width: number): Route {
     // (masqué au-dessus de la pointe, dans le ciel).
     points.push({ x: last.x, y: last.y - SUMMIT_RISE / 2 }, { x: last.x, y: -20 });
   } else {
-    points.push({ x: width / 2, y: -20 });
+    // Le chemin ne sort pas de la carte : il monte jusqu'à sa destination, un peu vers le milieu.
+    const end = trackEnd(count, width);
+    points.push({ x: (last.x * 2 + end.x) / 3, y: last.y - END_RISE * 0.55 }, end);
   }
   return { points, nodeAt };
+}
+
+/**
+ * Bout du chemin : la destination du parcours, au-dessus du dernier niveau (hors montagne, où le chemin
+ * finit à la pointe du sommet). C'est là que le monde du dernier niveau dessine son lieu d'arrivée.
+ */
+export function trackEnd(count: number, width: number): Point {
+  const last = nodePosition(Math.max(0, count - 1), count, width);
+  return { x: last.x + (width / 2 - last.x) * 0.5, y: last.y - END_RISE };
 }
 
 /** Points de passage du chemin : il entre par le bas de l'écran et ressort par le haut. */
@@ -549,9 +565,79 @@ function pickWeighted(kinds: readonly DecorKind[], r: number): DecorKind {
   return kinds[kinds.length - 1] as DecorKind;
 }
 
+/** Emprise au sol d'un élément de décor : un disque (un grand lieu en aligne plusieurs). */
+export interface Footprint {
+  x: number;
+  y: number;
+  r: number;
+}
+
+/** Le disque ne touche ni le chemin (marge `pathMargin`) ni un niveau (marge `nodeMargin`, étoiles comprises). */
+export function clearOfRoute(
+  f: Footprint,
+  samples: readonly Point[],
+  nodes: readonly Point[],
+  pathMargin = 6,
+  nodeMargin = 26,
+): boolean {
+  const pathMin = PATH_WIDTH / 2 + pathMargin + f.r;
+  const nodeMin = NODE_SIZE / 2 + nodeMargin + f.r;
+  return (
+    samples.every((p) => (p.x - f.x) ** 2 + (p.y - f.y) ** 2 >= pathMin * pathMin) &&
+    nodes.every((p) => (p.x - f.x) ** 2 + (p.y - f.y) ** 2 >= nodeMin * nodeMin)
+  );
+}
+
+/** Deux ensembles de disques se chevauchent-ils ? */
+export function overlaps(a: readonly Footprint[], b: readonly Footprint[], margin = 0): boolean {
+  return a.some((p) => b.some((q) => (p.x - q.x) ** 2 + (p.y - q.y) ** 2 < (p.r + q.r + margin) ** 2));
+}
+
+export interface SpotQuery {
+  /** Emprise du lieu, relative à son point d'appui (0, 0). */
+  shape: readonly Footprint[];
+  /** Point d'appui souhaité : on prend la place libre la plus proche. */
+  prefer: Point;
+  /** Zone où chercher le point d'appui. */
+  within: { x0: number; x1: number; y0: number; y1: number };
+  samples: readonly Point[];
+  nodes: readonly Point[];
+  /** Emprises déjà prises (autres lieux). */
+  taken?: readonly Footprint[];
+  pathMargin?: number;
+  nodeMargin?: number;
+  /** Pas de la recherche, en px. */
+  step?: number;
+}
+
+/**
+ * Place libre pour un grand lieu (arbre-maison, phare, chalet…) : le point d'appui le plus proche de
+ * `prefer` dans `within` dont toute l'emprise reste à l'écart du chemin, des niveaux et des autres lieux.
+ * Déterministe ; null s'il n'y a pas la place.
+ */
+export function findSpot(q: SpotQuery): Point | null {
+  const step = q.step ?? 8;
+  const candidates: Array<Point & { d: number }> = [];
+  for (let y = q.within.y0; y <= q.within.y1; y += step) {
+    for (let x = q.within.x0; x <= q.within.x1; x += step) {
+      candidates.push({ x, y, d: (x - q.prefer.x) ** 2 + (y - q.prefer.y) ** 2 });
+    }
+  }
+  candidates.sort((a, b) => a.d - b.d || a.y - b.y || a.x - b.x);
+  const near = q.samples.filter((p) => p.y >= q.within.y0 - 400 && p.y <= q.within.y1 + 400);
+  for (const c of candidates) {
+    const placed = q.shape.map((f) => ({ x: c.x + f.x, y: c.y + f.y, r: f.r }));
+    if (!placed.every((f) => clearOfRoute(f, near, q.nodes, q.pathMargin, q.nodeMargin))) continue;
+    if (q.taken && overlaps(placed, q.taken)) continue;
+    return { x: c.x, y: c.y };
+  }
+  return null;
+}
+
 /**
  * Décor d'une bande : grille jittée, hasard déterministe (même carte à chaque visite),
- * sans chevaucher le chemin, les niveaux ni un autre élément. Trié de haut en bas (profondeur).
+ * sans chevaucher le chemin, les niveaux, un autre élément ni les emprises `avoid` (grands lieux).
+ * Trié de haut en bas (profondeur).
  */
 export function placeDecor(
   band: WorldBand,
@@ -559,6 +645,7 @@ export function placeDecor(
   pathSamples: Point[],
   nodes: Point[],
   kindsAt?: (x: number, y: number) => readonly DecorKind[],
+  avoid: readonly Footprint[] = [],
 ): Decor[] {
   const rng = createRng(0x5eed + band.worldIndex * 7919 + Math.round(width));
   const kinds = DECOR_KINDS[band.world];
@@ -595,6 +682,7 @@ export function placeDecor(
         if (hidesSomething) continue;
       }
       if (!placed.every((d) => (d.x - px) ** 2 + (d.y - py) ** 2 >= (d.radius + radius) ** 2 * 0.7)) continue;
+      if (avoid.some((f) => (f.x - px) ** 2 + (f.y - py) ** 2 < (f.r + radius) ** 2)) continue;
       placed.push({ kind: kind.kind, x: px, y: py, scale, flip: rng.next() < 0.5, radius });
     }
   }

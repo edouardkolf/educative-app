@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Planche de contrôle de la carte</title>
+  <style>
+    body { margin: 0; }
+    .node { position: absolute; width: 80px; height: 80px; margin: -40px 0 0 -40px; border-radius: 50%;
+      background: #fff; box-shadow: 0 4px 0 rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center;
+      font: 600 22px system-ui, sans-serif; color: #6b7280; }
+    .node::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: #ffc531; opacity: .9; }
+    .node span { position: relative; z-index: 1; color: #fff; }
+    .backdrops { display: flex; gap: 12px; padding: 12px; }
+    .backdrops > div { position: relative; width: 300px; height: 600px; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="./main.tsx"></script>
+</body>
+</html>

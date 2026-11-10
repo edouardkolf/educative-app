@@ -1,8 +1,7 @@
-// Fond d'une partie : le monde en cours vu de près (mêmes sol et dessins que sur la carte), sous
+// Fond d'une partie : le monde en cours vu de près (dessiné par son module, scenery/*.tsx), sous
 // un voile blanc qui le laisse deviner sans voler l'attention à l'exercice. Purement décoratif.
-import { useMemo } from 'preact/hooks';
-import { BACKDROP_HEIGHT, BACKDROP_WIDTH, backdropDecor, type WorldId } from './layout';
-import { Sprite, THEMES } from './MapScenery';
+import { BACKDROP_HEIGHT, BACKDROP_WIDTH, type WorldId } from './layout';
+import { SCENES } from './scenery';
 
 interface Props {
   world: WorldId;
@@ -11,8 +10,7 @@ interface Props {
 }
 
 export function WorldBackdrop({ world, veil = 'focus' }: Props) {
-  const decor = useMemo(() => backdropDecor(world), [world]);
-  const theme = THEMES[world];
+  const { Backdrop } = SCENES[world];
   return (
     <div
       class={`world-backdrop world-backdrop--${veil}`}
@@ -25,19 +23,7 @@ export function WorldBackdrop({ world, veil = 'focus' }: Props) {
         viewBox={`0 0 ${BACKDROP_WIDTH} ${BACKDROP_HEIGHT}`}
         preserveAspectRatio="xMidYMid slice"
       >
-        <rect x="0" y="0" width={BACKDROP_WIDTH} height={BACKDROP_HEIGHT} fill={theme.ground} />
-        <ellipse cx={BACKDROP_WIDTH * 0.2} cy={BACKDROP_HEIGHT * 0.3} rx="170" ry="90" fill={theme.patch} />
-        <ellipse cx={BACKDROP_WIDTH * 0.85} cy={BACKDROP_HEIGHT * 0.72} rx="190" ry="100" fill={theme.patch} />
-        {decor.map((item, i) => (
-          <g
-            key={i}
-            transform={`translate(${Math.round(item.x)} ${Math.round(item.y)}) scale(${
-              item.flip ? -item.scale : item.scale
-            } ${item.scale})`}
-          >
-            <Sprite kind={item.kind} seed={i} />
-          </g>
-        ))}
+        <Backdrop />
       </svg>
       <div class="world-backdrop__veil" />
     </div>

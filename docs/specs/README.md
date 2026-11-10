@@ -9,6 +9,7 @@ les trois specs le respectent, et en cas de désaccord entre deux specs, c'est l
 | Dictée quotidienne (CE1) | [DICTEE.md](DICTEE.md) | séries de mots, tirage, voix du téléphone, saisie, correction, enregistrements, statistiques |
 | Coloriage magique (MS) | [COLORIAGE.md](COLORIAGE.md) | dessins et zones, code magique, pots et récipient de mélange, progression, enregistrements, statistiques |
 | Morpion et pendu (CE1) | [MORPION-PENDU.md](MORPION-PENDU.md) | lot du 29/10/2026 : deux jeux libres de plus, hub à 4 tuiles, stockage v3 |
+| Carte des mondes | [CARTE-MONDES.md](CARTE-MONDES.md) | lot du 10/11/2026 : refonte visuelle des quatre mondes, un module par monde, fin de chemin au château de nuages |
 
 ## 1. Pourquoi ce lot
 
