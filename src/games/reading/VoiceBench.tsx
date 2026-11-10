@@ -111,7 +111,7 @@ export function VoiceBench() {
                     data-testid="reading-bench-entry"
                     onClick={() => void play(key, e.steps)}
                   >
-                    {on ? '▶ ' : ''}
+                    {on ? '• ' : ''}
                     {e.label}
                   </button>
                 );
