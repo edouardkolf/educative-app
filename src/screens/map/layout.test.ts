@@ -35,6 +35,10 @@ import {
   onMountain,
   SUMMIT_RISE,
   SUMMIT_SPACING,
+  END_RISE,
+  END_ROOM,
+  findSpot,
+  trackEnd,
 } from './layout';
 
 const WIDTH = 412;
@@ -72,13 +76,18 @@ describe('mondes', () => {
 });
 
 describe('chemin', () => {
-  it('passe par chaque niveau et sort de la carte en haut comme en bas', () => {
+  it('passe par chaque niveau, entre par le bas et finit sur sa destination, dans la carte', () => {
     const count = 5;
     const { points, nodeAt } = buildRoute(count, WIDTH);
     expect(nodeAt).toHaveLength(count);
     nodeAt.forEach((k, i) => expect(points[k]).toEqual(nodePosition(i, count, WIDTH)));
     expect(points[0]!.y).toBeGreaterThan(trackHeightFor(count));
-    expect(points[points.length - 1]!.y).toBeLessThan(0);
+    const end = points[points.length - 1]!;
+    expect(end).toEqual(trackEnd(count, WIDTH));
+    expect(end.y).toBeGreaterThan(0);
+    expect(end.y).toBeLessThan(nodePosition(count - 1, count, WIDTH).y - NODE_SIZE);
+    // De la place au-dessus pour le lieu d'arrivée.
+    expect(end.y).toBeGreaterThanOrEqual(END_ROOM - 1);
     expect(pathWaypoints(count, WIDTH)).toEqual(points);
     const d = smoothPathD(points);
     expect(d.startsWith('M ')).toBe(true);
@@ -129,7 +138,8 @@ describe('écart entre niveaux', () => {
 
   it('la carte a la bonne hauteur', () => {
     const count = 20;
-    expect(nodePosition(count - 1, count, WIDTH).y).toBe(120);
+    // Au-dessus du dernier niveau : la fin du chemin et la place de sa destination.
+    expect(nodePosition(count - 1, count, WIDTH).y).toBe(END_RISE + END_ROOM);
     expect(nodePosition(0, count, WIDTH).y).toBe(trackHeightFor(count) - 140);
   });
 });
@@ -329,4 +339,37 @@ describe('montagne', () => {
       expect(decor.some((d) => meadow.has(d.kind))).toBe(true); // la prairie au pied
     });
   }
+});
+
+describe('findSpot', () => {
+  const count = LEVELS_PER_WORLD;
+  const samples = samplePath(pathWaypoints(count, WIDTH));
+  const nodes = Array.from({ length: count }, (_, i) => nodePosition(i, count, WIDTH));
+  const band = worldBands(count)[0]!;
+
+  it("trouve la place libre la plus proche, loin du chemin et des niveaux", () => {
+    const shape = [{ x: 0, y: -30, r: 30 }];
+    const spot = findSpot({
+      shape,
+      prefer: { x: WIDTH / 2, y: (band.top + band.bottom) / 2 },
+      within: { x0: 0, x1: WIDTH, y0: band.top + 100, y1: band.bottom - 100 },
+      samples,
+      nodes,
+    });
+    expect(spot).not.toBeNull();
+    const c = { x: spot!.x, y: spot!.y - 30 };
+    expect(Math.min(...samples.map((p) => Math.hypot(p.x - c.x, p.y - c.y)))).toBeGreaterThanOrEqual(PATH_WIDTH / 2 + 30);
+    expect(Math.min(...nodes.map((p) => Math.hypot(p.x - c.x, p.y - c.y)))).toBeGreaterThanOrEqual(NODE_SIZE / 2 + 30);
+  });
+
+  it("rend null quand rien ne tient", () => {
+    const spot = findSpot({
+      shape: [{ x: 0, y: 0, r: 400 }],
+      prefer: { x: WIDTH / 2, y: band.bottom - 300 },
+      within: { x0: 0, x1: WIDTH, y0: band.bottom - 400, y1: band.bottom - 200 },
+      samples,
+      nodes,
+    });
+    expect(spot).toBeNull();
+  });
 });

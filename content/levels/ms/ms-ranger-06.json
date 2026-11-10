@@ -1,0 +1,17 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-ranger-06",
+  "title": "Ranger : 5 quantités",
+  "skill": "comparison",
+  "objective": "Ranger 5 cartes de points, de 1 à 9, du plus petit au plus grand.",
+  "mechanic": "order",
+  "rounds": 4,
+  "params": {
+    "items": 5,
+    "mode": "quantity",
+    "range": {
+      "min": 1,
+      "max": 9
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-compte-08",
+  "title": "Compter 4 à 6, éparpillés, ciel",
+  "skill": "counting",
+  "objective": "Dénombrer 4 à 6 objets du ciel éparpillés, sans petits nombres faciles, et reconnaître le chiffre.",
+  "mechanic": "count",
+  "rounds": 5,
+  "params": {
+    "min": 4,
+    "max": 6,
+    "objects": [
+      "bird",
+      "butterfly",
+      "bee",
+      "ladybug",
+      "kite",
+      "balloon"
+    ],
+    "layout": "scatter",
+    "choices": 3,
+    "answers": "digits"
+  }
+}

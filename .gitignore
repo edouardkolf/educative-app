@@ -9,3 +9,4 @@ playwright-report
 dist-e2e-*
 test-results-*
 .claude/worktrees/
+map-preview-out/

@@ -1,0 +1,28 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-intrus-09",
+  "title": "Intrus : 6 éléments, forme",
+  "skill": "visual-discrimination",
+  "objective": "Repérer l'élément d'une autre forme parmi six, alors que les couleurs varient.",
+  "mechanic": "odd-one-out",
+  "rounds": 5,
+  "params": {
+    "items": 6,
+    "differBy": "shape",
+    "colors": [
+      "red",
+      "blue",
+      "yellow",
+      "green",
+      "purple"
+    ],
+    "shapes": [
+      "circle",
+      "square",
+      "triangle",
+      "star",
+      "heart"
+    ],
+    "distract": true
+  }
+}

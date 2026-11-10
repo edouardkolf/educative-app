@@ -1,0 +1,19 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-couleurs-04",
+  "title": "Couleurs : les six, sans pause",
+  "skill": "color-mixing",
+  "objective": "Retrouver une couleur mélangée ou pure, six fois de suite, parmi les six couleurs du laboratoire.",
+  "mechanic": "color-mix",
+  "rounds": 6,
+  "params": {
+    "targets": [
+      "orange",
+      "green",
+      "purple",
+      "red",
+      "yellow",
+      "blue"
+    ]
+  }
+}

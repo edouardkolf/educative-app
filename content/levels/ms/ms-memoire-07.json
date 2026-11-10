@@ -1,0 +1,27 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-memoire-07",
+  "title": "Memory : 6 paires, moins d'essais",
+  "skill": "memory",
+  "objective": "Retrouver six paires d'images en ne se trompant que très peu, sur trois grilles.",
+  "mechanic": "memory",
+  "rounds": 3,
+  "params": {
+    "pairs": 6,
+    "objects": [
+      "apple",
+      "dog",
+      "car",
+      "ball",
+      "sunflower",
+      "fish",
+      "butterfly",
+      "train",
+      "cow",
+      "kite",
+      "owl",
+      "drum"
+    ],
+    "maxMisses": 7
+  }
+}

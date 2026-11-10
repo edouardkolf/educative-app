@@ -1,0 +1,18 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-robot-08",
+  "title": "Robot : six rochers",
+  "skill": "logic",
+  "objective": "Guider le robot pas à pas jusqu'au trésor (6 à 8 pas) entre six rochers.",
+  "mechanic": "robot",
+  "rounds": 4,
+  "params": {
+    "size": 5,
+    "obstacles": 6,
+    "mode": "step",
+    "pathLength": {
+      "min": 6,
+      "max": 8
+    }
+  }
+}

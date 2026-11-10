@@ -1,0 +1,46 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-tri-04",
+  "title": "Trier : ferme, mer ou ciel, plus de manches",
+  "skill": "categorization",
+  "objective": "Ranger six animaux dans le bon panier parmi la ferme, la mer et le ciel.",
+  "mechanic": "sort",
+  "rounds": 6,
+  "params": {
+    "groups": [
+      {
+        "id": "farm",
+        "symbol": "🚜",
+        "objects": [
+          "cow",
+          "pig",
+          "sheep",
+          "chicken",
+          "horse"
+        ]
+      },
+      {
+        "id": "sea",
+        "symbol": "🌊",
+        "objects": [
+          "crab",
+          "octopus",
+          "whale",
+          "dolphin",
+          "tropical-fish",
+          "fish"
+        ]
+      },
+      {
+        "id": "sky",
+        "symbol": "☁️",
+        "objects": [
+          "bird",
+          "butterfly",
+          "bee",
+          "owl"
+        ]
+      }
+    ]
+  }
+}

@@ -619,7 +619,7 @@ test.describe('niveaux de maternelle', () => {
 
 // ==================== 3. Alternance et monde de la montagne sur la carte MS ====================
 
-test('carte MS : 60 niveaux, alternance (45, 50, 55, 60) et décor de la montagne au monde 3', async ({ page }) => {
+test('carte MS : 80 niveaux, alternance (45 à 80) et décors de la montagne et des nuages aux mondes 3 et 4', async ({ page }) => {
   test.slow();
   await onboardMs(page, 'Lou');
   await chooseProfile(page, 'Lou');
@@ -628,18 +628,23 @@ test('carte MS : 60 niveaux, alternance (45, 50, 55, 60) et décor de la montagn
   const nodes = page.locator('[data-level]');
   await expect(nodes.first()).toBeVisible();
   const ids = await nodes.evaluateAll((els) => els.map((el) => el.getAttribute('data-level')));
-  expect(ids).toHaveLength(60);
+  expect(ids).toHaveLength(80);
   expect(ids[44]).toBe('ms-robot-04');
   expect(ids[49]).toBe('ms-robot-07');
   expect(ids[54]).toBe('ms-morpion-03');
   expect(ids[59]).toBe('ms-robot-05');
+  expect(ids[64]).toBe('ms-robot-08');
+  expect(ids[69]).toBe('ms-morpion-06');
+  expect(ids[74]).toBe('ms-robot-09');
+  expect(ids[79]).toBe('ms-morpion-07');
   expect(ids).toEqual(TRACK.levels);
 
-  // Trois mondes de 20 : forêt, mer, montagne.
+  // Quatre mondes de 20 : forêt, mer, montagne, nuages.
   const worlds = await nodes.evaluateAll((els) => els.map((el) => el.getAttribute('data-world')));
   expect(worlds.slice(0, 20).every((w) => w === 'forest')).toBe(true);
   expect(worlds.slice(20, 40).every((w) => w === 'sea')).toBe(true);
-  expect(worlds.slice(40).every((w) => w === 'mountain')).toBe(true);
+  expect(worlds.slice(40, 60).every((w) => w === 'mountain')).toBe(true);
+  expect(worlds.slice(60).every((w) => w === 'clouds')).toBe(true);
   // Le décor de la montagne est dessiné sous la carte.
   await expect(page.locator('.screen--map g[data-world="mountain"]').first()).toBeAttached();
   await expect(page.locator('.screen--map g[data-world="sea"]').first()).toBeAttached();

@@ -74,7 +74,7 @@ Deux corrections possibles : ajouter un niveau intermédiaire (du JSON) ou reblo
 Une place sur cinq (5, 10… 60) est un niveau de raisonnement, sans texte (docs/specs/JEUX-LOGIQUE.md). Le code secret
 a été retiré de la carte MS le 29/10 (« trop compliqué en maternelle », retour du PM) : robot et morpion seulement ; il
 reste au CE1. Les quatre places du code (10, 25, 40, 50) ont reçu des niveaux intermédiaires de robot et de morpion. La carte compte
-désormais 20 niveaux par monde : forêt (1–20), mer (21–40), montagne (41–60). Un test vérifie l'alternance au build.
+désormais 20 niveaux par monde : forêt (1–20), mer (21–40), montagne (41–60), nuages (61–80). Un test vérifie l'alternance au build.
 
 | Place | id | Monde | Contenu |
 |---|---|---|---|
@@ -117,6 +117,36 @@ par un niveau avec tutoriel ; le labyrinthe passe de « taper les cases » à «
 | 60 | ms-robot-05 | Robot pas à pas 5×5, 5 rochers, chemin 6–8 |
 
 **Jeu libre memory** (hub de la petite) : ★ 3 paires avec aperçu, ★★ 6 paires, ★★★ 8 paires.
+
+## Monde 4 : les nuages — reprise des mécaniques, un cran au-dessus (10/11/2026)
+
+20 niveaux (61–80), sans texte et sans nouveau jeu (donc aucun tutoriel) : chaque mécanique reprend là où elle s'était
+arrêtée, d'un petit cran. Même alternance : un niveau de raisonnement aux places 65, 70, 75, 80. Thème « ciel » (oiseau,
+papillon, abeille, chouette, coccinelle, cerf-volant, ballon) quand la mécanique a des objets. Les cibles tactiles ne
+descendent pas sous celles du monde 3 : labyrinthe 6×6 au plus, memory 6 paires au plus (7 paires passeraient en grille 4×4).
+
+| Place | id | Contenu |
+|---|---|---|
+| 61 | ms-memoire-06 | Memory 6 paires d'objets du ciel, 9 ratés permis (12 avant) |
+| 62 | ms-ranger-06 | Ranger 5 quantités (1 à 9 points) |
+| 63 | ms-labyrinthe-05 | Labyrinthe 6×6, tracer, chemin d'au moins 16 cases |
+| 64 | ms-suite-10 | Suite ABBC, couleur et forme, trou au milieu, 4 choix |
+| 65 | ms-robot-08 | Robot pas à pas 5×5, 6 rochers, chemin 6–8 |
+| 66 | ms-intrus-08 | Intrus par couleur, 6 éléments, les formes varient |
+| 67 | ms-compte-07 | Compter 3 à 6 objets du ciel éparpillés, 4 choix, chiffres seuls |
+| 68 | ms-tri-04 | Trier 3 paniers (ferme, mer, ciel), 6 manches, poisson de plus dans la mer |
+| 69 | ms-couleurs-04 | Les 6 couleurs du labo, 6 manches |
+| 70 | ms-morpion-06 | Morpion niveau moyen, coup de pouce, on commence toujours, 3 vies |
+| 71 | ms-suite-nature-04 | Suite AABC, animaux du ciel, trou au milieu, 4 choix |
+| 72 | ms-formes-04 | Constructeur : fusée, robot, château, 2 pièces en trop |
+| 73 | ms-ranger-07 | Ranger 5 quantités rapprochées (3 à 9 points) |
+| 74 | ms-labyrinthe-06 | Labyrinthe 6×6, tracer, chemin d'au moins 18 cases |
+| 75 | ms-robot-09 | Robot pas à pas 5×5, 7 rochers, chemin 7–9 |
+| 76 | ms-memoire-07 | Memory 6 paires, 7 ratés permis, 3 grilles |
+| 77 | ms-intrus-09 | Intrus par forme, 6 éléments, les couleurs varient |
+| 78 | ms-compte-08 | Compter 4 à 6 objets du ciel éparpillés, 3 choix |
+| 79 | ms-suite-11 | Suite AABB, couleur et forme, trou au milieu, 4 choix |
+| 80 | ms-morpion-07 | Morpion niveau moyen, sans coup de pouce, on commence toujours, 3 vies |
 
 ## Jeu libre : le coloriage magique (hors carte)
 

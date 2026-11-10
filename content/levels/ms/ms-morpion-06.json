@@ -1,0 +1,15 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-morpion-06",
+  "title": "Morpion : niveau moyen avec coup de pouce",
+  "skill": "logic",
+  "objective": "Aligner trois symboles contre un téléphone plus malin, avec un coup de pouce.",
+  "mechanic": "tictactoe",
+  "rounds": 2,
+  "lives": 3,
+  "params": {
+    "level": "medium",
+    "hint": true,
+    "childStarts": "always"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-10",
+  "title": "Suite ABBC",
+  "skill": "patterns",
+  "objective": "Retrouver l'élément manquant au milieu d'une suite ABBC de formes et de couleurs.",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "ABBC",
+    "vary": "both",
+    "colors": [
+      "blue",
+      "red",
+      "green",
+      "yellow"
+    ],
+    "shapes": [
+      "circle",
+      "square",
+      "triangle",
+      "star"
+    ],
+    "length": 9,
+    "blank": "middle",
+    "choices": 4
+  }
+}

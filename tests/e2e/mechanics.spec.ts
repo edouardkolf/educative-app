@@ -15,7 +15,7 @@ function shot(name: string): string {
   return `${SHOTS_DIR}/${name}`;
 }
 
-// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte MS a 60 niveaux ----------
+// ---------- Contenu lu depuis content/ (fs), jamais codé en dur : la carte MS a 80 niveaux ----------
 
 interface TrackJson {
   levels: string[];
@@ -490,7 +490,7 @@ test('écran de fin (minuteur de session atteint) : visuel de nuit', async ({ pa
 // ==================== 7. Mise en page des niveaux MS (test paramétré, standard + petit téléphone) ====================
 
 test('mise en page : tous les niveaux MS tiennent à l\'écran, en standard et sur petit téléphone (360×640)', async ({ page }) => {
-  test.setTimeout(420_000); // 60 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
+  test.setTimeout(560_000); // 80 niveaux × 2 tailles d'écran : plus que les 30 s (même triplées) par défaut.
   await onboardWithChild(page, 'Zoé', { sessionMinutes: '', dailyMinutes: '' });
 
   // Débloque tous les niveaux d'un coup depuis les statistiques de l'enfant : plus rapide et tout

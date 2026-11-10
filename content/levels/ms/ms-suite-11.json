@@ -1,0 +1,28 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-suite-11",
+  "title": "Suite AABB",
+  "skill": "patterns",
+  "objective": "Retrouver l'élément manquant au milieu d'une suite AABB de formes et de couleurs.",
+  "mechanic": "sequence",
+  "rounds": 5,
+  "params": {
+    "pattern": "AABB",
+    "vary": "both",
+    "colors": [
+      "blue",
+      "red",
+      "green",
+      "yellow"
+    ],
+    "shapes": [
+      "circle",
+      "square",
+      "triangle",
+      "star"
+    ],
+    "length": 9,
+    "blank": "middle",
+    "choices": 4
+  }
+}

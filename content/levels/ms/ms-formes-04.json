@@ -1,0 +1,21 @@
+{
+  "$schema": "../../level.schema.json",
+  "id": "ms-formes-04",
+  "title": "Formes : fusée, robot, château",
+  "skill": "shapes",
+  "objective": "Reconstituer les figures les plus riches, avec deux pièces en trop qui ne vont nulle part.",
+  "mechanic": "builder",
+  "rounds": 3,
+  "stars": {
+    "maxMissesFor3": 1,
+    "maxMissesFor2": 3
+  },
+  "params": {
+    "figures": [
+      "rocket",
+      "robot",
+      "castle"
+    ],
+    "distractors": 2
+  }
+}
