@@ -55,8 +55,11 @@ En portrait, sans défilement, du 360×640 au Pixel 7 :
 [fiole rouge] [fiole jaune]     [récipient]     [fiole bleue]
 ```
 - Dessin : côté = min(largeur − 24 px, 440 px, hauteur restante), **au moins 300 px à 360×640** (`WORST_DRAWING_PX`).
-  Contours en `var(--ink)`, de 3 px (`vector-effect: non-scaling-stroke`). Cases à peindre et blancs en `#ffffff`,
-  cases peintes en `COLOR_HEX` (`src/ui/palette.ts`).
+  Contours en `var(--ink)`, de 3 px à bouts arrondis (`vector-effect: non-scaling-stroke`), conservés une fois la case
+  peinte : deux voisines de même couleur restent distinctes. Sur une vignette (écran de choix, frigo), le trait
+  s'affine avec la taille (0,88 % du côté, entre 1,2 et 3 px). Les détails et les blancs `thin` sont tracés aux deux
+  tiers. Cases à peindre et blancs en `#ffffff`, cases peintes en `COLOR_HEX` (`src/ui/palette.ts`). Les codes au trait
+  (forme, dé) ont un fond blanc, pour rester lisibles par-dessus les détails à l'encre.
 - Fioles : le `Flask` du labo (≥ 72 px, `data-choice="red|yellow|blue"`), placées comme au labo : rouge et jaune à
   gauche, bleu à droite. Récipient : l'`Erlenmeyer` du labo en réduit (≥ 88 × 100 px), `data-choice="cup"`. Il porte
   `data-drops="red,yellow"` et `data-paint="orange|none"`, invisibles, pour les tests.
@@ -230,7 +233,9 @@ export type Primitive =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; r?: number } // (x, y) = coin haut-gauche
   | { kind: 'circle'; cx: number; cy: number; r: number }
   | { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
-  | { kind: 'polygon'; points: [number, number][] }; // triangles, toits, vagues en ligne brisée
+  | { kind: 'polygon'; points: [number, number][] } // triangles, toits, étoiles
+  | { kind: 'path'; d: string }; // forme libre fermée (colline, buisson, algue) : M L H V C S Q T Z, pas d'arc
+export type PieceCategory = 'rect' | 'circle' | 'triangle';
 export type Detail = 1 | 2 | 3;
 export type LifeAnimation = 'pulse' | 'drift' | 'bob' | 'sway' | 'twinkle';
 interface LayerBase {
@@ -238,6 +243,7 @@ interface LayerBase {
   detail: Detail; // présent à partir de ce niveau de détail
   life?: LifeAnimation; // mouvement quand le dessin prend vie
   piece?: true; // pièce de la figure : une par emplacement de FIGURES[figure].slots
+  pieceAs?: PieceCategory; // pièce en forme libre (sapin à étages) : la forme du constructeur qu'elle remplace
 }
 export interface ZoneLayer extends LayerBase {
   kind: 'zone';
@@ -247,8 +253,8 @@ export interface ZoneLayer extends LayerBase {
   pair?: string; // cases jumelles, toujours de la même couleur (roues, fenêtres)
   differentFrom?: string[]; // voisines jamais de la même couleur (toit et ciel)
 }
-export interface BlankLayer extends LayerBase { kind: 'blank'; endOnly?: true } // reste blanc (nuage, neige, voile)
-export interface InkLayer { kind: 'ink'; d: string; detail: Detail; filled?: true; life?: LifeAnimation; endOnly?: true }
+export interface BlankLayer extends LayerBase { kind: 'blank'; endOnly?: true; thin?: true } // reste blanc (nuage, neige)
+export interface InkLayer { kind: 'ink'; d: string; detail: Detail; filled?: true; thin?: true; life?: LifeAnimation; endOnly?: true }
 export type Layer = ZoneLayer | BlankLayer | InkLayer; // ordre du tableau = ordre de peinture (fond d'abord)
 export interface Subject { figure: FigureId; endAnimation: EndAnimation; layers: Layer[] }
 export interface Drawing { id: string; background: Layer[]; subjects: [Subject] | [Subject, Subject]; foreground?: Layer[] }
@@ -279,7 +285,8 @@ Pourquoi des primitives plutôt que des chemins SVG libres : le test « point da
    distinctes au niveau 1, et au moins 12 aux niveaux 2 et 3.
 7. Pour chaque sujet, les calques `piece` (cases ou blancs) correspondent un à un aux emplacements de
    `FIGURES[figure].slots` : `rect` pour un carré ou un rectangle, `circle` pour un cercle, un polygone à 3 points pour
-   un triangle. L'enfant reconnaît sa fusée du constructeur, et la variante « construire puis colorier » (§10) sera
+   un triangle. Une pièce en forme libre (sapin à étages, coque arrondie, tour crénelée) déclare avec `pieceAs` la
+   forme qu'elle remplace, et doit rester reconnaissable comme telle. L'enfant reconnaît sa fusée du constructeur, et la variante « construire puis colorier » (§10) sera
    possible sans migration. Les proportions peuvent être adaptées au décor et à la règle 2 : les ailerons de la fusée
    (14 × 18) doivent par exemple grandir pour contenir le disque d'ancre.
 
@@ -329,9 +336,20 @@ export const house: Drawing = { // aides de catalog/build.ts : zone(id, formes, 
 };
 ```
 
+### 4.4 bis Style des dessins (refonte du 10/11/2026)
+Le sujet garde ses pièces du constructeur, adoucies (coins arrondis, débords). Le décor est organique : sols et
+collines en courbes, nuages, buissons, algues, vraies étoiles (`star`), fleurs à pétales (`ring`). Chaque dessin porte
+quelques détails à l'encre (croisillons, poignée, yeux, tuiles), non tapables, au niveau de détail de la case qu'ils
+décorent. Une case fait au moins 14 unités de large et de haut autour de son ancre : le dé (10 × 10) ne la masque
+jamais entièrement. Les fonds (ciel, eau) couvrent toute la feuille et le sol est dessiné par-dessus. L'exemple du
+§4.4 date d'avant la refonte : `catalog/house.ts` fait foi.
+`npm run preview:coloring -- <dossier> [id…]` écrit la planche de contrôle d'un dessin (3 niveaux, à colorier puis
+colorié), rendue par le vrai `DrawingView`. Le tap et les règles du §4.2 aplatissent les formes libres en polygones
+(`flattenPath`, `geometry.ts`).
+
 ### 4.5 Ajouter un dessin
 Pour ajouter un dessin, on crée `catalog/<id>.ts` avec les aides de `catalog/build.ts` (`rect`, `circle`, `ellipse`,
-`poly`, `zone`, `blank`, `ink`), puis on l'ajoute à `DRAWINGS` dans `catalog/index.ts`. On lance ensuite `npm test` :
+`poly`, `path`, `star`, `ring`, `dot`, `rays`, `zone`, `blank`, `ink`), puis on l'ajoute à `DRAWINGS` dans `catalog/index.ts`. On lance ensuite `npm test` :
 les règles du §4.2 disent quelle ancre corriger. Ce sont des données seulement : aucun écran, aucun stockage, aucune
 migration. Il ne faut jamais renommer l'id d'une case publiée : un coloriage en cours ne serait plus reprenable (§7).
 

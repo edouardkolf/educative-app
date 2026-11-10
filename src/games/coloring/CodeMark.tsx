@@ -29,7 +29,8 @@ const HEART_PATH =
   'C 50 14 52 6 60 6 C 74 6 90 14 90 32 C 90 58 50 88 50 88 Z';
 
 function ShapeOutline({ shape }: { shape: Exclude<CodeSymbol, `dice-${number}`> }) {
-  const common = { fill: 'none', stroke: 'var(--ink)', 'stroke-width': 6, 'stroke-linejoin': 'round' as const };
+  // Fond blanc : le code reste lisible par-dessus les détails au trait du dessin.
+  const common = { fill: '#ffffff', stroke: 'var(--ink)', 'stroke-width': 6, 'stroke-linejoin': 'round' as const };
   switch (shape) {
     case 'circle':
       return <circle cx={50} cy={50} r={40} {...common} />;
@@ -53,7 +54,7 @@ function DiceOutline({ symbol }: { symbol: `dice-${1 | 2 | 3 | 4 | 5 | 6}` }) {
   const dots = dotPositions(n);
   return (
     <g>
-      <rect x={6} y={6} width={88} height={88} rx={14} fill="none" stroke="var(--ink)" stroke-width={5} />
+      <rect x={6} y={6} width={88} height={88} rx={14} fill="#ffffff" stroke="var(--ink)" stroke-width={5} />
       {dots.map((d, i) => (
         <circle key={i} cx={10 + d.x * 80} cy={10 + d.y * 80} r={7} fill="var(--ink)" />
       ))}

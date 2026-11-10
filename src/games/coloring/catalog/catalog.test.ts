@@ -6,7 +6,7 @@ import { FIGURES } from '../../../mechanics/builder/figures';
 import type { BuilderShape } from '../../../mechanics/builder/figures';
 import { ANCHOR_R, MIN_ANCHOR_GAP, ZONES_PER_DETAIL } from '../model';
 import type { Detail, Drawing, Layer, Primitive, ZoneLayer } from '../model';
-import { pointInUnion } from '../geometry';
+import { flattenPath, pointInUnion } from '../geometry';
 import { DRAWINGS } from './index';
 
 const DETAILS: Detail[] = [1, 2, 3];
@@ -40,6 +40,13 @@ function primitiveBounds(shape: Primitive): { minX: number; maxX: number; minY: 
     case 'polygon': {
       const xs = shape.points.map((p) => p[0]);
       const ys = shape.points.map((p) => p[1]);
+      return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+    }
+    case 'path': {
+      const points = flattenPath(shape.d).flat();
+      expect(points.length).toBeGreaterThanOrEqual(3);
+      const xs = points.map((p) => p[0]);
+      const ys = points.map((p) => p[1]);
       return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
     }
     default:
@@ -91,8 +98,9 @@ describe.each(DRAWINGS.map((d) => [d.id, d] as const))('dessin %s', (_id, drawin
     it('règle 2 : le disque d’ancre est dans sa case, aucun calque plus haut ne le recouvre', () => {
       zones.forEach((zone) => {
         const disk = anchorDisk(zone.anchor);
+        const at = (point: { x: number; y: number }) => `(${point.x.toFixed(1)}, ${point.y.toFixed(1)})`;
         for (const point of disk) {
-          expect(pointInUnion(point, zone.shape)).toBe(true);
+          expect(pointInUnion(point, zone.shape), `l'ancre de « ${zone.id} » sort de sa case en ${at(point)}`).toBe(true);
         }
         // Calques strictement au-dessus (indices suivants dans l'ordre de peinture), encre exclue.
         const zoneIndex = layers.indexOf(zone);
@@ -100,8 +108,11 @@ describe.each(DRAWINGS.map((d) => [d.id, d] as const))('dessin %s', (_id, drawin
           const above = layers[i] as Layer;
           if (above.kind === 'ink') continue;
           if (above.kind === 'zone' && above.id === zone.id) continue;
+          const aboveName = above.kind === 'zone' ? `« ${above.id} »` : 'un blanc';
           for (const point of disk) {
-            expect(pointInUnion(point, above.shape)).toBe(false);
+            expect(pointInUnion(point, above.shape), `l'ancre de « ${zone.id} » est recouverte par ${aboveName} en ${at(point)}`).toBe(
+              false,
+            );
           }
         }
       });
@@ -162,6 +173,8 @@ describe.each(DRAWINGS.map((d) => [d.id, d] as const))('dessin %s', (_id, drawin
       const slotCategories = countBy(slots.map((s) => categoryOf(s.shape)));
       const pieceCategories = countBy(
         pieces.map((piece) => {
+          // Pièce en forme libre (sapin à étages, coque arrondie) : elle déclare la forme remplacée.
+          if (piece.pieceAs) return piece.pieceAs;
           expect(piece.shape.length).toBe(1);
           const primitive = piece.shape[0] as Primitive;
           if (primitive.kind === 'rect') return 'rect';
@@ -170,7 +183,7 @@ describe.each(DRAWINGS.map((d) => [d.id, d] as const))('dessin %s', (_id, drawin
             expect(primitive.points.length).toBe(3);
             return 'triangle';
           }
-          throw new Error(`pièce de forme inattendue : ${primitive.kind}`);
+          throw new Error(`pièce de forme inattendue sans pieceAs : ${primitive.kind}`);
         }),
       );
       expect(pieceCategories).toEqual(slotCategories);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pointInPrimitive, pointInUnion, resolveTap } from './geometry';
+import { flattenPath, pointInPrimitive, pointInUnion, resolveTap } from './geometry';
 import type { Layer, Primitive } from './model';
 
 describe('pointInPrimitive', () => {
@@ -103,5 +103,43 @@ describe('resolveTap', () => {
 
   it('hors dessin : null', () => {
     expect(resolveTap({ x: 500, y: 500 }, layers, new Set(), 1)).toBe(null);
+  });
+});
+
+describe('flattenPath et primitive path', () => {
+  it('droites absolues et relatives : un carré', () => {
+    expect(flattenPath('M10 10 H20 V20 H10 Z')).toEqual([[[10, 10], [20, 10], [20, 20], [10, 20]]]);
+    expect(flattenPath('m10 10 h10 v10 h-10 z')).toEqual([[[10, 10], [20, 10], [20, 20], [10, 20]]]);
+  });
+
+  it('courbes : une colline contient ce qui est sous sa crête, pas ce qui est au-dessus', () => {
+    const hill: Primitive = { kind: 'path', d: 'M0 80 C20 76 35 77 50 79 S85 81 100 77 V100 H0 Z' };
+    expect(pointInPrimitive({ x: 50, y: 90 }, hill)).toBe(true);
+    expect(pointInPrimitive({ x: 50, y: 70 }, hill)).toBe(false);
+    expect(pointInPrimitive({ x: 25, y: 78.5 }, hill)).toBe(true);
+    expect(pointInPrimitive({ x: 25, y: 75 }, hill)).toBe(false);
+  });
+
+  it('quadratiques enchaînées (Q puis T) et sous-chemins multiples', () => {
+    const rings = flattenPath('M0 0 Q5 10 10 0 T20 0 V-20 H0 Z M30 0 L40 0 L35 10 Z');
+    expect(rings.length).toBe(2);
+    const shape: Primitive = { kind: 'path', d: 'M0 0 Q5 10 10 0 T20 0 V-20 H0 Z M30 0 L40 0 L35 10 Z' };
+    expect(pointInPrimitive({ x: 5, y: 3 }, shape)).toBe(true); // sous la première bosse
+    expect(pointInPrimitive({ x: 15, y: -10 }, shape)).toBe(true); // la deuxième bosse rentre vers le haut
+    expect(pointInPrimitive({ x: 15, y: -3 }, shape)).toBe(false);
+    expect(pointInPrimitive({ x: 35, y: 5 }, shape)).toBe(true);
+  });
+
+  it('un chemin qui revient à son départ avant Z ne contient pas tout le plan', () => {
+    const shell: Primitive = { kind: 'path', d: 'M10 10 L20 10 L20 20 L10 20 L10 10 Z' };
+    expect(flattenPath(shell.d)[0]?.length).toBe(4);
+    expect(pointInPrimitive({ x: 90, y: 90 }, shell)).toBe(false);
+    const degenerate: Primitive = { kind: 'polygon', points: [[0, 0], [10, 0], [10, 10], [0, 0], [0, 0]] };
+    expect(pointInPrimitive({ x: 90, y: 90 }, degenerate)).toBe(false);
+  });
+
+  it('refuse les arcs et les chemins invalides', () => {
+    expect(() => flattenPath('M0 0 A5 5 0 0 1 10 0 Z')).toThrow();
+    expect(() => flattenPath('10 10 L20 20')).toThrow();
   });
 });

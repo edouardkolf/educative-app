@@ -8,7 +8,13 @@ export type Primitive =
   | { kind: 'rect'; x: number; y: number; w: number; h: number; r?: number } // (x, y) = coin haut-gauche
   | { kind: 'circle'; cx: number; cy: number; r: number }
   | { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
-  | { kind: 'polygon'; points: [number, number][] }; // triangles, toits, vagues en ligne brisée
+  | { kind: 'polygon'; points: [number, number][] } // triangles, toits, étoiles
+  // Forme libre (collines, buissons, algues) : un chemin SVG fermé, en commandes M L H V C S Q T Z
+  // (absolues ou relatives, pas d'arc). Le tap et les règles du §4.2 l'aplatissent en polygone.
+  | { kind: 'path'; d: string };
+
+/** Catégorie d'une pièce du constructeur (règle 7 du §4.2). */
+export type PieceCategory = 'rect' | 'circle' | 'triangle';
 
 export type Detail = 1 | 2 | 3;
 export type LifeAnimation = 'pulse' | 'drift' | 'bob' | 'sway' | 'twinkle';
@@ -22,6 +28,8 @@ interface LayerBase {
   life?: LifeAnimation;
   /** Pièce de la figure : une par emplacement de FIGURES[figure].slots. */
   piece?: true;
+  /** Pièce dessinée en forme libre (sapin à étages) : la forme du constructeur qu'elle remplace. */
+  pieceAs?: PieceCategory;
 }
 
 export interface ZoneLayer extends LayerBase {
@@ -42,6 +50,8 @@ export interface ZoneLayer extends LayerBase {
 export interface BlankLayer extends LayerBase {
   kind: 'blank';
   endOnly?: true;
+  /** Contour fin (flocons, bulles, cœur de fleur). */
+  thin?: true;
 }
 
 /** Trait d'encre (yeux, rayons, tirets) : jamais tapable, laisse passer le tap à la case du dessous. */
@@ -50,6 +60,8 @@ export interface InkLayer {
   d: string;
   detail: Detail;
   filled?: true;
+  /** Trait fin, pour les détails (croisillons, tuiles, rubans). */
+  thin?: true;
   life?: LifeAnimation;
   endOnly?: true;
 }

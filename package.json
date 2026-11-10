@@ -11,7 +11,8 @@
     "test": "vitest run",
     "validate:content": "vitest run content.test catalog.test",
     "test:e2e": "playwright test",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "preview:coloring": "node scripts/coloring-preview.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fredoka": "^5.3.0",

@@ -43,6 +43,8 @@ function renderPrimitive(shape: Primitive, key: number) {
       return <ellipse key={key} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} />;
     case 'polygon':
       return <polygon key={key} points={shape.points.map(([x, y]) => `${x},${y}`).join(' ')} />;
+    case 'path':
+      return <path key={key} d={shape.d} />;
     default:
       return null;
   }
@@ -110,6 +112,11 @@ export function DrawingView(props: DrawingViewProps) {
     showCodes = true,
   } = props;
 
+  // Contour : 3 px sur la feuille de jeu, plus fin sur une vignette (écran de choix, frigo), pour
+  // qu'il ne mange pas les petites cases. Le trait fin (détails) suit la même échelle.
+  const strokePx = Math.max(1.2, Math.min(3, sizePx * 0.0088));
+  const thinPx = strokePx * 0.66;
+
   const targetById = new Map(targets.map((z) => [z.id, z.target]));
   const zones = visibleZones(drawing, detail);
 
@@ -146,7 +153,9 @@ export function DrawingView(props: DrawingViewProps) {
           d={layer.d}
           fill={layer.filled ? 'var(--ink)' : 'none'}
           stroke={layer.filled ? 'none' : 'var(--ink)'}
-          stroke-width={3}
+          stroke-width={layer.thin ? thinPx : strokePx}
+          stroke-linecap="round"
+          stroke-linejoin="round"
           vector-effect="non-scaling-stroke"
           class={lifeClass(layer)}
         />
@@ -161,9 +170,39 @@ export function DrawingView(props: DrawingViewProps) {
     ]
       .filter(Boolean)
       .join(' ');
+    const width = layer.kind === 'blank' && layer.thin ? thinPx : strokePx;
+    const shapes = layer.shape.map((shape, i) => renderPrimitive(shape, i));
+    // Une union (nuage, fleur) ne montre que son contour extérieur : le trait est tracé deux fois
+    // plus épais, puis le remplissage sans trait vient recouvrir sa moitié intérieure.
+    if (layer.shape.length > 1) {
+      return (
+        <g key={key} class={classes} fill={fillFor(layer)}>
+          <g
+            class="clr-outline"
+            fill="var(--ink)"
+            stroke="var(--ink)"
+            stroke-width={width * 2}
+            stroke-linejoin="round"
+            vector-effect="non-scaling-stroke"
+          >
+            {layer.shape.map((shape, i) => renderPrimitive(shape, i))}
+          </g>
+          {shapes}
+        </g>
+      );
+    }
     return (
-      <g key={key} class={classes} fill={fillFor(layer)} stroke="var(--ink)" stroke-width={isZone ? 0 : 0}>
-        {layer.shape.map((shape, i) => renderPrimitive(shape, i))}
+      <g
+        key={key}
+        class={classes}
+        fill={fillFor(layer)}
+        stroke="var(--ink)"
+        stroke-width={width}
+        stroke-linejoin="round"
+        stroke-linecap="round"
+        vector-effect="non-scaling-stroke"
+      >
+        {shapes}
       </g>
     );
   }

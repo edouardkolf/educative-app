@@ -20,6 +20,13 @@
   transition: fill 200ms ease;
 }
 
+/* Le contour garde son épaisseur en px quelle que soit la taille du dessin. `vector-effect` ne
+   s'hérite pas : il doit porter sur chaque forme, pas sur le groupe. */
+.clr-zone *,
+.clr-blank * {
+  vector-effect: non-scaling-stroke;
+}
+
 .clr-zone--spread {
   animation: clr-spread 350ms ease-out;
 }
