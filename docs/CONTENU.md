@@ -342,7 +342,7 @@ Voir `docs/PROGRESSION-MS.md` (moyenne section) et `docs/PROGRESSION-CE1.md` (CE
 
 ## Contenu des jeux libres (hors parcours)
 
-Les deux jeux libres du hub ne sont pas des niveaux : leur contenu est en TypeScript, et `npm run validate:content`
+Les jeux libres du hub ne sont pas des niveaux : leur contenu est en TypeScript, et `npm run validate:content`
 le vérifie aussi (`content.test` et `catalog.test`). Un contenu invalide fait échouer le build, comme un niveau.
 
 ### Dictée quotidienne : ajouter une série
@@ -371,3 +371,22 @@ couleur naturelle) et l'ancre de son code. `npm run validate:content` dit quelle
 
 **Ne jamais renommer l'id d'une case publiée** : un dessin en cours ne serait plus reprenable. Détails :
 `docs/specs/COLORIAGE.md` §4.
+
+### Lecture : ajouter une image, un mot à lire, corriger une voix
+
+Tout est dans `src/games/reading/` ; `npm run validate:content` passe aussi `content.test.ts` (images, familles,
+mots déchiffrables, syllabes). Détails : `docs/specs/LECTURE.md` §3 et §6.
+
+- **Ajouter une image** : ajouter l'émoji dans le bloc « src/games/reading/pictures.ts » de `scripts/fetch-emoji.mjs`,
+  lancer le script (il télécharge le SVG Noto dans `public/emoji/`), puis ajouter l'entrée à `PICTURES` : `word` sans
+  article, `article`, `syllables` ORALES (celles qu'on tape au tambour, 1 à 3), `firstSound` (graphème du premier son,
+  `null` s'il n'est pas au programme : jamais `s` pour un mot en « ch », ni `o` pour « ou/on/oi »), `rhyme` (même clé
+  pour les mots qui riment). `src/ui/emoji-files.test.ts` vérifie que le fichier existe. Mot connu d'une enfant de 4 ans,
+  image sans ambiguïté.
+- **Ajouter un mot à lire** (jeu « mot mystère », étape 5) : une entrée de `READ_WORDS` en capitales, avec ses
+  `syllables` écrites et une `picture` existante. Le mot doit être déchiffrable avec les graphèmes n° 1 à 23, sans
+  lettre muette ni double consonne ; le test le refuse sinon.
+- **Corriger un texte de voix** : les sons des lettres sont dans `speech.ts` (« meu », « leu »…), les syllabes mal lues
+  dans la table `SYLLABLE_SPEECH`, les consignes dans `gameInstruction` et les `prompt` de `session.ts`. Repérer d'abord
+  le son qui sonne faux avec le **banc d'écoute** (espace parent, statistiques de l'enfant, « Banc d'écoute de la voix »),
+  qui dit tout ce que la voix peut prononcer en isolé, sur le téléphone de l'enfant.

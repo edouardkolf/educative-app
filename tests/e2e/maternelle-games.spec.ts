@@ -214,9 +214,9 @@ test.describe('jeu libre memory', () => {
   test('★ : 3 paires (aperçu), toutes retrouvées, une manche résolue, nouvelle manche', async ({ page }) => {
     await onboardMs(page, 'Mila');
     await chooseProfile(page, 'Mila');
-    // Hub MS : 6 tuiles par défaut (carte + coloriage, robot, memory, ranger, labyrinthe).
-    await expect(page.getByTestId('hub').locator('[data-testid^="hub-tile-"]')).toHaveCount(6);
-    for (const tile of ['map', 'coloring', 'robot', 'memory', 'order', 'maze']) {
+    // Hub MS : 7 tuiles par défaut (carte + coloriage, lecture, robot, memory, ranger, labyrinthe).
+    await expect(page.getByTestId('hub').locator('[data-testid^="hub-tile-"]')).toHaveCount(7);
+    for (const tile of ['map', 'coloring', 'reading', 'robot', 'memory', 'order', 'maze']) {
       await expect(page.getByTestId(`hub-tile-${tile}`)).toBeVisible();
     }
     await openFreeMemory(page);

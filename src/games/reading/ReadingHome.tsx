@@ -103,7 +103,7 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
                 )}
                 {state === 'locked' && (
                   <span class="rd-medal__badge rd-medal__badge--lock" aria-hidden="true">
-                    <Icon name="lock" size="100%" />
+                    <Icon name="lock" size="68%" />
                   </span>
                 )}
               </button>

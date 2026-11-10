@@ -10,6 +10,7 @@ les trois specs le respectent, et en cas de désaccord entre deux specs, c'est l
 | Coloriage magique (MS) | [COLORIAGE.md](COLORIAGE.md) | dessins et zones, code magique, pots et récipient de mélange, progression, enregistrements, statistiques |
 | Morpion et pendu (CE1) | [MORPION-PENDU.md](MORPION-PENDU.md) | lot du 29/10/2026 : deux jeux libres de plus, hub à 4 tuiles, stockage v3 |
 | Carte des mondes | [CARTE-MONDES.md](CARTE-MONDES.md) | lot du 10/11/2026 : refonte visuelle des quatre mondes, un module par monde, fin de chemin au château de nuages |
+| J'apprends à lire (MS) | [LECTURE.md](LECTURE.md) | lot du 10/11/2026 : programme de lecture en 5 étapes (huit jeux, voix du téléphone, maîtrise par item), accueil propre, store `readings`, stockage v5 et export v5, hub MS à 7 tuiles |
 
 ## 1. Pourquoi ce lot
 
@@ -152,3 +153,14 @@ ont été alignées sur ces décisions ; en cas d'écart restant, ce tableau fai
 | A10 | Documentation | T5 (HUB.md) tient `ARCHITECTURE.md`, `CONTENU.md` et les deux `PROGRESSION-*.md` pendant ce lot, y compris l'exception du clavier (§9). | Pas deux tâches sur un même fichier. |
 | A11 | E2E | Tous les nouveaux tests passent par `tests/e2e/nav.ts` (T3). | Une seule façon d'aller au hub. |
 | A12 | Contenu au build | T2 passe `validate:content` à `vitest run content.test catalog.test` (exception assumée à la règle « pas de `package.json` »). | Un mot ou un dessin invalide casse le build, comme un niveau. |
+
+### Lot « J'apprends à lire » (10/11/2026)
+
+`LECTURE.md` suit le cadre ci-dessus ; ses choix propres :
+
+| # | Sujet | Décision |
+|---|---|---|
+| A13 | Écran | Un accueil propre au programme (cinq médaillons) entre la tuile et la séance : la tuile ne lance pas de séance elle-même. |
+| A14 | Progression | Jamais stockée : `computeProgress` rejoue les séances (comme les étoiles). Réglage parent : `gameSettings.reading.startStage`. |
+| A15 | Voix | Même vérification que la dictée (`checkAvailability`) ; la voix indisponible bloque tout l'accueil, car aucune consigne n'est écrite. |
+| A16 | E2E | `reading.spec.ts` joue des séances complètes via `data-answer` ; les étapes 3 à 5 s'atteignent par « étape de départ ». |
