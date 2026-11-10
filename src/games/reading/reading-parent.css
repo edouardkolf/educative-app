@@ -1,0 +1,38 @@
+/* Bloc parent « J'apprends à lire » : grille des items, confusions, alertes, banc d'écoute. */
+.rp-stage { display: flex; flex-direction: column; gap: 6px; }
+.rp-stage__title { font-size: 16px; font-weight: 700; }
+.rp-items { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.rp-item {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-width: 64px; padding: 6px 10px; border-radius: 12px; border: 2px solid var(--pa-border);
+  background: var(--pa-surface); text-align: center; line-height: 1.2;
+}
+.rp-item__label { font-size: 17px; font-weight: 700; }
+.rp-item__rate { font-size: 13px; color: var(--pa-muted); }
+.rp-item--wide { min-width: 0; flex-basis: 100%; flex-direction: row; justify-content: space-between; gap: 10px; }
+.rp-item--wide .rp-item__label { font-size: 15px; }
+.rp-item[data-state='new'] { border-color: #c9c2b6; background: #f0ede7; }
+.rp-item[data-state='learning'] { border-color: #e0861a; background: #fff1dc; }
+.rp-item[data-state='acquired'] { border-color: var(--pa-success); background: var(--pa-success-bg); }
+.rp-item__dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; display: inline-block; }
+.rp-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; color: var(--pa-muted); }
+.rp-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.rp-legend [data-state='new'] { color: #8a8478; }
+.rp-legend [data-state='learning'] { color: #e0861a; }
+.rp-legend [data-state='acquired'] { color: var(--pa-success); }
+.rp-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.rp-table th, .rp-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--pa-border); }
+.rp-alert { background: #fff1dc; border: 2px solid #e0861a; border-radius: 12px; padding: 10px 12px; margin: 0; }
+.rp-alert__title { font-weight: 700; }
+.rp-bench { border: 2px solid var(--pa-border); border-radius: 12px; padding: 8px 12px; background: var(--pa-surface); }
+.rp-bench > summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; cursor: pointer; }
+.rp-bench__group { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.rp-bench__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.rp-bench__list { display: flex; flex-wrap: wrap; gap: 8px; }
+.rp-bench__btn {
+  min-height: 44px; padding: 6px 12px; border-radius: 10px; border: 2px solid var(--pa-border);
+  background: var(--pa-surface); color: var(--pa-text); font: inherit; font-size: 15px; cursor: pointer;
+}
+.rp-bench__btn[aria-pressed='true'] { border-color: var(--pa-focus); background: color-mix(in srgb, var(--pa-focus) 16%, var(--pa-surface)); }
+.rp-bench__all { min-height: 44px; padding: 6px 14px; }
+.rp-select { width: 100%; min-height: 48px; font: inherit; font-size: 16px; }
