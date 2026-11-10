@@ -1,5 +1,7 @@
 // Vue de la mécanique « maze ». Aucun texte : labyrinthe SVG, animal, nourriture.
 // Mode « tap » : on tape la case voisine. Mode « trace » : on glisse le doigt depuis l'animal.
+// Dans les deux modes le glissement depuis l'animal fonctionne (retour terrain du 10/11 : une enfant de 4 ans glisse par
+// réflexe, même quand le niveau demande de taper) ; le mode décide seulement de ce qu'on lui montre et du repli au tap.
 import type { JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { MechanicViewProps } from '../../engine/types';
@@ -48,6 +50,10 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   const doneRef = useRef(false);
   const strikes = useRef(0);
   const dragging = useRef(false);
+  /** Le doigt a bougé pendant l'appui : le « click » synthétique qui suit le relâcher n'est pas un tap. */
+  const moved = useRef(false);
+  const swallowClick = useRef(false);
+  const [usedDrag, setUsedDrag] = useState(false);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -83,6 +89,10 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   };
 
   const tapCell = (target: Cell) => {
+    if (swallowClick.current) {
+      swallowClick.current = false;
+      return;
+    }
     if (celebrating || doneRef.current) return;
     const res = stepTrail(maze, trailRef.current, target);
     if (res.kind === 'blocked') strike();
@@ -114,14 +124,17 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   };
 
   const onPointerDown = (e: JSX.TargetedPointerEvent<SVGSVGElement>) => {
-    if (!isTrace || celebrating || doneRef.current) return;
+    if (celebrating || doneRef.current) return;
     const cell = cellAt(e.clientX, e.clientY, false);
     if (!cell) return;
     const cur = trailRef.current[trailRef.current.length - 1] as Cell;
+    moved.current = false;
+    swallowClick.current = false;
     if (sameCell(cell, cur)) {
       dragging.current = true;
-    } else if (isNeighbor(cell, cur)) {
-      // Repli : un tap sur la case voisine du bout du trait avance d'une case, puis on peut continuer à glisser.
+    } else if (isTrace && isNeighbor(cell, cur)) {
+      // Repli (mode trace) : un tap sur la case voisine du bout du trait avance d'une case, puis on peut continuer à
+      // glisser. En mode tap, c'est le « click » de la case qui s'en charge (un seul traitement par geste).
       const res = stepTrail(maze, trailRef.current, cell);
       if (res.kind === 'blocked') {
         strike();
@@ -133,6 +146,7 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
       return;
     }
     lastPoint.current = { x: e.clientX, y: e.clientY };
+    setUsedDrag(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
@@ -140,6 +154,7 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
     if (!dragging.current || doneRef.current) return;
     const from = lastPoint.current ?? { x: e.clientX, y: e.clientY };
     const dist = Math.hypot(e.clientX - from.x, e.clientY - from.y);
+    if (dist > 0) moved.current = true;
     const box = svgRef.current?.getBoundingClientRect();
     const stepPx = box ? (box.width / maze.size) * 0.2 : 8;
     const n = Math.max(1, Math.ceil(dist / stepPx));
@@ -154,6 +169,12 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
   };
 
   const onPointerEnd = () => {
+    // Un glissement relâché au-dessus d'une case ne doit pas compter en plus comme un tap sur cette case.
+    if (moved.current) {
+      swallowClick.current = true;
+      timers.current.push(window.setTimeout(() => (swallowClick.current = false), 80));
+    }
+    moved.current = false;
     dragging.current = false;
     lastPoint.current = null;
   };
@@ -167,6 +188,7 @@ function MazeBoard({ round, solved, onChoose }: MechanicViewProps<MazeRoundData>
     <div
       class="maze-view"
       data-mode={d.mode}
+      data-drag={usedDrag ? '1' : undefined}
       data-size={maze.size}
       data-start={`${d.start.r},${d.start.c}`}
       data-goal={`${d.goal.r},${d.goal.c}`}

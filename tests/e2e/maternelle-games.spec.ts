@@ -594,6 +594,36 @@ test.describe('niveaux de maternelle', () => {
     await expectStars(page, 3); // une seule coupure : pas de raté
   });
 
+  // Retour terrain (10/11) : une enfant de 4 ans glisse le doigt par réflexe, même au niveau « taper ». Vrais événements
+  // tactiles (CDP) : la souris de Playwright ne reproduit pas le comportement d'un écran tactile.
+  test('ms-labyrinthe-01 (tap) : on peut aussi glisser le doigt depuis l\'animal jusqu\'à la nourriture, sans raté', async ({
+    page,
+  }) => {
+    await setupLevel(page, 'Alba', 'ms-labyrinthe-01');
+    await expect(page.locator('.maze-view')).toHaveAttribute('data-mode', 'tap');
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', p?: { x: number; y: number }) =>
+      cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [{ x: p.x, y: p.y }] : [] });
+
+    await playLevelRounds(page, levelRounds('ms-labyrinthe-01'), async () => {
+      const m = await readMaze(page);
+      const path = solution(m);
+      await touch('touchStart', await cellPoint(page, m.size, path[0] as Cell));
+      for (let i = 1; i < path.length; i += 1) {
+        const a = await cellPoint(page, m.size, path[i - 1] as Cell);
+        const b = await cellPoint(page, m.size, path[i] as Cell);
+        for (let s = 1; s <= 6; s += 1) {
+          await touch('touchMove', { x: a.x + ((b.x - a.x) * s) / 6, y: a.y + ((b.y - a.y) * s) / 6 });
+          await page.waitForTimeout(8);
+        }
+        await expect.poll(() => animalCell(page)).toEqual(path[i]);
+      }
+      await touch('touchEnd');
+    });
+    await waitForLevelEnd(page);
+    await expectStars(page, 3); // aucun choc parasite après le relâcher : 3 étoiles
+  });
+
   // Jeux libres du hub (29/10) : ranger et labyrinthe, une manche résolue en ★ puis une nouvelle manche.
   for (const game of ['order', 'maze'] as const) {
     test(`jeu libre ${game} : tuile du hub, ★ présélectionné, une manche résolue, nouvelle manche`, async ({ page }) => {

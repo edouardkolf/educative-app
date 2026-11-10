@@ -35,11 +35,9 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  filter: drop-shadow(var(--shadow-sm, 0 3px 8px rgba(61, 44, 30, 0.14)));
-}
-.maze-view[data-mode='trace'] .maze-board {
+  /* Glisser depuis l'animal marche dans les deux modes : le navigateur ne doit pas prendre le geste pour un défilement. */
   touch-action: none;
+  filter: drop-shadow(var(--shadow-sm, 0 3px 8px rgba(61, 44, 30, 0.14)));
 }
 
 .maze-hit {
@@ -71,7 +69,8 @@
   transition: transform 200ms ease-in-out;
   pointer-events: none;
 }
-.maze-view[data-mode='trace'] .maze-mover {
+.maze-view[data-mode='trace'] .maze-mover,
+.maze-view[data-drag='1'] .maze-mover {
   transition-duration: 110ms;
 }
 .maze-mover image,
