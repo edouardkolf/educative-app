@@ -12,6 +12,7 @@ import { isColoringFinished, isColoringRecord, type ColoringRecord } from './col
 import { isDictationFinished, isDictationRecord, type DictationRecord } from './dictations';
 import { isHangmanFinished, isHangmanRecord, type HangmanRecord } from './hangmans';
 import { isPuzzleFinished, isPuzzleRecord, type PuzzleRecord } from './puzzles';
+import { isReadingFinished, isReadingRecord, type ReadingRecord } from './readings';
 import { isTicTacToeFinished, isTicTacToeRecord, type TicTacToeRecord } from './tictactoes';
 import type { GameEndReason, GameRecordBase, GameStoreName } from './types';
 
@@ -21,9 +22,10 @@ export type GameRecordByStore = {
   tictactoes: TicTacToeRecord;
   hangmans: HangmanRecord;
   puzzles: PuzzleRecord;
+  readings: ReadingRecord;
 };
 
-export const GAME_STORES: readonly GameStoreName[] = ['dictations', 'colorings', 'tictactoes', 'hangmans', 'puzzles'];
+export const GAME_STORES: readonly GameStoreName[] = ['dictations', 'colorings', 'tictactoes', 'hangmans', 'puzzles', 'readings'];
 
 /** Issue d'une partie : terminée, ou abandonnée avec une raison. */
 export type GameOutcome = { status: 'completed' } | { status: 'abandoned'; endReason: GameEndReason };
@@ -48,6 +50,12 @@ function rulesFor<S extends GameStoreName>(
     return {
       isRecord: isPuzzleRecord as (value: unknown) => value is GameRecordByStore[S],
       isFinished: isPuzzleFinished as unknown as (record: GameRecordByStore[S]) => boolean,
+    };
+  }
+  if (store === 'readings') {
+    return {
+      isRecord: isReadingRecord as (value: unknown) => value is GameRecordByStore[S],
+      isFinished: isReadingFinished as unknown as (record: GameRecordByStore[S]) => boolean,
     };
   }
   if (store === 'hangmans') {

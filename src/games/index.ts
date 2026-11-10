@@ -3,6 +3,7 @@
 import type { GameRouteName, Route } from '../app/routes';
 import { getTrackOrDefault } from '../engine';
 import type { GameRecordBase, GameStoreName, Profile } from '../storage/types';
+import { checkVoice, type VoiceProblem } from '../ui/voice';
 import { checkDictationAvailability } from './dictation/availability';
 
 export type GameId = GameRouteName;
@@ -25,6 +26,27 @@ export interface GameDefinition {
   checkAvailability?: () => Promise<Availability>;
 }
 
+const READING_HINT_BY_PROBLEM: Record<VoiceProblem, string> = {
+  'no-api': "Ce navigateur ne sait pas faire parler le téléphone : ouvrez l'application avec Chrome.",
+  'no-french-voice': 'Aucune voix française : Paramètres Android › Accessibilité › Synthèse vocale, Français (France).',
+  'no-offline-voice': 'Voix française absente hors connexion : installez les données vocales Français (France).',
+};
+
+/** « J'apprends à lire » passe entièrement par la voix (LECTURE.md §8.1) : même vérification que la dictée. */
+async function checkReadingAvailability(): Promise<Availability> {
+  const check = await checkVoice();
+  if (check.status === 'muted') {
+    return {
+      available: false,
+      parentHint: "Le son de l'application est coupé (onglet Réglages) : la lecture a besoin de la voix.",
+    };
+  }
+  if (check.status === 'unavailable') {
+    return { available: false, parentHint: READING_HINT_BY_PROBLEM[check.problem ?? 'no-api'] };
+  }
+  return { available: true };
+}
+
 export const GAMES: readonly GameDefinition[] = [
   {
     id: 'dictation',
@@ -42,6 +64,16 @@ export const GAMES: readonly GameDefinition[] = [
     tileLabel: 'Coloriage',
     defaultTracks: ['ms'],
     store: 'colorings',
+  },
+  // « J'apprends à lire » : programme de lecture de zéro au CP (docs/specs/LECTURE.md). Premier jeu du hub MS après la carte.
+  {
+    id: 'reading',
+    route: { name: 'reading' },
+    parentLabel: "J'apprends à lire",
+    tileLabel: 'Lecture',
+    defaultTracks: ['ms'],
+    store: 'readings',
+    checkAvailability: checkReadingAvailability,
   },
   {
     id: 'tictactoe',

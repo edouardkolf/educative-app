@@ -32,6 +32,11 @@ describe('describeImportCounts', () => {
     expect(describeImportCounts(data)).toEqual({ profiles: 1, runs: 7 });
   });
 
+  it('inclut les séances de lecture (v5)', () => {
+    const data = { profiles: [{}], runs: [{}], puzzles: [{}], readings: [{}, {}] };
+    expect(describeImportCounts(data)).toEqual({ profiles: 1, runs: 4 });
+  });
+
   it('renvoie zéro pour une forme inattendue', () => {
     expect(describeImportCounts(null)).toEqual({ profiles: 0, runs: 0 });
     expect(describeImportCounts('texte')).toEqual({ profiles: 0, runs: 0 });

@@ -14,6 +14,7 @@ import {
   updateGameRecord,
   updateSettings,
 } from './index';
+import type { ReadingAnswer } from '../games/reading/types';
 import type { ColoringRecord } from './colorings';
 
 beforeEach(async () => {
@@ -200,6 +201,21 @@ describe('closeStaleGameRecords', () => {
     expect(grids.map((g) => [g.status, g.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
     const words = await listGameRecords('hangmans', 'p1');
     expect(words.map((w) => [w.status, w.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
+  });
+
+  it('lecture : toutes les questions prévues répondues (hors reposées) → completed ; sinon abandoned/closed', async () => {
+    const answer: ReadingAnswer = {
+      itemId: 'g:a', game: 'letter-sound', target: 'a', correct: true, chosen: null,
+      choiceCount: 2, replays: 0, hinted: false, retry: false, ms: 1500, at: 1,
+    };
+    const base = { stage: 2 as const, newItemId: null, demos: [], review: false };
+    await startGameRecord('readings', 'p1', { ...base, planned: 2, answers: [answer, { ...answer, at: 2 }] });
+    await startGameRecord('readings', 'p1', { ...base, planned: 2, answers: [answer, { ...answer, retry: true }] });
+
+    expect(await closeStaleGameRecords()).toBe(2);
+
+    const sessions = await listGameRecords('readings', 'p1');
+    expect(sessions.map((s) => [s.status, s.endReason]).sort()).toEqual([['abandoned', 'closed'], ['completed', null]]);
   });
 
   it('puzzles : manche résolue → completed ; sinon abandoned/closed', async () => {

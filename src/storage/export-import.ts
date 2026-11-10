@@ -5,6 +5,7 @@ import { getDB } from './db';
 import { isDictationRecord, type DictationRecord } from './dictations';
 import { isHangmanRecord, type HangmanRecord } from './hangmans';
 import { isPuzzleRecord, type PuzzleRecord } from './puzzles';
+import { isReadingRecord, isReadingSettings, type ReadingRecord } from './readings';
 import { isTicTacToeRecord, type TicTacToeRecord } from './tictactoes';
 import { DEFAULT_SETTINGS } from './settings';
 import {
@@ -36,6 +37,7 @@ export async function exportAll(): Promise<ExportBundle> {
     allTicTacToes,
     allHangmans,
     allPuzzles,
+    allReadings,
     settings,
   ] = await Promise.all([
       db.getAll('profiles'),
@@ -47,6 +49,7 @@ export async function exportAll(): Promise<ExportBundle> {
       db.getAll('tictactoes'),
       db.getAll('hangmans'),
       db.getAll('puzzles'),
+      db.getAll('readings'),
       db.get('settings', 'app'),
     ]);
   // F2 : ne jamais exporter les lignes orphelines (parties/réglages/temps d'un enfant supprimé,
@@ -60,6 +63,7 @@ export async function exportAll(): Promise<ExportBundle> {
   const tictactoes = allTicTacToes.filter((record) => profileIds.has(record.profileId));
   const hangmans = allHangmans.filter((record) => profileIds.has(record.profileId));
   const puzzles = allPuzzles.filter((record) => profileIds.has(record.profileId));
+  const readings = allReadings.filter((record) => profileIds.has(record.profileId));
   return {
     format: EXPORT_FORMAT,
     version: EXPORT_VERSION,
@@ -73,6 +77,7 @@ export async function exportAll(): Promise<ExportBundle> {
     tictactoes,
     hangmans,
     puzzles,
+    readings,
     settings: { soundOn: (settings ?? DEFAULT_SETTINGS).soundOn },
   };
 }
@@ -138,6 +143,8 @@ function isProfile(value: unknown): value is Profile {
     if (!isPlainObject(value.gameSettings)) return false;
     const { coloring } = value.gameSettings as Record<string, unknown>;
     if (coloring !== undefined && !isColoringSettings(coloring)) return false;
+    const { reading } = value.gameSettings as Record<string, unknown>;
+    if (reading !== undefined && !isReadingSettings(reading)) return false;
   }
   return true;
 }
@@ -200,6 +207,7 @@ interface ValidatedBundle {
   tictactoes: TicTacToeRecord[];
   hangmans: HangmanRecord[];
   puzzles: PuzzleRecord[];
+  readings: ReadingRecord[];
   soundOn: boolean;
   /** F2 : nombre de lignes ignorées parce qu'elles référencent un enfant absent de la sauvegarde. */
   skipped: number;
@@ -257,6 +265,14 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
     if (!hasUniqueIds(rawPuzzles, (r) => r.id)) return { error: BAD_SHAPE };
     puzzles = rawPuzzles;
   }
+  // v5 : lecture (tableau obligatoire) ; v1 à v4 : lu comme vide.
+  let readings: ReadingRecord[] = [];
+  if (data.version === 5) {
+    const { readings: rawReadings } = data;
+    if (!Array.isArray(rawReadings) || !rawReadings.every(isReadingRecord)) return { error: BAD_SHAPE };
+    if (!hasUniqueIds(rawReadings, (r) => r.id)) return { error: BAD_SHAPE };
+    readings = rawReadings;
+  }
 
   // F2 : une ligne dont l'enfant est absent de la sauvegarde (parties/réglages/temps écrits via un
   // profil resté en mémoire après suppression) est ignorée plutôt que de faire échouer tout l'import.
@@ -269,6 +285,7 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
   const keptTicTacToes = tictactoes.filter((record) => profileIds.has(record.profileId));
   const keptHangmans = hangmans.filter((record) => profileIds.has(record.profileId));
   const keptPuzzles = puzzles.filter((record) => profileIds.has(record.profileId));
+  const keptReadings = readings.filter((record) => profileIds.has(record.profileId));
   const skipped =
     runs.length -
     keptRuns.length +
@@ -278,7 +295,8 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
     (colorings.length - keptColorings.length) +
     (tictactoes.length - keptTicTacToes.length) +
     (hangmans.length - keptHangmans.length) +
-    (puzzles.length - keptPuzzles.length);
+    (puzzles.length - keptPuzzles.length) +
+    (readings.length - keptReadings.length);
 
   return {
     bundle: {
@@ -291,6 +309,7 @@ function validateImportData(data: unknown): { bundle: ValidatedBundle } | { erro
       tictactoes: keptTicTacToes,
       hangmans: keptHangmans,
       puzzles: keptPuzzles,
+      readings: keptReadings,
       soundOn,
       skipped,
     },
@@ -312,7 +331,7 @@ export async function importAll(data: unknown): Promise<ImportResult> {
 
   const db = await getDB();
   const tx = db.transaction(
-    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'tictactoes', 'hangmans', 'puzzles', 'settings'],
+    ['profiles', 'runs', 'overrides', 'usage', 'dictations', 'colorings', 'tictactoes', 'hangmans', 'puzzles', 'readings', 'settings'],
     'readwrite',
   );
   const profiles = tx.objectStore('profiles');
@@ -324,6 +343,7 @@ export async function importAll(data: unknown): Promise<ImportResult> {
   const tictactoes = tx.objectStore('tictactoes');
   const hangmans = tx.objectStore('hangmans');
   const puzzles = tx.objectStore('puzzles');
+  const readings = tx.objectStore('readings');
   const settings = tx.objectStore('settings');
 
   await Promise.all([
@@ -336,6 +356,7 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     tictactoes.clear(),
     hangmans.clear(),
     puzzles.clear(),
+    readings.clear(),
   ]);
   await Promise.all([
     ...bundle.profiles.map((profile) => profiles.put(profile)),
@@ -347,6 +368,7 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     ...bundle.tictactoes.map((record) => tictactoes.put(record)),
     ...bundle.hangmans.map((record) => hangmans.put(record)),
     ...bundle.puzzles.map((record) => puzzles.put(record)),
+    ...bundle.readings.map((record) => readings.put(record)),
   ]);
 
   const existingSettings = (await settings.get('app')) ?? DEFAULT_SETTINGS;
@@ -367,7 +389,8 @@ export async function importAll(data: unknown): Promise<ImportResult> {
     gameRecords:
       bundle.dictations.length + bundle.colorings.length + bundle.tictactoes.length +
       bundle.hangmans.length +
-      bundle.puzzles.length,
+      bundle.puzzles.length +
+      bundle.readings.length,
     skipped: bundle.skipped,
   };
 }

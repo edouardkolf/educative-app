@@ -49,6 +49,23 @@ const DRAWINGS: Record<GameId, () => JSX.Element> = {
       <circle cx="27" cy="6.5" r="3.4" fill="#1d7fd8" />
     </>
   ),
+  // Lecture : un livre ouvert d'où sortent une lettre A et une petite onde sonore (pas de <text> : traits).
+  reading: () => (
+    <>
+      <ellipse cx="24" cy="43.5" rx="18" ry="2.5" fill={SHADOW} />
+      <path d="M24 41V27Q15 22.5 5 25V39Q15 36.5 24 41Z" fill="#3fa58a" />
+      <path d="M24 41V27Q33 22.5 43 25V39Q33 36.5 24 41Z" fill="#5fc4a6" />
+      <path d="M24 38.5V28.5Q16 25 7.5 27V36.5Q16 34.5 24 38.5Z" fill="#fff7e8" />
+      <path d="M24 38.5V28.5Q32 25 40.5 27V36.5Q32 34.5 24 38.5Z" fill="#fffdf6" />
+      <path d="M11 30.5Q15.5 29.3 20 31M11 33.8Q15.5 32.6 20 34.2M28 31Q32.5 29.3 37 30.5M28 34.2Q32.5 32.6 37 33.8" stroke="#bcd6e8" stroke-width="1.5" stroke-linecap="round" fill="none" />
+      <path d="M24 41V27" stroke="#2f8a72" stroke-width="1.6" />
+      <circle cx="19" cy="13" r="10" fill="#ffc53d" />
+      <circle cx="16" cy="9.5" r="2.4" fill="#ffe38f" />
+      <path d="M14 20L19 6L24 20M15.9 15.6H22.1" fill="none" stroke="#7a4b00" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M32 9Q35 13 32 17" fill="none" stroke="#1d7fd8" stroke-width="2.4" stroke-linecap="round" />
+      <path d="M36 6Q41.5 13 36 20" fill="none" stroke="#1d7fd8" stroke-width="2.4" stroke-linecap="round" />
+    </>
+  ),
   // Morpion : une grille de 3 × 3 sur un plateau, des croix rouges et des ronds bleus, trois alignés.
   tictactoe: () => (
     <>

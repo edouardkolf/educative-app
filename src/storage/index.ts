@@ -44,6 +44,7 @@ export * from './colorings';
 export * from './tictactoes';
 export * from './hangmans';
 export * from './puzzles';
+export * from './readings';
 
 // ---------- Export / import ----------
 export { exportAll, importAll } from './export-import';

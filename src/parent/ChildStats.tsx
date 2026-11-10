@@ -9,6 +9,7 @@ import { ColoringStats } from '../games/coloring/ColoringStats';
 import { DictationStats } from '../games/dictation/DictationStats';
 import { HangmanStats } from '../games/hangman/HangmanStats';
 import { PuzzleStats } from '../games/puzzle/PuzzleStats';
+import { ReadingStats } from '../games/reading/ReadingStats';
 import { TicTacToeStats } from '../games/tictactoe/TicTacToeStats';
 import {
   dayKey,
@@ -18,6 +19,7 @@ import {
   listHangmans,
   listOverrides,
   listPuzzles,
+  listReadings,
   listRuns,
   listTicTacToes,
   listUsage,
@@ -31,6 +33,7 @@ import type {
   LevelOverride,
   Profile,
   PuzzleRecord,
+  ReadingRecord,
   TicTacToeRecord,
   UsageDay,
 } from '../storage';
@@ -141,6 +144,7 @@ interface StatsData {
   tictactoes: TicTacToeRecord[];
   hangmans: HangmanRecord[];
   puzzles: PuzzleRecord[];
+  readings: ReadingRecord[];
   usageDays: UsageDay[];
 }
 
@@ -148,7 +152,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
   const profile = await getProfile(profileId);
   if (!profile) throw new Error('Cet enfant est introuvable.');
 
-  const [runs, overrides, dictations, colorings, tictactoes, hangmans, puzzles, usageDays] = await Promise.all([
+  const [runs, overrides, dictations, colorings, tictactoes, hangmans, puzzles, readings, usageDays] = await Promise.all([
     listRuns(profileId),
     listOverrides(profileId),
     listDictations(profileId),
@@ -156,6 +160,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
     listTicTacToes(profileId),
     listHangmans(profileId),
     listPuzzles(profileId),
+    listReadings(profileId),
     listUsage(profileId),
   ]);
 
@@ -198,6 +203,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
     tictactoes,
     hangmans,
     puzzles,
+    readings,
     usageDays,
   };
 }
@@ -207,6 +213,7 @@ function activityRowLabel(id: string): string {
   if (id === 'map') return 'Carte';
   if (id === 'hub') return 'Accueil';
   if (id === 'total') return 'Total';
+  if (id === 'reading') return 'Lecture';
   return GAMES.find((game) => game.id === id)?.parentLabel ?? id;
 }
 
@@ -269,13 +276,14 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
-  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, tictactoes, hangmans, puzzles, usageDays } =
+  const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, tictactoes, hangmans, puzzles, readings, usageDays } =
     data;
   const recordsByGame: Record<string, readonly GameRecordBase[]> = {
     dictation: dictations,
     coloring: colorings,
     tictactoe: tictactoes,
     hangman: hangmans,
+    reading: readings,
     // Les trois jeux de logique partagent le store ; chacun a sa section (filtre par `game`).
     'guess-number': puzzles.filter((r) => r.game === 'guess-number'),
     'code-breaker': puzzles.filter((r) => r.game === 'code-breaker'),
@@ -406,6 +414,7 @@ export function ChildStats(props: { profileId: string }) {
               <TicTacToeStats profile={profile} records={records as TicTacToeRecord[]} />
             )}
             {game.id === 'hangman' && <HangmanStats profile={profile} records={records as HangmanRecord[]} />}
+            {game.id === 'reading' && <ReadingStats profile={profile} records={records as ReadingRecord[]} />}
             {(game.id === 'guess-number' || game.id === 'code-breaker' || game.id === 'robot' || game.id === 'memory' || game.id === 'order' || game.id === 'maze') && (
               <PuzzleStats profile={profile} records={records as PuzzleRecord[]} />
             )}
