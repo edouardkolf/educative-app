@@ -62,7 +62,6 @@ export function choiceFlags(props: ChoiceStateProps, id: string): ChoiceFlags {
 // ---------- Tambour ----------
 
 export const DRUM_MAX_TAPS = 4;
-export const DRUM_VALIDATE_MS = 2000;
 export const DRUM_PULSE_GAP_MS = 650;
 
 /** Frappe suivante : 4 au plus, les frappes en trop ne comptent pas. */

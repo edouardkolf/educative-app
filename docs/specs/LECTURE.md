@@ -145,9 +145,10 @@ glisser-déposer, pas de bouton de validation. Rien ne défile en 360 × 640. `p
 
 Précisions :
 
-- **Tambour** : la vue compte elle-même les frappes (rebond du tambour, un point affiché par frappe, 4 au plus) ;
-  **2 s après la dernière frappe**, elle appelle `onChoose(String(n))`. C'est la seule vue autorisée à jouer un son
-  (`playTap` à chaque frappe).
+- **Tambour** : la vue compte elle-même les frappes (rebond du tambour, un point affiché par frappe, 4 au plus).
+  Après la première frappe, une **coche verte** apparaît à côté des points (`data-choice="drum-ok"`) : la toucher
+  valide (`onChoose(String(n))`). Pas de validation automatique (décision du PM, 11/11/2026). C'est la seule vue
+  autorisée à jouer un son (`playTap` à chaque frappe).
   Faux : les points s'effacent et elle recommence. Relance (`hintChoice`) : le tambour pulse `answer` fois en rythme.
   `answer` ∈ '1'..'3'. `choiceCount` enregistré = 3.
 - **Machine à syllabes** : à l'arrivée de la question, les deux blocs (`stimulus.parts`) sont écartés puis glissent et
@@ -250,9 +251,14 @@ Les réponses `retry: true` et les exemples guidés ne comptent jamais.
    de ce jeu est jouée en **exemple guidé** : `guided: true`, la main animée (`TutorialHand`) montre le bon choix, seul
    le bon choix réagit. Cet exemple n'est **pas enregistré** comme réponse ; le jeu est ajouté à `demos`. La même
    question est ensuite jouée normalement plus tard dans la séance (remise en fin de file).
-   Tambour : la main tape le tambour `answer` fois.
+   Tambour : la main tape le tambour `answer` fois, puis touche la coche.
+9. **Réécouter le modèle** (décision du PM, 11/11/2026) : toucher l'image modèle (tambour, commence pareil, finit
+   pareil, par quoi ça commence) ou le grand haut-parleur (la lettre qui chante) fait répéter le mot ou le son, sans
+   rien valider (`onReplayModel`, `data-testid="reading-model"`, compté dans `replays`). Les choix de réponse ne
+   font jamais répéter : toucher un choix = répondre.
 4. **Une seule action : toucher.** 5. **Relance** après 9 s (§2). 6. **Aucun texte à lire** hors lettres, syllabes et
    mots du programme. 7. **Grandes zones tactiles** espacées. 8. **Fin de séance claire**, sans enchaînement automatique.
+
 
 ## 10. Intégration
 

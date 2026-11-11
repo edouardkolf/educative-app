@@ -28,8 +28,7 @@ import {
   nextQuestion,
   recordFirstAttempt,
   soundOfChoice,
-  type FlowState,
-} from './flow';
+  type FlowState, modelSpeech } from './flow';
 import { gameInstruction, SOUND_RATE, soundText, syllableText } from './speech';
 import type { ReadingAnswer, ReadingQuestion, ReadingSessionPlan, ReadingViewProps } from './types';
 
@@ -439,6 +438,24 @@ export function useQuestionFlow(opts: UseQuestionFlowOptions): QuestionFlow {
     });
   }
 
+  /** Toucher le modèle : la voix répète le mot ou le son, seulement quand les choix sont actifs. */
+  function replayModel() {
+    const t = turnRef.current;
+    const q = currentQuestion(flowRef.current);
+    if (!q || !t.activated || t.solved || finishing || unmountedRef.current) return;
+    const steps = modelSpeech(q);
+    if (!steps) return;
+    if (!t.attempted) t.replays += 1;
+    const turnId = turnIdRef.current;
+    clearHintTimer();
+    speechIdRef.current += 1;
+    cancelSpeech();
+    setSpoken(null);
+    void say(steps).then(() => {
+      if (turnAlive(turnId)) armHint(turnId);
+    });
+  }
+
   function goHome() {
     // La navigation est faite par l'écran (returnTo) ; le démontage ferme la séance.
     cancelSpeech();
@@ -475,6 +492,7 @@ export function useQuestionFlow(opts: UseQuestionFlowOptions): QuestionFlow {
           guided,
           disabled,
           onChoose,
+          onReplayModel: replayModel,
         };
 
   return {
