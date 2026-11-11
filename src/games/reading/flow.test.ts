@@ -160,7 +160,7 @@ describe('aides', () => {
   it('cibles de la main animée', () => {
     expect(guidedTargets(q1)).toEqual(['a']);
     const drum: ReadingQuestion = { ...q1, game: 'syllable-drum', choices: [], answer: '3' };
-    expect(guidedTargets(drum)).toEqual(['drum', 'drum', 'drum']);
+    expect(guidedTargets(drum)).toEqual(['drum', 'drum', 'drum', 'drum-ok']);
   });
 
   it('son d\'un choix faux : lettre et syllabe seulement', () => {

@@ -211,4 +211,9 @@ export interface ReadingViewProps {
   /** La consigne est en cours : les choix sont visibles mais pas encore tapables. */
   disabled: boolean;
   onChoose: (choiceId: string) => void;
+  /**
+   * Toucher l'image modèle (ou le haut-parleur de « la lettre qui chante ») : la voix répète le mot ou le son,
+   * sans rien valider. Les choix de réponse, eux, ne font jamais répéter : toucher un choix = répondre.
+   */
+  onReplayModel: () => void;
 }

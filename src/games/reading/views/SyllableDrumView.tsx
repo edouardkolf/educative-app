@@ -1,12 +1,12 @@
-// « Le tambour » : l'enfant tape une fois par syllabe ; la vue compte, puis valide 2 s après la dernière frappe.
-import { useEffect, useRef, useState } from "preact/hooks";
+// « Le tambour » : l'enfant tape une fois par syllabe (la vue compte), puis touche la coche pour valider.
+import { useEffect, useState } from "preact/hooks";
+import { Icon } from "../../../ui/icons/Icon";
 import { playTap } from "../../../ui/sound";
 import type { ReadingViewProps } from "../types";
 import { PictureCard } from "./PictureCard";
 import {
   addTap,
   DRUM_MAX_TAPS,
-  DRUM_VALIDATE_MS,
   drumPulseTimes,
 } from "./logic";
 
@@ -23,7 +23,7 @@ function DrumArt() {
       />
       <path
         class="rv-drum-zig"
-        d="M30 98l20 66 20-66 20 66 20-66 20 66 20-66 20 66 20-66 20 66"
+        d="M30 98l20 66 20-66 20 66 20-66 20 66 20-66 20 66 20-66"
       />
       <ellipse class="rv-drum-rim" cx="110" cy="84" rx="90" ry="26" />
       <ellipse class="rv-drum-skin" cx="110" cy="84" rx="80" ry="20" />
@@ -32,34 +32,16 @@ function DrumArt() {
 }
 
 export function SyllableDrumView(props: ReadingViewProps) {
-  const { question, wrongChoices, solved, hintChoice, disabled } = props;
+  const { question, wrongChoices, solved, hintChoice, disabled, guided } = props;
   const [taps, setTaps] = useState(0);
-  const [stamp, setStamp] = useState(0);
   const [bounce, setBounce] = useState(0);
   const [pulseKey, setPulseKey] = useState(0);
   const [ring, setRing] = useState(false);
-  const sent = useRef(false);
-  const latest = useRef(props);
-  latest.current = props;
 
   // Nouvelle question ou erreur : les points s'effacent, on recommence.
   useEffect(() => {
-    sent.current = false;
     setTaps(0);
-    setStamp(0);
   }, [question, wrongChoices.length]);
-
-  // Validation 2 s après la dernière frappe.
-  useEffect(() => {
-    if (stamp === 0) return;
-    const id = window.setTimeout(() => {
-      const p = latest.current;
-      if (p.solved || p.disabled) return;
-      sent.current = true;
-      p.onChoose(String(taps));
-    }, DRUM_VALIDATE_MS);
-    return () => window.clearTimeout(id);
-  }, [stamp]);
 
   // Relance : le tambour pulse `answer` fois en rythme.
   useEffect(() => {
@@ -84,15 +66,21 @@ export function SyllableDrumView(props: ReadingViewProps) {
   const shown = solved
     ? Math.min(DRUM_MAX_TAPS, Number(question.answer) || taps)
     : taps;
+  // La coche n'apparaît qu'après la première frappe ; sa place est réservée pour que rien ne bouge.
+  const canValidate = !inert && taps > 0;
 
   const hit = () => {
     if (inert) return;
     playTap();
-    const base = sent.current ? 0 : taps;
-    sent.current = false;
-    setTaps(addTap(base));
-    setStamp((s) => s + 1);
+    setTaps((n) => addTap(n));
     setBounce((b) => b + 1);
+  };
+
+  const validate = () => {
+    if (!canValidate) return;
+    // Exemple guidé : seule la coche après le bon nombre de frappes réagit.
+    if (guided && String(taps) !== question.answer) return;
+    props.onChoose(String(taps));
   };
 
   const classes = ["rv-drum"];
@@ -103,7 +91,10 @@ export function SyllableDrumView(props: ReadingViewProps) {
   return (
     <div class="rv rv-drum-view" data-game="syllable-drum" data-taps={shown}>
       {question.stimulus.kind === "picture" && (
-        <PictureCard id={question.stimulus.picture} />
+        <PictureCard
+          id={question.stimulus.picture}
+          onTap={props.onReplayModel}
+        />
       )}
       <button
         type="button"
@@ -124,13 +115,25 @@ export function SyllableDrumView(props: ReadingViewProps) {
           <DrumArt />
         </span>
       </button>
-      <div class="rv-dots" aria-hidden="true">
-        {Array.from({ length: DRUM_MAX_TAPS }, (_, i) => (
-          <span
-            key={i}
-            class={i < shown ? `rv-dot rv-dot--on rv-dot--${i % 2}` : "rv-dot"}
-          />
-        ))}
+      <div class="rv-drum-foot">
+        <div class="rv-dots" aria-hidden="true">
+          {Array.from({ length: DRUM_MAX_TAPS }, (_, i) => (
+            <span
+              key={i}
+              class={i < shown ? `rv-dot rv-dot--on rv-dot--${i % 2}` : "rv-dot"}
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          class={canValidate ? "rv-drum-ok" : "rv-drum-ok rv-drum-ok--hidden"}
+          data-choice="drum-ok"
+          aria-disabled={canValidate ? "false" : "true"}
+          aria-label="j'ai fini"
+          onClick={validate}
+        >
+          <Icon name="check" size="62%" />
+        </button>
       </div>
     </div>
   );

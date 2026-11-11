@@ -159,8 +159,8 @@ async function waitReady(question: Locator): Promise<void> {
 }
 
 /**
- * Répond juste à la question affichée : tambour (on tape `data-answer` fois, la réponse part 2 s après la
- * dernière frappe) ou choix `data-choice=<data-answer>`. Rend ce qui a été joué.
+ * Répond juste à la question affichée : tambour (on tape `data-answer` fois, puis la coche `drum-ok`) ou
+ * choix `data-choice=<data-answer>`. Rend ce qui a été joué.
  */
 export async function answerCurrent(
   page: Page,
@@ -182,6 +182,7 @@ export async function answerCurrent(
   if (info.game === 'syllable-drum') {
     const drum = question.locator('[data-choice="drum"]');
     for (let i = 0; i < Number(info.answer); i += 1) await drum.click();
+    await question.locator('[data-choice="drum-ok"]').click();
   } else {
     if (wrongFirst && !info.guided) {
       const wrong = question.locator(`[data-choice]:not([data-choice="${info.answer}"])`).first();
@@ -228,7 +229,9 @@ export async function playFullSession(
     }
     await waitReady(question);
     const game = await question.getAttribute('data-game');
-    const eligible = errOnce && !erred && game !== 'syllable-drum' && (await question.getAttribute('data-guided')) !== 'true';
+    // Erreur volontaire seulement sur un jeu à lettres ou syllabes : ce sont les seuls choix qui « chantent ».
+    const lettered = ['letter-sound', 'first-sound', 'syllable-machine', 'letter-twins'].includes(game ?? '');
+    const eligible = errOnce && !erred && lettered && (await question.getAttribute('data-guided')) !== 'true';
     const info = await answerCurrent(page, eligible, beforeAnswer, afterWrong);
     if (info.wrongChoice) erred = true;
     if (onQuestion) await onQuestion(info, page);
@@ -254,7 +257,7 @@ interface StoredReading {
   review: boolean;
   demos: string[];
   newItemId: string | null;
-  answers: { game: string; itemId: string; correct: boolean; chosen: string | null; retry: boolean }[];
+  answers: { game: string; itemId: string; correct: boolean; chosen: string | null; retry: boolean; replays: number }[];
 }
 
 /** Lit le store `readings` d'IndexedDB (base de l'app, déjà créée). */

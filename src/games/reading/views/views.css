@@ -431,6 +431,56 @@
   background: #5aa9e6;
 }
 
+/* Pied du tambour : pastilles de frappe et coche de validation, sur une ligne. */
+.rv-drum-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 1.5);
+}
+.rv-drum-ok {
+  flex: none;
+  width: max(72px, calc(var(--u) * 21));
+  height: max(72px, calc(var(--u) * 21));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  background: #3cb24a;
+  color: #fff;
+  box-shadow: var(--shadow);
+  animation: rv-pop 380ms ease-out;
+  transition: opacity 200ms ease, transform 120ms ease;
+}
+.rv-drum-ok:active {
+  transform: scale(0.94);
+}
+.rv-drum-ok--hidden {
+  visibility: hidden;
+  animation: none;
+}
+
+/* Modèle à réécouter (image ou haut-parleur) : un bouton qui garde l'aspect de la carte. */
+.rv-stim--tap,
+.rv-speaker-btn {
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.rv-speaker-btn {
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  flex: none;
+}
+.rv-stim--tap:active,
+.rv-speaker-btn:active {
+  transform: scale(0.95);
+}
+
 /* ---------- Machine à syllabes ---------- */
 
 .rv-machine {

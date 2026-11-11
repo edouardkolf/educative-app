@@ -13,17 +13,36 @@ export function Pic({ id }: { id: PictureId | undefined | null }) {
   );
 }
 
-/** Carte d'image posée seule (modèle, stimulus). */
+/**
+ * Carte d'image posée seule (modèle, stimulus). Avec `onTap`, c'est un bouton qui fait répéter le mot
+ * (`data-testid="reading-model"`) ; ce n'est jamais un choix de réponse.
+ */
 export function PictureCard({
   id,
   class: extra,
+  onTap,
 }: {
   id: PictureId | undefined | null;
   class?: string;
+  onTap?: () => void;
 }) {
+  const cls = extra ? `rv-stim ${extra}` : "rv-stim";
+  if (!onTap) {
+    return (
+      <div class={cls}>
+        <Pic id={id} />
+      </div>
+    );
+  }
   return (
-    <div class={extra ? `rv-stim ${extra}` : "rv-stim"}>
+    <button
+      type="button"
+      class={`${cls} rv-stim--tap`}
+      data-testid="reading-model"
+      aria-label="réécouter le mot"
+      onClick={onTap}
+    >
       <Pic id={id} />
-    </div>
+    </button>
   );
 }

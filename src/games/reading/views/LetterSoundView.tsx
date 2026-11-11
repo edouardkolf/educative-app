@@ -29,7 +29,15 @@ export function LetterSoundView(props: ReadingViewProps) {
           )}
         </div>
       ) : (
-        <Speaker />
+        <button
+          type="button"
+          class="rv-speaker-btn"
+          data-testid="reading-model"
+          aria-label="réécouter le son"
+          onClick={props.onReplayModel}
+        >
+          <Speaker />
+        </button>
       )}
       <ChoiceRow view={props} render={(c) => <LetterTile text={c.label} />} />
     </div>

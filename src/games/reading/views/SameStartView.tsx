@@ -8,7 +8,11 @@ export function SameStartView(props: ReadingViewProps) {
   return (
     <div class="rv rv-pictures rv-pictures--start" data-game="same-start">
       {stimulus.kind === "picture" && (
-        <PictureCard id={stimulus.picture} class="rv-stim--model" />
+        <PictureCard
+          id={stimulus.picture}
+          class="rv-stim--model"
+          onTap={props.onReplayModel}
+        />
       )}
       <ChoiceRow view={props} render={(c) => <Pic id={c.picture} />} />
     </div>

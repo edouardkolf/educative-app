@@ -97,6 +97,44 @@ test('étape 1 : tuile, accueil, séance complète (démonstrations et tambour c
   await expect(page.getByTestId('hub')).toBeVisible();
 });
 
+// ==================== 1 bis. Image modèle qui répète, coche du tambour ====================
+
+test('toucher l’image modèle répète le mot sans répondre ; le tambour ne se valide qu’avec la coche', async ({ page }) => {
+  test.slow();
+  await installFakeVoice(page, 'fr');
+  await onboardMs(page, 'Lina');
+  await chooseProfile(page, 'Lina');
+  await openReading(page);
+  await startCurrentStage(page);
+
+  const checked = new Set<string>();
+  await playFullSession(page, {
+    beforeAnswer: async (info) => {
+      if (info.guided || checked.has(info.game) || !['syllable-drum', 'same-start'].includes(info.game)) return;
+      checked.add(info.game);
+      const question = page.getByTestId('reading-question');
+      // L'image modèle fait répéter le mot, et la question reste posée.
+      const before = (await spokenTexts(page)).length;
+      await question.getByTestId('reading-model').click();
+      await expect.poll(async () => (await spokenTexts(page)).length).toBeGreaterThan(before);
+      await expect(question).not.toHaveAttribute('data-solved', 'true');
+      if (info.game === 'syllable-drum') {
+        // Pas de coche avant la première frappe, et rien ne part tout seul.
+        const ok = question.locator('[data-choice="drum-ok"]');
+        await expect(ok).toHaveAttribute('aria-disabled', 'true');
+        await expect(ok).toBeHidden();
+        await page.waitForTimeout(2500);
+        await expect(question).not.toHaveAttribute('data-solved', 'true');
+      }
+    },
+  });
+  expect([...checked].sort()).toEqual(['same-start', 'syllable-drum']);
+  // Les réécoutes du modèle comptent comme des réécoutes, jamais comme des réponses.
+  const [session] = await readReadings(page);
+  expect(session?.answers.every((a) => a.correct)).toBe(true);
+  expect(session?.answers.some((a) => a.replays > 0)).toBe(true);
+});
+
 // ==================== 2. Une erreur grise le choix et la question est reposée ====================
 
 test('erreur volontaire : le choix se grise, la lettre touchée chante, la question est reposée et ne compte pas', async ({ page }) => {

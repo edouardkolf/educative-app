@@ -1,7 +1,10 @@
 // Enchaînement d'une séance de lecture : machine d'état PURE de la file de questions et fabrication des
 // `ReadingAnswer`. Aucun effet (ni voix, ni son, ni stockage, ni minuteur) : l'écran les exécute
 // (`useQuestionFlow.ts`) ; ici on décide seulement ce qui est enregistré et dans quel ordre on pose les questions.
+import type { SpeechStep } from '../../ui/voice';
+import { getPicture } from './pictures';
 import { requeueAfterMiss } from './session';
+import { drumPrompt, soundStep, SOUND_RATE } from './speech';
 import type {
   ReadingAnswer,
   ReadingChoice,
@@ -14,6 +17,8 @@ import type {
 export const DRUM_CHOICE_COUNT = 3;
 /** Identifiant du seul « choix » du tambour (`data-choice`). */
 export const DRUM_CHOICE = 'drum';
+/** Coche qui valide les frappes du tambour (`data-choice`). */
+export const DRUM_OK_CHOICE = 'drum-ok';
 
 /** Fonction de remise en file (injectable pour les tests). */
 export type Requeue = (queue: readonly ReadingQuestion[], index: number) => ReadingQuestion[];
@@ -163,7 +168,7 @@ export function buildAnswer(info: AttemptInfo): ReadingAnswer {
 export function guidedTargets(question: ReadingQuestion): string[] {
   if (question.game === 'syllable-drum') {
     const n = Math.max(1, Math.min(4, Number.parseInt(question.answer, 10) || 1));
-    return Array.from({ length: n }, () => DRUM_CHOICE);
+    return [...Array.from({ length: n }, () => DRUM_CHOICE), DRUM_OK_CHOICE];
   }
   return [question.answer];
 }
@@ -177,4 +182,17 @@ export function soundOfChoice(choice: ReadingChoice | undefined): ChoiceSound | 
   if (choice.kind === 'letter') return { type: 'grapheme', id };
   if (choice.kind === 'syllable') return { type: 'syllable', id };
   return null;
+}
+
+/**
+ * Ce que dit la voix quand l'enfant touche le modèle : le mot de l'image (tambour, commence pareil, finit
+ * pareil, par quoi ça commence) ou le son (la lettre qui chante). `null` : ce jeu n'a pas de modèle à réécouter.
+ */
+export function modelSpeech(question: ReadingQuestion): SpeechStep[] | null {
+  const s = question.stimulus;
+  if (s.kind === 'sound') return [soundStep(s.grapheme)];
+  if (s.kind !== 'picture') return null;
+  const word = getPicture(s.picture)?.word;
+  if (!word) return null;
+  return question.game === 'syllable-drum' ? drumPrompt(word) : [{ text: word, rate: SOUND_RATE }];
 }
