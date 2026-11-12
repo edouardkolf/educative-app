@@ -136,9 +136,14 @@ export async function openReading(page: Page): Promise<void> {
 }
 
 /** Accueil → étape en cours → séance (attend le premier écran de question). */
-export async function startCurrentStage(page: Page): Promise<void> {
-  // `force` : le médaillon de l'étape en cours pulse en permanence (Playwright ne le juge jamais « stable »).
-  await page.locator('[data-testid^="reading-stage-"][data-state="current"]').click({ force: true });
+/** Médaillon du niveau en cours sur l'accueil. */
+export function currentLevel(page: Page): Locator {
+  return page.locator('[data-testid^="reading-level-"][data-state="current"]');
+}
+
+export async function startCurrentLevel(page: Page): Promise<void> {
+  // `force` : le médaillon du niveau en cours pulse en permanence (Playwright ne le juge jamais « stable »).
+  await currentLevel(page).click({ force: true });
   await expect(page.getByTestId('reading-session')).toBeVisible();
   await expect(page.getByTestId('reading-question')).toBeVisible();
 }
@@ -181,6 +186,15 @@ export async function answerCurrent(
   if (before) await before(info, page);
   if (info.game === 'syllable-drum') {
     const drum = question.locator('[data-choice="drum"]');
+    if (wrongFirst && !info.guided) {
+      // Mauvais nombre de frappes, validé par la coche : les points s'effacent et elle recommence.
+      const wrong = info.answer === '1' ? 2 : 1;
+      for (let i = 0; i < wrong; i += 1) await drum.click();
+      await question.locator('[data-choice="drum-ok"]').click();
+      info.wrongChoice = String(wrong);
+      await expect(question.locator('[data-taps]')).toHaveAttribute('data-taps', '0');
+      if (afterWrong) await afterWrong(info, page);
+    }
     for (let i = 0; i < Number(info.answer); i += 1) await drum.click();
     await question.locator('[data-choice="drum-ok"]').click();
   } else {
@@ -209,12 +223,15 @@ export async function playFullSession(
     /** Appelé quand les choix sont actifs, juste avant la réponse (captures d'écran). */
     beforeAnswer?: (info: PlayedQuestion, page: Page) => Promise<void>;
     errOnce?: boolean;
+    /** Rate volontairement les N premières questions (hors exemple guidé et questions reposées), tous jeux. */
+    missFirst?: number;
     /** Appelé juste après l'erreur volontaire (le choix faux est grisé). */
     afterWrong?: (info: PlayedQuestion, page: Page) => Promise<void>;
   } = {},
 ): Promise<PlayedQuestion[]> {
-  const { onQuestion, beforeAnswer, errOnce = false, afterWrong } = options;
+  const { onQuestion, beforeAnswer, errOnce = false, missFirst = 0, afterWrong } = options;
   let erred = false;
+  let missed = 0;
   const played: PlayedQuestion[] = [];
   const question = page.getByTestId('reading-question');
   const end = page.getByTestId('reading-end');
@@ -231,9 +248,14 @@ export async function playFullSession(
     const game = await question.getAttribute('data-game');
     // Erreur volontaire seulement sur un jeu à lettres ou syllabes : ce sont les seuls choix qui « chantent ».
     const lettered = ['letter-sound', 'first-sound', 'syllable-machine', 'letter-twins'].includes(game ?? '');
-    const eligible = errOnce && !erred && lettered && (await question.getAttribute('data-guided')) !== 'true';
+    const guided = (await question.getAttribute('data-guided')) === 'true';
+    const retry = (await question.getAttribute('data-retry')) === 'true';
+    const eligible = (errOnce && !erred && lettered && !guided) || (missed < missFirst && !guided && !retry);
     const info = await answerCurrent(page, eligible, beforeAnswer, afterWrong);
-    if (info.wrongChoice) erred = true;
+    if (info.wrongChoice) {
+      erred = true;
+      missed += 1;
+    }
     if (onQuestion) await onQuestion(info, page);
     played.push(info);
     // Le conteneur est remonté à chaque tour (clé) : on attend le suivant ou la fête.
@@ -251,6 +273,7 @@ export async function finishEnd(page: Page): Promise<void> {
 
 interface StoredReading {
   stage: number;
+  levelId?: string;
   planned: number;
   status: string;
   endReason: string | null;

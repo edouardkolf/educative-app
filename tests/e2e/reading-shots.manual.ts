@@ -12,7 +12,7 @@ import {
   openParentDashboard,
   openReading,
   playFullSession,
-  startCurrentStage,
+  startCurrentLevel,
 } from './reading-helpers';
 
 const DIR = process.env.SHOTS_DIR ?? 'test-results/reading-shots';
@@ -68,7 +68,7 @@ let wrongShot = false;
 
 async function collectGames(page: Page, wanted: string[], done: Set<string>, maxSessions: number, err = false): Promise<void> {
   for (let i = 0; i < maxSessions && wanted.some((g) => !done.has(g)); i += 1) {
-    await startCurrentStage(page);
+    await startCurrentLevel(page);
     await playFullSession(page, {
       errOnce: err && !wrongShot,
       afterWrong: async (_info, p) => {
@@ -98,7 +98,7 @@ test('captures du programme de lecture', async ({ page }) => {
   await openReading(page);
   await shot(page, '02-home-stage1', { child: true });
 
-  await startCurrentStage(page);
+  await startCurrentLevel(page);
   let guidedShot = false;
   await playFullSession(page, {
     beforeAnswer: async (info, p) => {
@@ -179,7 +179,7 @@ test('présentation d’une lettre nouvelle (voix ralentie)', async ({ page }) =
   await page.evaluate(() => {
     (window as unknown as { __speakMs: number }).__speakMs = 60_000;
   });
-  await page.locator('[data-testid^="reading-stage-"][data-state="current"]').click({ force: true });
+  await page.locator('[data-testid^="reading-level-"][data-state="current"]').click({ force: true });
   await expect(page.getByTestId('reading-question')).toBeVisible();
   await expect(page.getByTestId('reading-question')).toHaveAttribute('data-game', 'letter-sound');
   await shot(page, '18-new-letter-presentation', { child: true });

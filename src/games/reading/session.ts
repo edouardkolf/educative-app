@@ -12,6 +12,7 @@ import {
   splitGraphemes,
   stageItems,
 } from './curriculum';
+import type { ReadingLevel } from './levels';
 import { PICTURES, getPicture, isDrumAmbiguous, onsetKey, picturesStartingWith } from './pictures';
 import {
   drumPrompt,
@@ -780,6 +781,84 @@ function plan(progress: ReadingProgress, rng: Rng, opts?: PlanOptions): ReadingS
   const limited = questions.slice(0, SESSION_MAX_QUESTIONS);
   const newItemId = alloc.newItem !== null && limited.some((q) => q.itemId === alloc.newItem && q.isNew) ? alloc.newItem : null;
   return { stage, questions: limited, newItemId, demos: demosOf(progress, limited) };
+}
+
+// ---------- Parcours de niveaux (levels.ts) : une séance = un niveau = un seul jeu ----------
+
+/** Part des questions d'un niveau « lettre » qui portent sur la lettre du niveau (le reste : révision). */
+const LEVEL_MAIN_SHARE = 0.6;
+
+/** Progression vue depuis un niveau : seules les lettres déjà présentées dans le parcours sont « introduites ». */
+function progressAtLevel(progress: ReadingProgress, level: ReadingLevel): ReadingProgress {
+  const known = new Set(level.known);
+  const items: Record<string, ItemProgress> = { ...progress.items };
+  for (const g of GRAPHEMES) {
+    const key = `g:${g.id}`;
+    const cur = items[key] ?? NEW_STATE;
+    if (known.has(g.id)) items[key] = cur.state === 'new' ? { ...cur, state: 'learning' } : cur;
+    else items[key] = { ...cur, state: 'new' };
+  }
+  return { ...progress, items };
+}
+
+function levelSlots(level: ReadingLevel, rng: Rng): Slot[] {
+  const n = level.questions;
+  const plain = (item: ItemId, forNew = false, presentation = false): Slot => ({ item, game: level.game, forNew, presentation });
+  if (level.game !== 'letter-sound' && level.game !== 'first-sound') {
+    return Array.from({ length: n }, () => plain(level.item));
+  }
+  const id = level.item.slice(2);
+  // Lettres déjà vues qui peuvent être révisées par ce jeu, les plus récentes d'abord.
+  const earlier = level.known
+    .filter((g) => g !== id && gamesForItem(`g:${g}`).includes(level.game))
+    .reverse()
+    .slice(0, 4);
+  let main = earlier.length === 0 ? n : Math.ceil(n * LEVEL_MAIN_SHARE);
+  if (level.game === 'first-sound') main = Math.min(main, picturesStartingWith(id).length);
+  if (earlier.length === 0) main = n;
+  const review: Slot[] = [];
+  const order = rng.shuffle(earlier);
+  for (let i = 0; review.length < n - main; i += 1) review.push(plain(`g:${order[i % order.length] as string}`));
+  const mains = Array.from({ length: main }, () => plain(level.item, true));
+  if (level.game === 'letter-sound') {
+    // La lettre du niveau est présentée en premier (« a… comme avion »), puis le reste est mélangé.
+    const first = plain(level.item, true, true);
+    return [first, ...rng.shuffle([...mains.slice(1), ...review])];
+  }
+  return rng.shuffle([...mains, ...review]);
+}
+
+/**
+ * Séance d'un niveau du parcours : uniquement le jeu du niveau. Déterministe pour une graine ; ne lève jamais
+ * (au pire, la séance de tambour de secours).
+ */
+export function planLevel(level: ReadingLevel, progress: ReadingProgress, rng: Rng): ReadingSessionPlan {
+  try {
+    const at = progressAtLevel(progress, level);
+    const ctx: Ctx = {
+      progress: at,
+      rng,
+      used: new Set(),
+      usedPictures: new Set(),
+      drumCounts: [0, 0, 0],
+      blendStopAsked: 0,
+      blendStopShort: 0,
+    };
+    const questions: ReadingQuestion[] = [];
+    for (const slot of levelSlots(level, rng)) {
+      // Jamais un autre jeu en secours : à défaut, une question de plus sur l'item du niveau.
+      const q = makeQuestion(ctx, slot) ?? makeQuestion(ctx, { ...slot, item: level.item, presentation: false });
+      if (!q) continue;
+      if (!slot.forNew) ctx.used.add(`${q.itemId}|${q.target}`);
+      questions.push(q);
+    }
+    if (questions.length === 0) return emergencyPlan(progress, rng);
+    const newItemId = questions.some((q) => q.isNew) ? level.item : null;
+    return { stage: level.stage, levelId: level.id, questions, newItemId, demos: demosOf(progress, questions) };
+  } catch (err) {
+    console.error('planLevel : séance de secours', err);
+    return emergencyPlan(progress, rng);
+  }
 }
 
 /** Séance déterministe pour une graine donnée. Ne lève jamais : toute progression valide donne une séance. */

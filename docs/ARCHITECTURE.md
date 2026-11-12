@@ -37,7 +37,7 @@ src/
     coloring/                ← coloriage magique (MS) : catalogue de dessins, récipient, paliers, écran, stats
     tictactoe/               ← morpion (CE1) : contre le téléphone ou à deux (docs/specs/MORPION-PENDU.md)
     hangman/                 ← pendu (CE1) : 114 mots avec indice, fleur à pétales (docs/specs/MORPION-PENDU.md)
-    reading/                 ← « J'apprends à lire » (MS) : programme en 5 étapes, 8 jeux, logique pure, écran, stats (docs/specs/LECTURE.md)
+    reading/                 ← « J'apprends à lire » (MS) : parcours de niveaux (levels.ts), 8 jeux, logique pure, écran, stats (docs/specs/LECTURE.md)
     puzzle/                  ← écran générique « une mécanique en manches illimitées » (devine le nombre, code secret, robot)
   screens/                   ← écrans enfant : profils, hub, carte, partie, fin de niveau, écran de fin
   parent/                    ← espace parent : code, profils, stats, réglages, export/import
@@ -136,6 +136,8 @@ Le conteneur de manche porte `data-answer` (utile aux tests e2e, invisible pour 
   fin douce), `views/` (une vue par jeu, qui n'affiche que : pas de voix, pas de stockage ; `data-choice` sur chaque
   cible). Parent : `ReadingStats`, `ReadingSettings`, `VoiceBench`.
 - **La progression n'est jamais stockée** : `computeProgress(listReadings(profileId), settings)` la rejoue à chaque ouverture.
+- **Parcours** : `levels.ts` (`LEVELS`, `levelProgress`, barre 4 sur 5) et `planLevel` dans `session.ts` ; une séance
+  porte `levelId`. `planSession` (séances mêlées d'avant le parcours) n'est plus appelé par l'écran.
 - Tests e2e : `tests/e2e/reading.spec.ts` (fausse voix et lecteur de séance dans `reading-helpers.ts`).
 
 La progression (étoiles, niveaux débloqués) est **recalculée à partir des parties** (`computeLevelStates`) : aucune donnée dupliquée qui pourrait diverger.
