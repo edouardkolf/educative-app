@@ -3,6 +3,7 @@
 // elles se testent sans la progression ni le contenu.
 import type { ReadingRecord } from '../../storage/readings';
 import { getGrapheme, gatedItems, stageItems } from './curriculum';
+import { LEVELS, levelProgress } from './levels';
 import { computeProgress } from './progress';
 import type { ReadingSettings } from './progress';
 import { READING_STAGES } from './types';
@@ -38,7 +39,14 @@ export interface GuessAlert {
 
 export interface ReadingStatsSummary {
   stage: ReadingStage;
+  /** Tout le parcours de niveaux est fait. */
   finished: boolean;
+  /** Niveau en cours dans le parcours (rang à partir de 1), ou null quand tout est fait. */
+  levelIndex: number | null;
+  /** Nombre de niveaux du parcours. */
+  levelTotal: number;
+  /** Niveaux gagnés. */
+  levelsPassed: number;
   sessionsCompleted: number;
   acquired: number;
   gatedTotal: number;
@@ -192,9 +200,13 @@ export function summarizeReading(
     }
   }
   const answers = records.flatMap((r) => r.answers);
+  const levels = levelProgress(records, settings);
   return {
-    stage: progress.stage,
-    finished: progress.finished,
+    stage: levels.current?.stage ?? 5,
+    finished: levels.finished,
+    levelIndex: levels.current?.index ?? null,
+    levelTotal: LEVELS.length,
+    levelsPassed: levels.passed.size,
     sessionsCompleted: progress.sessionsCompleted,
     acquired,
     gatedTotal,

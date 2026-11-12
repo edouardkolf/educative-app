@@ -1,5 +1,5 @@
-/* « J'apprends à lire » (docs/specs/LECTURE.md §2). Classes préfixées rd-. Rien ne défile en 360 × 640 :
-   barre 72 + chemin de cinq médaillons (≥ 72 px) ou vue de jeu en flex:1. */
+/* « J'apprends à lire » (docs/specs/LECTURE.md §2 et §16). Classes préfixées rd-. Seul le parcours de niveaux
+   de l'accueil défile (verticalement) ; la séance et la fête tiennent en 360 × 640. */
 
 .reading {
   width: 100%;
@@ -55,33 +55,30 @@
 /* ---------- Chemin des étapes ---------- */
 
 .rd-path {
-  --medal: clamp(72px, calc((100dvh - 190px) / 5.5), 96px);
+  --medal: 84px;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 28px 0 40px;
   width: 100%;
   max-width: 440px;
   flex: 1;
   min-height: 0;
   display: flex;
-  flex-direction: column-reverse; /* l'étape 1 en bas, on grimpe */
-  justify-content: space-evenly;
+  flex-direction: column-reverse; /* le niveau 1 en bas, on grimpe */
   align-items: stretch;
+  gap: 22px;
   position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.rd-path::-webkit-scrollbar {
+  display: none;
 }
 
 .rd-path[data-muted] {
   --medal: 72px;
-}
-
-.rd-path::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 6%;
-  bottom: 6%;
-  border-left: 5px dotted rgba(122, 106, 88, 0.3);
-  transform: translateX(-50%);
 }
 
 .rd-step {
@@ -189,24 +186,43 @@
   animation: rd-shake 0.45s ease-in-out;
 }
 
-.rd-gauge {
-  position: absolute;
-  left: 50%;
-  bottom: -9px;
-  width: calc(var(--medal) * 0.8);
-  height: 8px;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: rgba(122, 106, 88, 0.2);
-  overflow: hidden;
+/* Lettre affichée dans un médaillon de niveau (et, pour « son dans un mot », l'image du mot repère). */
+.rd-glyph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: calc(var(--medal, 84px) * 0.5);
+  line-height: 1;
+  color: var(--m-dark);
 }
 
-.rd-gauge__fill {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--m-main);
-  transition: width 400ms ease;
+.rd-glyph--wide {
+  font-size: calc(var(--medal, 84px) * 0.34);
+}
+
+.rd-glyph--pic .rd-glyph__text {
+  transform: translate(-16%, -8%);
+}
+
+.rd-glyph__emoji {
+  position: absolute;
+  right: -6%;
+  bottom: -4%;
+  font-size: calc(var(--medal, 84px) * 0.3);
+}
+
+.rd-medal[data-state='locked'] .rd-glyph {
+  color: #b9b0a0;
+}
+
+.rd-medal[data-state='locked'] .rd-glyph__emoji {
+  filter: grayscale(1);
+  opacity: 0.45;
 }
 
 @keyframes rd-pulse {

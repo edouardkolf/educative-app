@@ -106,7 +106,7 @@ export interface ItemProgress {
 export interface ReadingProgress {
   /** Étape en cours (la plus haute débloquée). */
   stage: ReadingStage;
-  /** Les cinq étapes sont validées. */
+  /** Les cinq étapes sont validées (maîtrise des items ; le parcours de niveaux a son propre `finished`). */
   finished: boolean;
   /** Tous les items du programme, y compris ceux jamais vus (`state: 'new'`). */
   items: Readonly<Record<string, ItemProgress>>;
@@ -161,7 +161,9 @@ export interface ReadingQuestion {
 
 export interface ReadingSessionPlan {
   stage: ReadingStage;
-  /** 8 à 10 questions. */
+  /** Niveau du parcours joué par cette séance (levels.ts). Absent : séance de secours hors parcours. */
+  levelId?: string;
+  /** 5 ou 8 questions selon le niveau. */
   questions: readonly ReadingQuestion[];
   /** Item introduit par cette séance (un seul au plus). */
   newItemId: ItemId | null;

@@ -18,8 +18,10 @@ export interface ReadingRecord extends GameRecordBase {
   demos: ReadingGameId[];
   /** Premières tentatives, dans l'ordre (questions reposées comprises, `retry: true`). */
   answers: ReadingAnswer[];
-  /** true : séance de révision d'une étape déjà validée, lancée depuis l'accueil. */
+  /** true : niveau déjà gagné, rejoué depuis l'accueil. */
   review: boolean;
+  /** Niveau du parcours (src/games/reading/levels.ts). Absent sur les séances d'avant le parcours (ignorées). */
+  levelId?: string;
 }
 
 /** Réglage par enfant (fiche enfant) : `Profile.gameSettings.reading`. */
@@ -27,7 +29,7 @@ export interface ReadingSettingsValue {
   startStage?: ReadingStage;
 }
 
-export type ReadingInit = Pick<ReadingRecord, 'stage' | 'planned' | 'newItemId' | 'demos' | 'answers' | 'review'>;
+export type ReadingInit = Pick<ReadingRecord, 'stage' | 'planned' | 'newItemId' | 'demos' | 'answers' | 'review' | 'levelId'>;
 
 /** Une séance ne dépasse jamais 60 premières tentatives (10 questions prévues + questions reposées). */
 const MAX_ANSWERS = 60;
@@ -126,5 +128,6 @@ export function isReadingRecord(value: unknown): value is ReadingRecord {
   if (new Set(v.demos).size !== v.demos.length) return false;
   if (!Array.isArray(v.answers) || v.answers.length > MAX_ANSWERS || !v.answers.every(isReadingAnswer)) return false;
   if (typeof v.review !== 'boolean') return false;
+  if (v.levelId !== undefined && !(isNonEmptyString(v.levelId) && v.levelId.length <= 40)) return false;
   return true;
 }

@@ -176,8 +176,10 @@ Détails : `docs/specs/COLORIAGE.md`. Contenu : `docs/CONTENU.md`.
 ## Programme de lecture : « J'apprends à lire » (hors carte)
 
 Une **piste à part**, sans étoile ni niveau sur la carte : une tuile du hub MS (juste après le coloriage) ouvre un
-programme en cinq étapes, de zéro lecture à l'entrée en CP. Le rythme visé est de trois séances de 5 minutes par
-semaine ; **la maîtrise décide, pas le calendrier**. Une séance de 8 à 10 questions se joue seule, à la voix.
+programme de zéro lecture à l'entrée en CP. Depuis le 12/11/2026, c'est un **parcours de 104 niveaux** (LECTURE.md
+§16) : un niveau = un seul jeu = une séance de 5 questions (8 à partir des consonnes), gagné à 4 sur 5. Le chemin
+alterne un niveau d'écoute et un niveau de lettres ; la lettre A est le niveau 2. Les cinq étapes ci-dessous
+restent le découpage pédagogique (ordre des lettres, réglage « étape de départ »).
 
 | Étape | Titre | Contenu |
 |---|---|---|

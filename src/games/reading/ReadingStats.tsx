@@ -28,10 +28,10 @@ export function ReadingStats({ profile, records }: GameStatsProps<ReadingRecord>
         <>
           <div class="pa-summary">
             <div class="pa-stat">
-              <span class="pa-stat__value" data-testid="reading-stats-stage">
-                {summary.finished ? 'Terminé' : `${summary.stage} · ${STAGE_TITLES[summary.stage]}`}
+              <span class="pa-stat__value" data-testid="reading-stats-level">
+                {summary.finished ? 'Terminé' : `${summary.levelIndex} sur ${summary.levelTotal}`}
               </span>
-              <span class="pa-stat__label">Étape en cours</span>
+              <span class="pa-stat__label">Niveau en cours</span>
             </div>
             <div class="pa-stat">
               <span class="pa-stat__value" data-testid="reading-stats-acquired">

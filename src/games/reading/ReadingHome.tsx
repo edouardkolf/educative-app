@@ -1,42 +1,24 @@
-// Accueil du programme (LECTURE.md §2) : un chemin de cinq médaillons, sans texte. L'étape en cours pulse et lance
-// la séance ; une étape validée se rejoue en révision ; une étape verrouillée tremble sans rien lancer.
-import { useEffect, useState } from 'preact/hooks';
+// Accueil du programme (LECTURE.md §16) : le parcours de niveaux, sans texte. On grimpe : le niveau 1 est en bas.
+// Le niveau en cours pulse et lance sa séance ; un niveau gagné se rejoue ; un niveau verrouillé tremble.
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { returnTo } from '../../app/routes';
 import { IconButton } from '../../ui/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 import { playError } from '../../ui/sound';
-import { gatedItems } from './curriculum';
-import { STAGE_COLORS, StageIcon } from './StageIcon';
-import { READING_STAGES, type ReadingProgress, type ReadingStage } from './types';
-
-export type StageState = 'done' | 'current' | 'locked';
-
-export function stageState(progress: ReadingProgress, stage: ReadingStage): StageState {
-  if (progress.finished || stage < progress.stage) return 'done';
-  return stage === progress.stage ? 'current' : 'locked';
-}
-
-/** Items acquis / items à acquérir (ceux qui bloquent le passage) de l'étape. */
-export function stageGauge(progress: ReadingProgress, stage: ReadingStage): { acquired: number; total: number } {
-  let items: string[] = [];
-  try {
-    items = gatedItems(stage);
-  } catch {
-    items = [];
-  }
-  const acquired = items.filter((id) => progress.items[id]?.state === 'acquired').length;
-  return { acquired, total: items.length };
-}
+import { LevelIcon, TRACK_COLORS } from './LevelIcon';
+import { LEVELS, levelState, type LevelProgress, type LevelState, type ReadingLevel } from './levels';
 
 interface ReadingHomeProps {
-  progress: ReadingProgress;
+  progress: LevelProgress;
   /** `checkVoice()` = ready. */
   voiceReady: boolean;
-  onStart: (stage: ReadingStage, review: boolean) => void;
+  onStart: (level: ReadingLevel, review: boolean) => void;
 }
 
 export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps) {
-  const [shaking, setShaking] = useState<ReadingStage | null>(null);
+  const [shaking, setShaking] = useState<string | null>(null);
+  const pathRef = useRef<HTMLOListElement>(null);
+  const focusId = (progress.current ?? LEVELS[LEVELS.length - 1])?.id;
 
   useEffect(() => {
     if (shaking === null) return undefined;
@@ -44,14 +26,20 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
     return () => window.clearTimeout(id);
   }, [shaking]);
 
-  function tap(stage: ReadingStage, state: StageState) {
+  // Le niveau en cours est amené au milieu de l'écran à l'ouverture.
+  useEffect(() => {
+    const el = pathRef.current?.querySelector<HTMLElement>('[data-focus="true"]');
+    el?.scrollIntoView({ block: 'center' });
+  }, [focusId]);
+
+  function tap(level: ReadingLevel, state: LevelState) {
     if (!voiceReady) return;
     if (state === 'locked') {
       playError();
-      setShaking(stage);
+      setShaking(level.id);
       return;
     }
-    onStart(stage, state === 'done');
+    onStart(level, state === 'done');
   }
 
   return (
@@ -67,27 +55,28 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
         )}
       </header>
 
-      <ol class="rd-path" data-muted={voiceReady ? undefined : 'true'}>
-        {READING_STAGES.map((stage, i) => {
-          const state = stageState(progress, stage);
-          const colors = STAGE_COLORS[stage];
-          const gauge = state === 'current' ? stageGauge(progress, stage) : null;
-          const pct = gauge && gauge.total > 0 ? Math.round((gauge.acquired / gauge.total) * 100) : 0;
+      <ol class="rd-path" ref={pathRef} data-testid="reading-path" data-muted={voiceReady ? undefined : 'true'}>
+        {LEVELS.map((level, i) => {
+          const state = levelState(progress, level);
+          const colors = TRACK_COLORS[level.track];
           return (
-            <li key={stage} class="rd-step" data-side={i % 2 === 0 ? 'left' : 'right'}>
+            <li key={level.id} class="rd-step" data-side={i % 2 === 0 ? 'left' : 'right'}>
               <button
                 type="button"
-                class={`rd-medal${shaking === stage ? ' rd-medal--shake' : ''}`}
-                data-testid={`reading-stage-${stage}`}
+                class={`rd-medal${shaking === level.id ? ' rd-medal--shake' : ''}`}
+                data-testid={`reading-level-${level.index}`}
+                data-level={level.id}
+                data-game={level.game}
                 data-state={state}
+                data-focus={level.id === focusId ? 'true' : undefined}
                 disabled={!voiceReady}
                 aria-disabled={state === 'locked' ? 'true' : undefined}
-                aria-label={`Étape ${stage}`}
+                aria-label={`Niveau ${level.index}`}
                 style={`--m-main:${colors.main};--m-soft:${colors.soft};--m-dark:${colors.dark}`}
-                onClick={() => tap(stage, state)}
+                onClick={() => tap(level, state)}
               >
                 <span class="rd-medal__face">
-                  <StageIcon stage={stage} />
+                  <LevelIcon level={level} />
                 </span>
                 {state === 'current' && (
                   <span class="rd-medal__badge rd-medal__badge--play" aria-hidden="true">
@@ -107,19 +96,6 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
                   </span>
                 )}
               </button>
-              {gauge && (
-                <div
-                  class="rd-gauge"
-                  data-testid={`reading-gauge-${stage}`}
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={gauge.total}
-                  aria-valuenow={gauge.acquired}
-                  style={`--m-main:${colors.main}`}
-                >
-                  <span class="rd-gauge__fill" style={`width:${pct}%`} />
-                </div>
-              )}
             </li>
           );
         })}

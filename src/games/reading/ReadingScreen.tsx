@@ -1,5 +1,5 @@
-// Écran du programme « J'apprends à lire » (route `#/reading`, LECTURE.md §2). Trois états : accueil (les cinq
-// étapes), séance, fin. La progression n'est jamais stockée : elle est recalculée à partir des séances.
+// Écran du programme « J'apprends à lire » (route `#/reading`, LECTURE.md §2 et §16). Trois états : accueil (le
+// parcours de niveaux), séance, fin. La progression n'est jamais stockée : elle est recalculée à partir des séances.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useProfile } from '../../app/context';
 import { returnTo } from '../../app/routes';
@@ -9,18 +9,27 @@ import { Icon } from '../../ui/icons/Icon';
 import { checkVoice } from '../../ui/voice';
 import { listReadings } from '../../storage/readings';
 import { computeProgress, type ReadingSettings } from './progress';
-import { planSession } from './session';
+import { isLevelPass, levelProgress, type LevelProgress, type ReadingLevel } from './levels';
+import { planLevel } from './session';
 import { ReadingEnd, type EndInfo } from './ReadingEnd';
-import { ReadingHome, stageState } from './ReadingHome';
+import { ReadingHome } from './ReadingHome';
 import { ReadingSession } from './ReadingSession';
-import type { ReadingAnswer, ReadingProgress, ReadingSessionPlan, ReadingStage } from './types';
+import type { ReadingAnswer, ReadingProgress, ReadingSessionPlan } from './types';
 import './reading.css';
 
 interface ActiveSession {
   plan: ReadingSessionPlan;
+  level: ReadingLevel;
   review: boolean;
-  /** Progression avant la séance (pour savoir si une étape vient d'être validée). */
-  before: ReadingProgress;
+  /** Parcours avant la séance (pour savoir si le niveau vient d'être gagné). */
+  before: LevelProgress;
+}
+
+interface Loaded {
+  /** Maîtrise des items (leurres, statistiques). */
+  progress: ReadingProgress;
+  /** Position dans le parcours de niveaux. */
+  levels: LevelProgress;
 }
 
 type Phase = 'loading' | 'home' | 'session' | 'end' | 'error';
@@ -28,7 +37,7 @@ type Phase = 'loading' | 'home' | 'session' | 'end' | 'error';
 export function ReadingScreen() {
   const { profile } = useProfile();
   const [phase, setPhase] = useState<Phase>('loading');
-  const [progress, setProgress] = useState<ReadingProgress | null>(null);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [voiceReady, setVoiceReady] = useState(true);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [end, setEnd] = useState<EndInfo | null>(null);
@@ -43,11 +52,12 @@ export function ReadingScreen() {
   }, []);
 
   /** Recharge les séances et recalcule la progression ; renvoie null en cas d'échec. */
-  async function loadProgress(): Promise<ReadingProgress | null> {
+  async function loadProgress(): Promise<Loaded | null> {
     if (!profile) return null;
     try {
       const records = await listReadings(profile.id);
-      return computeProgress(records, profile.gameSettings?.reading);
+      const settings = profile.gameSettings?.reading;
+      return { progress: computeProgress(records, settings), levels: levelProgress(records, settings) };
     } catch (err) {
       console.error('reading progress failed', err);
       return null;
@@ -59,7 +69,7 @@ export function ReadingScreen() {
     if (!aliveRef.current) return;
     setVoiceReady(voice?.status === 'ready');
     if (next) {
-      setProgress(next);
+      setLoaded(next);
       setPhase('home');
     } else {
       setPhase((p) => (p === 'loading' ? 'error' : p));
@@ -71,30 +81,38 @@ export function ReadingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
-  function start(stage: ReadingStage, review: boolean) {
-    if (!progress) return;
+  function start(level: ReadingLevel, review: boolean) {
+    if (!loaded) return;
     try {
       seedRef.current = (seedRef.current + 0x9e3779b9) >>> 0;
       const rng = createRng((Date.now() ^ seedRef.current) >>> 0);
-      const plan = planSession(progress, rng, review ? { stage } : undefined);
-      setSession({ plan, review, before: progress });
+      const plan = planLevel(level, loaded.progress, rng);
+      setSession({ plan, level, review, before: loaded.levels });
       setPhase('session');
     } catch (err) {
-      console.error('reading planSession failed', err);
+      console.error('reading planLevel failed', err);
     }
   }
 
-  async function onFinish(_answers: readonly ReadingAnswer[]) {
+  async function onFinish(answers: readonly ReadingAnswer[]) {
     const current = session;
     if (!current) return;
     const after = await loadProgress();
     if (!aliveRef.current) return;
-    const stage = current.plan.stage;
-    const wasDone = stageState(current.before, stage) === 'done';
-    const nowDone = after ? stageState(after, stage) === 'done' : wasDone;
-    const justValidated = !current.review && !wasDone && nowDone;
-    if (after) setProgress(after);
-    setEnd({ stage, review: current.review, justValidated, programFinished: justValidated && Boolean(after?.finished) });
+    const { level, plan } = current;
+    const passed = isLevelPass({ status: 'completed', planned: plan.questions.length, answers: [...answers] });
+    const wasDone = current.before.passed.has(level.id);
+    const nowDone = after ? after.levels.passed.has(level.id) : wasDone;
+    const justValidated = !wasDone && nowDone;
+    if (after) setLoaded(after);
+    setEnd({
+      level,
+      review: current.review,
+      passed,
+      justValidated,
+      next: justValidated ? (after?.levels.current ?? null) : null,
+      programFinished: justValidated && Boolean(after?.levels.finished),
+    });
     setSession(null);
     setPhase('end');
   }
@@ -117,7 +135,7 @@ export function ReadingScreen() {
           </IconButton>
         </div>
       )}
-      {phase === 'home' && progress && <ReadingHome progress={progress} voiceReady={voiceReady} onStart={start} />}
+      {phase === 'home' && loaded && <ReadingHome progress={loaded.levels} voiceReady={voiceReady} onStart={start} />}
       {phase === 'session' && session && (
         <ReadingSession plan={session.plan} review={session.review} profileId={profile.id} onFinish={onFinish} />
       )}

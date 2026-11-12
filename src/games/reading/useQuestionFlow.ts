@@ -211,6 +211,7 @@ export function useQuestionFlow(opts: UseQuestionFlowOptions): QuestionFlow {
           demos,
           answers,
           review,
+          ...(plan.levelId ? { levelId: plan.levelId } : {}),
         });
         if (unmountedRef.current && kind !== 'complete') {
           slot.closed = true;
