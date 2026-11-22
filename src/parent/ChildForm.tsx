@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
 import { useProfile } from '../app/context';
-import { getTracks } from '../engine';
+import { getTracks, trackLabel } from '../engine';
 import type { Track } from '../engine';
-import { GAMES, defaultGameIds, resolveAvailability } from '../games';
+import { GAMES, defaultGameIds, isAdventureGame, resolveAvailability } from '../games';
 import type { Availability, GameId } from '../games';
 import { ColoringSettings } from '../games/coloring/ColoringSettings';
 import { ReadingSettings } from '../games/reading/ReadingSettings';
@@ -299,7 +299,8 @@ export function ChildForm(props: ChildFormProps) {
           {!tracksError && tracks !== null && tracks.length === 0 && (
             <p className="pa-muted">Aucun parcours disponible.</p>
           )}
-          {tracks && tracks.length > 0 && (
+          {tracks && tracks.length === 1 && <p className="pa-muted">{trackLabel(trackId)}</p>}
+          {tracks && tracks.length > 1 && (
             <div className="pa-track-list">
               {tracks.map((t) => (
                 <button
@@ -316,13 +317,26 @@ export function ChildForm(props: ChildFormProps) {
           )}
         </fieldset>
 
+        {GAMES.some((game) => isAdventureGame(game.id)) && (
+          <fieldset className="pa-field" data-testid="adventure-settings">
+            <legend className="pa-field__label">Aventure de lecture</legend>
+            <p className="pa-muted">La carte de l'enfant : un niveau de lecture par étape, toujours visible.</p>
+            {availability.reading && !availability.reading.available && (
+              <p className="pa-game-warning" role="alert">
+                {availability.reading.parentHint}
+              </p>
+            )}
+            <ReadingSettings value={gameSettings?.reading} onChange={handleReadingSettingsChange} />
+          </fieldset>
+        )}
+
         <fieldset className="pa-field">
           <legend className="pa-field__label">Jeux libres</legend>
           <p className="pa-muted">
             Sur l'accueil de l'enfant, à côté de la carte. Sans limite de parties : seul le temps de jeu compte.
           </p>
           <div className="pa-track-list">
-            {GAMES.map((game) => {
+            {GAMES.filter((game) => !isAdventureGame(game.id)).map((game) => {
               const checked = effectiveGames.includes(game.id);
               const gameAvailability = availability[game.id];
               return (

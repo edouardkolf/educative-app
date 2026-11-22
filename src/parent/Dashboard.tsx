@@ -2,8 +2,8 @@
 // et l'ajout d'un enfant. Les données et les réglages ont leurs propres onglets (ParentShell).
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { navigate } from '../app/routes';
-import { getTrack } from '../engine';
-import { getGame, visibleGameIds } from '../games';
+import { trackLabel } from '../engine';
+import { getGame, hubGameIds } from '../games';
 import { dayKey, getUsage, grantExtraMinutes, listProfiles } from '../storage';
 import type { Profile, UsageDay } from '../storage';
 import { Emoji } from '../ui/Emoji';
@@ -15,7 +15,7 @@ const GRANT_MINUTES = 15;
 
 function trackTitle(trackId: string): string {
   try {
-    return getTrack(trackId)?.title ?? trackId;
+    return trackLabel(trackId);
   } catch {
     return trackId;
   }
@@ -23,7 +23,7 @@ function trackTitle(trackId: string): string {
 
 /** « Jeux libres : Dictée quotidienne » (ou « aucun ») pour la carte du tableau de bord. */
 function gamesLabel(profile: Profile): string {
-  const labels = visibleGameIds(profile)
+  const labels = hubGameIds(profile)
     .map((id) => getGame(id)?.parentLabel)
     .filter((label): label is string => Boolean(label));
   return `Jeux libres : ${labels.length > 0 ? labels.join(', ') : 'aucun'}`;

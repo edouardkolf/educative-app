@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lecture": "vite --mode lecture",
     "build": "npm run validate:content && tsc --noEmit && vite build",
+    "build:lecture": "npm run validate:content && tsc --noEmit && vite build --mode lecture",
     "preview": "vite preview",
+    "preview:lecture": "vite preview --mode lecture",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "validate:content": "vitest run content.test catalog.test",

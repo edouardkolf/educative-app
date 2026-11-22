@@ -486,3 +486,9 @@
     opacity: 0;
   }
 }
+
+/* Mode admin : niveau pas encore atteint mais ouvert. Couleurs normales, contour pointillé pour le distinguer. */
+.rd-medal[data-state='open'] {
+  outline: 3px dashed var(--m-dark);
+  outline-offset: 3px;
+}

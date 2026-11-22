@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '../../engine/rng';
 import type { ReadingRecord } from '../../storage/readings';
 import { gamesForItem, GRAPHEMES } from './curriculum';
-import { getLevel, isLevelPass, LEVELS, levelProgress, levelState, passMark, type ReadingLevel } from './levels';
+import { getLevel, isLevelPass, isPlayable, LEVELS, levelProgress, levelState, passMark, type ReadingLevel } from './levels';
 import { computeProgress } from './progress';
 import { planLevel } from './session';
 import type { ReadingAnswer } from './types';
@@ -230,5 +230,16 @@ describe('planLevel : une séance = un niveau = un seul jeu', () => {
     const seen = computeProgress([session('drum-1', 5, 5, { demos: ['syllable-drum'] })]);
     expect(planLevel(getLevel('drum-2')!, seen, createRng(1)).demos).toEqual([]);
     expect(planLevel(getLevel('sound-a')!, seen, createRng(1)).demos).toEqual(['letter-sound']);
+  });
+});
+
+describe('parcours de niveaux : mode admin', () => {
+  it('unlockAll ouvre les niveaux non atteints sans toucher aux gagnés ni au niveau en cours', () => {
+    const p = levelProgress([session('drum-1', 5)]);
+    expect(levelState(p, level(1), { unlockAll: true })).toBe('done');
+    expect(levelState(p, level(2), { unlockAll: true })).toBe('current');
+    expect(levelState(p, level(3), { unlockAll: true })).toBe('open');
+    expect(isPlayable('open')).toBe(true);
+    expect(isPlayable('locked')).toBe(false);
   });
 });

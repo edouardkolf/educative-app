@@ -8,8 +8,10 @@ import type { PuzzleRecord } from './puzzles';
 import type { ReadingRecord } from './readings';
 import type { TicTacToeRecord } from './tictactoes';
 import type { AppSettings, LevelOverride, Profile, Run, UsageDay } from './types';
+import { FLAVOR } from '../app/flavor';
 
-export const DB_NAME = 'petits-malins';
+/** "petits-malins" ou "petits-lecteurs" selon la variante (src/app/flavor.ts) : deux apps, deux bases. */
+export const DB_NAME = FLAVOR.dbName;
 /** v2 : parties des jeux hors parcours (stores "dictations" et "colorings", docs/specs/HUB.md §5.1).
  * v3 : morpion et pendu (stores "tictactoes" et "hangmans", docs/specs/MORPION-PENDU.md §4).
  * v4 : jeux libres de logique (store "puzzles", docs/specs/JEUX-LOGIQUE.md §4).

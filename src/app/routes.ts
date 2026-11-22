@@ -9,7 +9,8 @@ export type Route =
   | { name: 'coloring' }
   | { name: 'tictactoe' }
   | { name: 'hangman' }
-  | { name: 'reading' }
+  /** `levelId` : séance d'un niveau lancée depuis la carte d'aventure (Petits Lecteurs) ; absent = accueil du programme. */
+  | { name: 'reading'; levelId?: string }
   | { name: 'guess-number' }
   | { name: 'code-breaker' }
   | { name: 'robot' }
@@ -57,7 +58,7 @@ export function parseHash(hash: string): Route {
     case 'hangman':
       return { name: 'hangman' };
     case 'reading':
-      return { name: 'reading' };
+      return rest[0] ? { name: 'reading', levelId: rest[0] } : { name: 'reading' };
     case 'guess-number':
       return { name: 'guess-number' };
     case 'code-breaker':
@@ -98,7 +99,7 @@ export function toHash(route: Route): string {
     case 'hangman':
       return '#/hangman';
     case 'reading':
-      return '#/reading';
+      return route.levelId ? `#/reading/${encodeURIComponent(route.levelId)}` : '#/reading';
     case 'guess-number':
       return '#/guess-number';
     case 'code-breaker':
@@ -123,7 +124,8 @@ export function toHash(route: Route): string {
 // main, tests). « Maison » remonte jusqu'à l'ancre (hub ou profils) au lieu d'empiler une entrée :
 // ainsi le retour Android ne rouvre jamais la partie ou le jeu restés dessous.
 
-export type HistoryAnchor = 'profiles' | 'hub';
+/** `map` : la carte d'aventure, d'où partent les niveaux de lecture (Petits Lecteurs). */
+export type HistoryAnchor = 'profiles' | 'hub' | 'map';
 
 interface HistoryState {
   depth: number | null;
@@ -159,7 +161,9 @@ export function navigate(route: Route, opts: { replace?: boolean } = {}): void {
 /** Au montage de l'écran profils et du hub : retient où revenir. Les profils ouvrent une nouvelle séance d'enfant. */
 export function markHistoryAnchor(anchor: HistoryAnchor): void {
   const depth = currentDepth();
+  // Une ancre plus basse efface celles du dessus : profils < hub < carte.
   if (anchor === 'profiles') delete anchors.hub;
+  if (anchor === 'profiles' || anchor === 'hub') delete anchors.map;
   if (depth === null) delete anchors[anchor];
   else anchors[anchor] = depth;
 }

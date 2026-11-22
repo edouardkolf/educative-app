@@ -5,6 +5,9 @@ const chromiumExecutablePath = '/opt/pw-browsers/chromium';
 // E2E_PORT permet à deux sessions de tests de tourner en parallèle (port et dossier de build distincts).
 const port = Number(process.env.E2E_PORT ?? 4173);
 const outDir = port === 4173 ? 'dist' : `dist-e2e-${port}`;
+// Petits Lecteurs (docs/specs/LECTURE-APP.md) : construit et servi à part, joué par le projet « lecture ».
+const lecturePort = port + 100;
+const lectureOutDir = `dist-e2e-lecture-${lecturePort}`;
 const launchOptions = existsSync(chromiumExecutablePath)
   ? { executablePath: chromiumExecutablePath }
   : {};
@@ -13,12 +16,20 @@ export default defineConfig({
   testDir: 'tests/e2e',
   outputDir: port === 4173 ? 'test-results' : `test-results-${port}`,
   fullyParallel: false,
-  webServer: {
-    command: `npx vite build --outDir ${outDir} && npx vite preview --outDir ${outDir} --port ${port} --strictPort`,
-    url: `http://localhost:${port}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      command: `npx vite build --outDir ${outDir} && npx vite preview --outDir ${outDir} --port ${port} --strictPort`,
+      url: `http://localhost:${port}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+    {
+      command: `npx vite build --mode lecture --outDir ${lectureOutDir} && npx vite preview --mode lecture --outDir ${lectureOutDir} --port ${lecturePort} --strictPort`,
+      url: `http://localhost:${lecturePort}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+  ],
   use: {
     baseURL: `http://localhost:${port}`,
     trace: 'retain-on-failure',
@@ -26,8 +37,18 @@ export default defineConfig({
   projects: [
     {
       name: 'mobile-chrome',
+      testIgnore: '**/lecture/**',
       use: {
         ...devices['Pixel 7'],
+        launchOptions,
+      },
+    },
+    {
+      name: 'lecture',
+      testDir: 'tests/e2e/lecture',
+      use: {
+        ...devices['Pixel 7'],
+        baseURL: `http://localhost:${lecturePort}`,
         launchOptions,
       },
     },

@@ -1,6 +1,6 @@
 // Une séance de « J'apprends à lire » (LECTURE.md §2 et §9) : maison, points d'avancement, haut-parleur, et la vue
 // du jeu en cours. Tout l'enchaînement (voix, relance, enregistrement) est dans `useQuestionFlow`.
-import { returnTo } from '../../app/routes';
+import { returnTo, type HistoryAnchor } from '../../app/routes';
 import { IconButton } from '../../ui/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 import { TutorialHand } from '../../ui/TutorialHand';
@@ -14,9 +14,11 @@ interface ReadingSessionProps {
   review: boolean;
   profileId: string;
   onFinish: (answers: readonly ReadingAnswer[]) => void;
+  /** Où mène la maison : l'accueil (hub) ou, séance lancée depuis la carte d'aventure, la carte. */
+  exitTo?: HistoryAnchor;
 }
 
-export function ReadingSession({ plan, review, profileId, onFinish }: ReadingSessionProps) {
+export function ReadingSession({ plan, review, profileId, onFinish, exitTo = 'hub' }: ReadingSessionProps) {
   const flow = useQuestionFlow({ plan, review, profileId, onFinish });
   const { question, viewProps, dots } = flow;
   const colors = STAGE_COLORS[plan.stage];
@@ -35,12 +37,12 @@ export function ReadingSession({ plan, review, profileId, onFinish }: ReadingSes
           size={56}
           onClick={() => {
             flow.goHome();
-            returnTo('hub');
+            returnTo(exitTo);
           }}
-          aria-label="Retour à l'accueil"
-          data-testid="to-hub"
+          aria-label={exitTo === 'map' ? 'Retour à la carte' : "Retour à l'accueil"}
+          data-testid={exitTo === 'map' ? 'to-map' : 'to-hub'}
         >
-          <Icon name="home" size={36} />
+          <Icon name={exitTo === 'map' ? 'map' : 'home'} size={36} />
         </IconButton>
         <ol class="rd-dots" data-testid="reading-dots" aria-hidden="true">
           {Array.from({ length: dots.total }, (_, i) => (

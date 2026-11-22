@@ -1,15 +1,18 @@
 // Écran du programme « J'apprends à lire » (route `#/reading`, LECTURE.md §2 et §16). Trois états : accueil (le
 // parcours de niveaux), séance, fin. La progression n'est jamais stockée : elle est recalculée à partir des séances.
+// Avec `levelId` (route `#/reading/<niveau>`, Petits Lecteurs, LECTURE-APP.md §3) : pas d'accueil, la séance du
+// niveau démarre tout de suite et tout retour mène à la carte d'aventure.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useProfile } from '../../app/context';
 import { returnTo } from '../../app/routes';
+import { getSettings } from '../../storage/settings';
 import { createRng } from '../../engine/rng';
 import { IconButton } from '../../ui/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 import { checkVoice } from '../../ui/voice';
 import { listReadings } from '../../storage/readings';
 import { computeProgress, type ReadingSettings } from './progress';
-import { isLevelPass, levelProgress, type LevelProgress, type ReadingLevel } from './levels';
+import { getLevel, isLevelPass, isPlayable, levelProgress, levelState, type LevelProgress, type ReadingLevel } from './levels';
 import { planLevel } from './session';
 import { ReadingEnd, type EndInfo } from './ReadingEnd';
 import { ReadingHome } from './ReadingHome';
@@ -30,12 +33,20 @@ interface Loaded {
   progress: ReadingProgress;
   /** Position dans le parcours de niveaux. */
   levels: LevelProgress;
+  /** Mode admin : tous les niveaux sont ouverts. */
+  unlockAll: boolean;
 }
 
 type Phase = 'loading' | 'home' | 'session' | 'end' | 'error';
 
-export function ReadingScreen() {
+interface ReadingScreenProps {
+  /** Niveau à jouer tout de suite (séance lancée depuis la carte d'aventure). */
+  levelId?: string;
+}
+
+export function ReadingScreen({ levelId }: ReadingScreenProps = {}) {
   const { profile } = useProfile();
+  const fromMap = levelId !== undefined;
   const [phase, setPhase] = useState<Phase>('loading');
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [voiceReady, setVoiceReady] = useState(true);
@@ -55,9 +66,13 @@ export function ReadingScreen() {
   async function loadProgress(): Promise<Loaded | null> {
     if (!profile) return null;
     try {
-      const records = await listReadings(profile.id);
+      const [records, appSettings] = await Promise.all([listReadings(profile.id), getSettings()]);
       const settings = profile.gameSettings?.reading;
-      return { progress: computeProgress(records, settings), levels: levelProgress(records, settings) };
+      return {
+        progress: computeProgress(records, settings),
+        levels: levelProgress(records, settings),
+        unlockAll: appSettings.adminUnlockAll === true,
+      };
     } catch (err) {
       console.error('reading progress failed', err);
       return null;
@@ -68,7 +83,17 @@ export function ReadingScreen() {
     const [next, voice] = await Promise.all([loadProgress(), checkVoice().catch(() => null)]);
     if (!aliveRef.current) return;
     setVoiceReady(voice?.status === 'ready');
-    if (next) {
+    if (next && fromMap) {
+      // Depuis la carte : niveau inconnu, verrouillé ou voix absente → retour à la carte (qui montre la cause).
+      const level = getLevel(levelId);
+      const state = level ? levelState(next.levels, level, { unlockAll: next.unlockAll }) : 'locked';
+      setLoaded(next);
+      if (!level || !isPlayable(state) || voice?.status !== 'ready') {
+        returnTo('map');
+        return;
+      }
+      start(level, state === 'done', next);
+    } else if (next) {
       setLoaded(next);
       setPhase('home');
     } else {
@@ -79,15 +104,15 @@ export function ReadingScreen() {
   useEffect(() => {
     if (profile) void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, [profile?.id, levelId]);
 
-  function start(level: ReadingLevel, review: boolean) {
-    if (!loaded) return;
+  function start(level: ReadingLevel, review: boolean, from: Loaded | null = loaded) {
+    if (!from) return;
     try {
       seedRef.current = (seedRef.current + 0x9e3779b9) >>> 0;
       const rng = createRng((Date.now() ^ seedRef.current) >>> 0);
-      const plan = planLevel(level, loaded.progress, rng);
-      setSession({ plan, level, review, before: loaded.levels });
+      const plan = planLevel(level, from.progress, rng);
+      setSession({ plan, level, review, before: from.levels });
       setPhase('session');
     } catch (err) {
       console.error('reading planLevel failed', err);
@@ -118,6 +143,10 @@ export function ReadingScreen() {
   }
 
   function backHome() {
+    if (fromMap) {
+      returnTo('map');
+      return;
+    }
     setEnd(null);
     setPhase('home');
     void reload();
@@ -130,14 +159,32 @@ export function ReadingScreen() {
       {phase === 'loading' && <div class="screen rd-loading" />}
       {phase === 'error' && (
         <div class="screen rd-loading">
-          <IconButton size={72} onClick={() => returnTo('hub')} aria-label="Retour à l'accueil" data-testid="to-hub">
-            <Icon name="home" size={44} />
+          <IconButton
+            size={72}
+            onClick={() => returnTo(fromMap ? 'map' : 'hub')}
+            aria-label={fromMap ? 'Retour à la carte' : "Retour à l'accueil"}
+            data-testid={fromMap ? 'to-map' : 'to-hub'}
+          >
+            <Icon name={fromMap ? 'map' : 'home'} size={44} />
           </IconButton>
         </div>
       )}
-      {phase === 'home' && loaded && <ReadingHome progress={loaded.levels} voiceReady={voiceReady} onStart={start} />}
+      {phase === 'home' && loaded && (
+        <ReadingHome
+          progress={loaded.levels}
+          voiceReady={voiceReady}
+          unlockAll={loaded.unlockAll}
+          onStart={(level, review) => start(level, review)}
+        />
+      )}
       {phase === 'session' && session && (
-        <ReadingSession plan={session.plan} review={session.review} profileId={profile.id} onFinish={onFinish} />
+        <ReadingSession
+          plan={session.plan}
+          review={session.review}
+          profileId={profile.id}
+          onFinish={onFinish}
+          exitTo={fromMap ? 'map' : 'hub'}
+        />
       )}
       {phase === 'end' && end && <ReadingEnd info={end} onContinue={backHome} />}
     </div>

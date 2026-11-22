@@ -6,16 +6,18 @@ import { IconButton } from '../../ui/IconButton';
 import { Icon } from '../../ui/icons/Icon';
 import { playError } from '../../ui/sound';
 import { LevelIcon, TRACK_COLORS } from './LevelIcon';
-import { LEVELS, levelState, type LevelProgress, type LevelState, type ReadingLevel } from './levels';
+import { isPlayable, LEVELS, levelState, type LevelProgress, type LevelState, type ReadingLevel } from './levels';
 
 interface ReadingHomeProps {
   progress: LevelProgress;
   /** `checkVoice()` = ready. */
   voiceReady: boolean;
   onStart: (level: ReadingLevel, review: boolean) => void;
+  /** Mode admin : tous les niveaux sont ouverts. */
+  unlockAll?: boolean;
 }
 
-export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps) {
+export function ReadingHome({ progress, voiceReady, onStart, unlockAll = false }: ReadingHomeProps) {
   const [shaking, setShaking] = useState<string | null>(null);
   const pathRef = useRef<HTMLOListElement>(null);
   const focusId = (progress.current ?? LEVELS[LEVELS.length - 1])?.id;
@@ -34,7 +36,7 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
 
   function tap(level: ReadingLevel, state: LevelState) {
     if (!voiceReady) return;
-    if (state === 'locked') {
+    if (!isPlayable(state)) {
       playError();
       setShaking(level.id);
       return;
@@ -57,7 +59,7 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
 
       <ol class="rd-path" ref={pathRef} data-testid="reading-path" data-muted={voiceReady ? undefined : 'true'}>
         {LEVELS.map((level, i) => {
-          const state = levelState(progress, level);
+          const state = levelState(progress, level, { unlockAll });
           const colors = TRACK_COLORS[level.track];
           return (
             <li key={level.id} class="rd-step" data-side={i % 2 === 0 ? 'left' : 'right'}>

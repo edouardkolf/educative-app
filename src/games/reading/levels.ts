@@ -142,7 +142,8 @@ export function getLevel(id: string): ReadingLevel | undefined {
   return LEVEL_BY_ID.get(id);
 }
 
-export type LevelState = 'done' | 'current' | 'locked';
+/** `open` : niveau pas encore atteint mais ouvert par le mode admin (`AppSettings.adminUnlockAll`). */
+export type LevelState = 'done' | 'current' | 'locked' | 'open';
 
 export interface LevelProgress {
   /** Niveaux gagnés (ou tenus pour acquis par le réglage « étape de départ »). */
@@ -178,7 +179,13 @@ export function levelProgress(records: readonly ReadingRecord[], settings?: Read
   return { passed, current, finished: current === null, attempts };
 }
 
-export function levelState(progress: LevelProgress, level: ReadingLevel): LevelState {
+export function levelState(progress: LevelProgress, level: ReadingLevel, opts: { unlockAll?: boolean } = {}): LevelState {
   if (progress.passed.has(level.id)) return 'done';
-  return progress.current?.id === level.id ? 'current' : 'locked';
+  if (progress.current?.id === level.id) return 'current';
+  return opts.unlockAll ? 'open' : 'locked';
+}
+
+/** Un niveau dans cet état se lance-t-il ? (`done` = révision.) */
+export function isPlayable(state: LevelState): boolean {
+  return state !== 'locked';
 }

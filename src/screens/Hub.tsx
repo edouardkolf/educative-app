@@ -5,7 +5,8 @@ import type { Route } from '../app/routes';
 import { markHistoryAnchor, navigate, returnTo } from '../app/routes';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
-import { getGame, resolveAvailability, visibleGameIds } from '../games';
+import { FLAVOR } from '../app/flavor';
+import { getGame, hubGameIds, resolveAvailability } from '../games';
 import { playTap } from '../ui/sound';
 import { Emoji } from '../ui/Emoji';
 import { Icon } from '../ui/icons/Icon';
@@ -30,10 +31,13 @@ export function Hub() {
     markHistoryAnchor('hub');
   }, []);
 
-  const gameIds = profile ? visibleGameIds(profile) : [];
+  // Le jeu d'aventure de la variante (la lecture dans Petits Lecteurs) a la tuile « carte », pas une tuile à lui.
+  const gameIds = profile ? hubGameIds(profile) : [];
   // La liste ne change qu'avec le profil ou les jeux visibles : une chaîne stable évite de relancer
   // les vérifications de disponibilité à chaque rendu.
-  const gameIdsKey = gameIds.join(',');
+  // L'aventure de lecture a besoin de la voix : sa disponibilité est vérifiée comme celle d'un jeu (badge sur la carte).
+  const adventureId = FLAVOR.adventureGame;
+  const gameIdsKey = (adventureId ? [adventureId, ...gameIds] : gameIds).join(',');
 
   // Chaque montage relance la vérification de disponibilité (§2.1) : au plus 2 s, jamais bloquante.
   useEffect(() => {
@@ -70,6 +74,7 @@ export function Hub() {
   };
 
   const world = worldIdAt(profile.seenWorld ?? 0);
+  const mapState: TileState | undefined = adventureId ? (states[adventureId] ?? 'checking') : undefined;
   const count = 1 + gameIds.length;
 
   return (
@@ -89,8 +94,10 @@ export function Hub() {
           testId="hub-tile-map"
           ariaLabel="Carte"
           world={world}
+          state={mapState}
           onClick={() => goTo({ name: 'map' })}
           style={{ '--enter-delay': '0ms' }}
+          badge={mapState === 'unavailable' ? <Icon name="speaker-off" size={40} /> : undefined}
         >
           <span class="hub-tile__backdrop" aria-hidden="true">
             <WorldBackdrop world={world} veil="soft" />

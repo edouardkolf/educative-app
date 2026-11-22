@@ -152,6 +152,11 @@ export interface AppSettings {
   /** Une session par enfant (clé = profileId) : passer par l'autre enfant ne remet pas ce minuteur à zéro. */
   sessions: Record<string, SessionState>;
   lock: LockState | null;
+  /**
+   * Mode admin (réglage caché de l'espace parent) : tous les niveaux sont ouverts, sur la carte comme dans la
+   * lecture, pour tous les enfants de ce téléphone. Absent = désactivé. Jamais exporté.
+   */
+  adminUnlockAll?: boolean;
 }
 
 export const EXPORT_FORMAT = 'petits-malins-export';

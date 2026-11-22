@@ -64,6 +64,7 @@ describe('parseHash / toHash', () => {
     { name: 'tictactoe' },
     { name: 'hangman' },
     { name: 'reading' },
+    { name: 'reading', levelId: 'sound-a' },
     { name: 'locked' },
     { name: 'parent', path: ['children', 'p1'] },
   ])('aller-retour pour %o', async (route) => {
@@ -186,6 +187,23 @@ describe('navigate, markHistoryAnchor, returnTo', () => {
     returnTo('profiles');
     expect(historyMock.go).not.toHaveBeenCalled();
     expect(historyMock.replaceState).toHaveBeenCalledWith({ depth: null }, '', '#/');
+  });
+
+  it("markHistoryAnchor('hub') efface l'ancre carte : la carte se trouve au-dessus du hub", async () => {
+    const { historyMock } = stubBrowser('#/');
+    const { markHistoryAnchor, navigate, returnTo } = await import('./routes');
+    historyMock.replaceState({ depth: 0 }, '');
+    navigate({ name: 'hub' });
+    markHistoryAnchor('hub');
+    navigate({ name: 'map' });
+    markHistoryAnchor('map');
+    navigate({ name: 'reading', levelId: 'drum-1' });
+    returnTo('map'); // ancre connue et plus basse : on remonte d'une entrée
+    expect(historyMock.go).toHaveBeenCalledWith(-1);
+    historyMock.go.mockClear();
+    markHistoryAnchor('hub');
+    returnTo('map'); // ancre oubliée : on remplace au lieu de sauter
+    expect(historyMock.go).not.toHaveBeenCalled();
   });
 
   it("markHistoryAnchor('profiles') efface l'ancre hub : une nouvelle séance d'enfant commence", async () => {

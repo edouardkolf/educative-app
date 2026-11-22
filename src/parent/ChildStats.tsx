@@ -2,7 +2,8 @@
 // carte du parcours (bilan par compétence ou par jeu, une carte par niveau — ARCHITECTURE §7, HUB.md §5.5/§6.4).
 import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { chanceOfFirstTry, computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault } from '../engine';
+import { FLAVOR } from '../app/flavor';
+import { chanceOfFirstTry, computeLevelStates, computeLevelStats, getLevel, getTrackOrDefault, trackLabel } from '../engine';
 import type { LevelStats, LevelStatus, MechanicId, SkillId } from '../engine';
 import { GAMES, visibleGameIds } from '../games';
 import { ColoringStats } from '../games/coloring/ColoringStats';
@@ -165,7 +166,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
   ]);
 
   const track = getTrackOrDefault(profile.trackId); // F11 : parcours inconnu → premier disponible
-  const trackTitle = track?.title ?? profile.trackId;
+  const trackTitle = trackLabel(profile.trackId);
   const levelIds = track?.levels ?? [];
   const states = track ? computeLevelStates(track, runs, overrides) : [];
   const overrideByLevel = new Map(overrides.map((o) => [o.levelId, o.state]));
@@ -210,7 +211,7 @@ async function loadStats(profileId: string): Promise<StatsData> {
 
 /** Libellé d'une ligne du tableau « Temps par activité » (HUB.md §6.4). */
 function activityRowLabel(id: string): string {
-  if (id === 'map') return 'Carte';
+  if (id === 'map') return FLAVOR.adventureGame === 'reading' ? "Carte de l'aventure" : 'Carte';
   if (id === 'hub') return 'Accueil';
   if (id === 'total') return 'Total';
   if (id === 'reading') return 'Lecture';
@@ -276,6 +277,8 @@ export function ChildStats(props: { profileId: string }) {
     );
   }
 
+  // Petits Lecteurs n'a pas de carte de compétences : ni parties de niveaux ni « points forts » à montrer.
+  const skillMap = FLAVOR.adventureGame === null;
   const { profile, trackTitle, levels, summary, skills, games, dictations, colorings, tictactoes, hangmans, puzzles, readings, usageDays } =
     data;
   const recordsByGame: Record<string, readonly GameRecordBase[]> = {
@@ -331,14 +334,18 @@ export function ChildStats(props: { profileId: string }) {
       </header>
 
       <section className="pa-section pa-summary">
-        <div className="pa-stat">
-          <span className="pa-stat__value">{summary.totalRuns}</span>
-          <span className="pa-stat__label">Parties lancées</span>
-        </div>
-        <div className="pa-stat">
-          <span className="pa-stat__value">{formatPercentage(summary.firstTryRate)}</span>
-          <span className="pa-stat__label">Réussite au 1er coup</span>
-        </div>
+        {skillMap && (
+          <>
+            <div className="pa-stat">
+              <span className="pa-stat__value">{summary.totalRuns}</span>
+              <span className="pa-stat__label">Parties lancées</span>
+            </div>
+            <div className="pa-stat">
+              <span className="pa-stat__value">{formatPercentage(summary.firstTryRate)}</span>
+              <span className="pa-stat__label">Réussite au 1er coup</span>
+            </div>
+          </>
+        )}
         <div className="pa-stat">
           <span className="pa-stat__value">{formatDuration(summary.playTimeMs + freeGamesActiveMs)}</span>
           <span className="pa-stat__label">Temps de jeu total</span>
@@ -422,117 +429,121 @@ export function ChildStats(props: { profileId: string }) {
         );
       })}
 
-      <h2 className="pa-section__title">Carte du parcours</h2>
+      {skillMap && (
+        <>
+        <h2 className="pa-section__title">Carte du parcours</h2>
 
-      <section className="pa-section" data-testid="skill-stats">
-        <h2 className="pa-section__title">Points forts et points à travailler</h2>
-        <div className="pa-segmented" role="group" aria-label="Regrouper">
-          {(['skill', 'mechanic'] as const).map((choice) => (
-            <button
-              key={choice}
-              type="button"
-              className="pa-segmented__option"
-              data-testid={`group-by-${choice}`}
-              aria-pressed={groupBy === choice}
-              onClick={() => setGroupBy(choice)}
-            >
-              {GROUP_BY_LABELS[choice]}
-            </button>
-          ))}
-        </div>
-        <p className="pa-muted">
-          Du mieux au moins bien réussi du premier coup, une fois retirée la part que donnerait le hasard.
-        </p>
-        <ul className="pa-skill-list">
-          {groups.map((g) => (
-            <GroupRow key={g.key} label={g.label} testId={g.testId} summary={g.summary} />
-          ))}
-        </ul>
-      </section>
-
-      <section className="pa-section">
-        <h2 className="pa-section__title">Niveaux</h2>
-        {overrideError && (
-          <p className="pa-error" role="alert">
-            {overrideError}
+        <section className="pa-section" data-testid="skill-stats">
+          <h2 className="pa-section__title">Points forts et points à travailler</h2>
+          <div className="pa-segmented" role="group" aria-label="Regrouper">
+            {(['skill', 'mechanic'] as const).map((choice) => (
+              <button
+                key={choice}
+                type="button"
+                className="pa-segmented__option"
+                data-testid={`group-by-${choice}`}
+                aria-pressed={groupBy === choice}
+                onClick={() => setGroupBy(choice)}
+              >
+                {GROUP_BY_LABELS[choice]}
+              </button>
+            ))}
+          </div>
+          <p className="pa-muted">
+            Du mieux au moins bien réussi du premier coup, une fois retirée la part que donnerait le hasard.
           </p>
-        )}
-        <div className="pa-level-list">
-          {levels.map((level) => (
-            <article key={level.levelId} className="pa-level-card" data-testid={`level-stats-${level.levelId}`}>
-              <div className="pa-level-card__header">
-                <div>
-                  <h3 className="pa-level-card__title">{level.title}</h3>
-                  <p className="pa-level-card__skill">{level.skill ? SKILL_LABELS[level.skill] : '—'}</p>
-                </div>
-                <span className={`pa-badge pa-badge--${level.status}`}>{STATUS_LABELS[level.status]}</span>
-              </div>
+          <ul className="pa-skill-list">
+            {groups.map((g) => (
+              <GroupRow key={g.key} label={g.label} testId={g.testId} summary={g.summary} />
+            ))}
+          </ul>
+        </section>
 
-              <Stars count={level.stats.bestStars} />
+        <section className="pa-section">
+          <h2 className="pa-section__title">Niveaux</h2>
+          {overrideError && (
+            <p className="pa-error" role="alert">
+              {overrideError}
+            </p>
+          )}
+          <div className="pa-level-list">
+            {levels.map((level) => (
+              <article key={level.levelId} className="pa-level-card" data-testid={`level-stats-${level.levelId}`}>
+                <div className="pa-level-card__header">
+                  <div>
+                    <h3 className="pa-level-card__title">{level.title}</h3>
+                    <p className="pa-level-card__skill">{level.skill ? SKILL_LABELS[level.skill] : '—'}</p>
+                  </div>
+                  <span className={`pa-badge pa-badge--${level.status}`}>{STATUS_LABELS[level.status]}</span>
+                </div>
 
-              <dl className="pa-stat-grid">
-                <div className="pa-stat-grid__item">
-                  <dt>Essais</dt>
-                  <dd>{level.stats.runs}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Réussites</dt>
-                  <dd>{level.stats.completed}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Abandons</dt>
-                  <dd>{level.stats.abandoned}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Interruptions</dt>
-                  <dd>{level.stats.interrupted}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Vies perdues</dt>
-                  <dd>{level.stats.outOfLives}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Rejeux</dt>
-                  <dd>{level.stats.replays}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Taux de réussite</dt>
-                  <dd>{formatPercentage(level.stats.firstTryRate)}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Temps de jeu</dt>
-                  <dd>{formatDuration(level.stats.playTimeMs)}</dd>
-                </div>
-                <div className="pa-stat-grid__item">
-                  <dt>Dernière partie</dt>
-                  <dd>{formatDateTime(level.stats.lastPlayedAt)}</dd>
-                </div>
-              </dl>
+                <Stars count={level.stats.bestStars} />
 
-              <p className="pa-field__label">Déblocage</p>
-              <div className="pa-segmented" role="group" aria-label={`Déblocage de ${level.title}`}>
-                {(['auto', 'unlocked', 'locked'] as const).map((choice) => {
-                  const state: OverrideState = choice === 'auto' ? null : choice;
-                  return (
-                    <button
-                      key={choice}
-                      type="button"
-                      className="pa-segmented__option"
-                      data-testid={`override-${level.levelId}-${choice}`}
-                      aria-pressed={level.override === state}
-                      disabled={overridePending === level.levelId}
-                      onClick={() => handleOverrideChange(level.levelId, state)}
-                    >
-                      {OVERRIDE_LABELS[choice]}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="pa-muted">« Auto » suit la règle des étoiles.</p>
-            </article>
-          ))}
-        </div>
-      </section>
+                <dl className="pa-stat-grid">
+                  <div className="pa-stat-grid__item">
+                    <dt>Essais</dt>
+                    <dd>{level.stats.runs}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Réussites</dt>
+                    <dd>{level.stats.completed}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Abandons</dt>
+                    <dd>{level.stats.abandoned}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Interruptions</dt>
+                    <dd>{level.stats.interrupted}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Vies perdues</dt>
+                    <dd>{level.stats.outOfLives}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Rejeux</dt>
+                    <dd>{level.stats.replays}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Taux de réussite</dt>
+                    <dd>{formatPercentage(level.stats.firstTryRate)}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Temps de jeu</dt>
+                    <dd>{formatDuration(level.stats.playTimeMs)}</dd>
+                  </div>
+                  <div className="pa-stat-grid__item">
+                    <dt>Dernière partie</dt>
+                    <dd>{formatDateTime(level.stats.lastPlayedAt)}</dd>
+                  </div>
+                </dl>
+
+                <p className="pa-field__label">Déblocage</p>
+                <div className="pa-segmented" role="group" aria-label={`Déblocage de ${level.title}`}>
+                  {(['auto', 'unlocked', 'locked'] as const).map((choice) => {
+                    const state: OverrideState = choice === 'auto' ? null : choice;
+                    return (
+                      <button
+                        key={choice}
+                        type="button"
+                        className="pa-segmented__option"
+                        data-testid={`override-${level.levelId}-${choice}`}
+                        aria-pressed={level.override === state}
+                        disabled={overridePending === level.levelId}
+                        onClick={() => handleOverrideChange(level.levelId, state)}
+                      >
+                        {OVERRIDE_LABELS[choice]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="pa-muted">« Auto » suit la règle des étoiles.</p>
+              </article>
+            ))}
+          </div>
+        </section>
+        </>
+      )}
 
       <section className="pa-help-box">
         <h2 className="pa-section__title">Comment lire ces chiffres</h2>

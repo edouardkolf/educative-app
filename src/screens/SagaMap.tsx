@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { computeLevelStates, getLevel, getTrackOrDefault } from '../engine';
 import type { LevelState, MechanicId } from '../engine/types';
-import { listOverrides, listRuns, saveProfile } from '../storage';
+import { getSettings, listOverrides, listRuns, saveProfile } from '../storage';
 import { navigate, returnTo } from '../app/routes';
 import { useProfile } from '../app/context';
 import { useSession } from '../app/SessionProvider';
@@ -94,9 +94,9 @@ export function SagaMap() {
           if (!cancelled) setStates([]);
           return;
         }
-        const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
+        const [runs, overrides, settings] = await Promise.all([listRuns(profile.id), listOverrides(profile.id), getSettings()]);
         if (cancelled) return;
-        const next = computeLevelStates(track, runs, overrides);
+        const next = computeLevelStates(track, runs, overrides, { unlockAll: settings.adminUnlockAll });
         const entry = pendingWorldEntry(next, profile.seenWorld);
         setArrival(
           entry ? { entry, phase: entry.fromIndex === null || prefersReducedMotion() ? 'banner' : 'travel' } : null,

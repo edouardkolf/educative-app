@@ -1,4 +1,5 @@
 // Contenu pédagogique : intégré au build via import.meta.glob (disponible hors ligne, pas de fetch).
+import { FLAVOR } from '../app/flavor';
 import type { Level, Track } from './types';
 
 const levelModules = import.meta.glob('/content/levels/**/*.json', {
@@ -18,7 +19,11 @@ const schoolRank = (id: string): number => {
   const rank = SCHOOL_ORDER.indexOf(id);
   return rank === -1 ? SCHOOL_ORDER.length : rank;
 };
-const tracks: Track[] = Object.values(trackModules).sort((a, b) => schoolRank(a.id) - schoolRank(b.id));
+// Petits Lecteurs (src/app/flavor.ts) : seul le parcours de maternelle est proposé.
+const flavorTracks = FLAVOR.trackIds;
+const tracks: Track[] = Object.values(trackModules)
+  .filter((track) => flavorTracks === null || flavorTracks.includes(track.id))
+  .sort((a, b) => schoolRank(a.id) - schoolRank(b.id));
 
 const levelsById = new Map(levels.map((level) => [level.id, level]));
 const tracksById = new Map(tracks.map((track) => [track.id, track]));
@@ -38,6 +43,11 @@ export function getTrack(trackId: string): Track | undefined {
  */
 export function getTrackOrDefault(trackId: string): Track | undefined {
   return getTrack(trackId) ?? getTracks()[0];
+}
+
+/** Libellé du parcours pour le parent : celui de la variante s'il existe (« Maternelle »), sinon le titre du parcours. */
+export function trackLabel(trackId: string): string {
+  return FLAVOR.trackLabel ?? getTrack(trackId)?.title ?? trackId;
 }
 
 export function getLevel(levelId: string): Level | undefined {

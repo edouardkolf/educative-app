@@ -9,6 +9,8 @@ import { visibleGameIds } from '../games';
 import { setSoundEnabled, unlockAudio } from '../ui/sound';
 import { ProfilePicker } from '../screens/ProfilePicker';
 import { SagaMap } from '../screens/SagaMap';
+import { ReadingMap } from '../screens/adventure/ReadingMap';
+import { FLAVOR } from './flavor';
 import { LevelPlayer } from '../screens/LevelPlayer';
 import { LockScreen } from '../screens/LockScreen';
 import { ParentSpace } from '../parent/ParentSpace';
@@ -123,7 +125,9 @@ function renderRoute(route: Route, profile: Profile | null) {
     case 'hub':
       return profile ? <Hub /> : null;
     case 'map':
-      return profile ? <SagaMap /> : null;
+      // Petits Lecteurs : l'aventure est le parcours de lecture, posé sur la carte des mondes.
+      if (!profile) return null;
+      return FLAVOR.adventureGame === 'reading' ? <ReadingMap /> : <SagaMap />;
     case 'play':
       return profile ? <LevelPlayer levelId={route.levelId} /> : null;
     case 'dictation':
@@ -135,7 +139,7 @@ function renderRoute(route: Route, profile: Profile | null) {
     case 'hangman':
       return profile ? <HangmanScreen /> : null;
     case 'reading':
-      return profile ? <ReadingScreen /> : null;
+      return profile ? <ReadingScreen levelId={route.levelId} key={route.levelId ?? 'home'} /> : null;
     case 'guess-number':
     case 'code-breaker':
     case 'robot':

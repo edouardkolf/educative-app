@@ -283,12 +283,12 @@ interface StoredReading {
   answers: { game: string; itemId: string; correct: boolean; chosen: string | null; retry: boolean; replays: number }[];
 }
 
-/** Lit le store `readings` d'IndexedDB (base de l'app, déjà créée). */
-export async function readReadings(page: Page): Promise<StoredReading[]> {
+/** Lit le store `readings` d'IndexedDB (base de l'app, déjà créée ; `petits-lecteurs` pour Petits Lecteurs). */
+export async function readReadings(page: Page, dbName = 'petits-malins'): Promise<StoredReading[]> {
   return page.evaluate(
-    () =>
+    (name) =>
       new Promise<StoredReading[]>((resolve, reject) => {
-        const open = indexedDB.open('petits-malins');
+        const open = indexedDB.open(name);
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const db = open.result;
@@ -300,5 +300,6 @@ export async function readReadings(page: Page): Promise<StoredReading[]> {
           request.onerror = () => reject(request.error);
         };
       }),
+    dbName,
   );
 }

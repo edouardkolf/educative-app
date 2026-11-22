@@ -1257,3 +1257,11 @@
 .pa-stat__value {
   font-size: 24px;
 }
+
+/* Nom de l'app en bas des réglages : 7 tapes font apparaître le mode admin (Settings.tsx). */
+.pa-app-name {
+  text-align: center;
+  padding: 16px 0 8px;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}

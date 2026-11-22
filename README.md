@@ -3,6 +3,10 @@
 Jeux éducatifs pour la maternelle et le CE1, sous forme de PWA : installable sur Android, plein écran, hors ligne,
 sans compte et sans serveur. Les données restent sur le téléphone.
 
+Le même code construit une deuxième app, **Petits Lecteurs** : la lecture seule, pour la maternelle. Son aventure est
+le parcours de lecture posé sur la carte des mondes, son hub propose les mini-jeux de maternelle, et l'espace parent
+est le même ([docs/specs/LECTURE-APP.md](docs/specs/LECTURE-APP.md)).
+
 - **Pour l'enfant** : un hub sans texte, qui mène à la carte à étoiles de sa classe et à un jeu libre, illimité.
   - Moyenne section : six mécaniques (compléter une suite, compter, trouver l'intrus, mélanger des couleurs, trier par famille, construire une figure géométrique), aucun texte à lire.
     Jeu libre : le **coloriage magique** (les figures du constructeur à peindre avec trois couleurs primaires et un petit récipient de mélange, un code à décoder qui se complique au fil des dessins).
@@ -28,7 +32,10 @@ npm install
 npm run dev               # serveur de développement
 npm test                  # tests unitaires + validation du contenu
 npm run build             # build de production (dist/)
-npm run test:e2e          # parcours complet dans un Chrome mobile simulé
+npm run test:e2e          # parcours complet dans un Chrome mobile simulé (les deux apps)
+
+npm run dev:lecture       # Petits Lecteurs : serveur de développement
+npm run build:lecture     # Petits Lecteurs : build de production (dist-lecture/)
 ```
 
 ## Crédits / licences

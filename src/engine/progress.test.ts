@@ -119,3 +119,15 @@ describe('hasCompleted', () => {
     expect(hasCompleted('l1', [])).toBe(false);
   });
 });
+
+describe('computeLevelStates — mode admin (unlockAll)', () => {
+  it('aucun niveau verrouillé, même par le parent ; le niveau en cours reste le premier non terminé', () => {
+    const runs = [makeRun({ levelId: 'l1', stars: 2 })];
+    const states = computeLevelStates(makeTrack(), runs, [override('l3', 'locked')], { unlockAll: true });
+    expect(states.map((s) => [s.levelId, s.status, s.current])).toEqual([
+      ['l1', 'completed', false],
+      ['l2', 'unlocked', true],
+      ['l3', 'unlocked', false],
+    ]);
+  });
+});

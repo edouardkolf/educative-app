@@ -1,0 +1,55 @@
+/* Carte d'aventure de Petits Lecteurs (LECTURE-APP.md §3) : le décor et le chemin de la carte (global.css,
+   .map-*), avec les médaillons du programme de lecture (reading.css, .rd-medal) à la place des disques. */
+
+.adv-node {
+  --medal: 80px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* L'avatar de l'enfant se pose sur le niveau en cours, au-dessus du médaillon qui pulse. */
+.adv-node .map-node__avatar {
+  z-index: 2;
+}
+
+.adv-map .rd-medal:disabled {
+  opacity: 0.7;
+}
+
+/* Mode admin : une petite clé discrète, pour ne jamais oublier qu'il est actif. */
+.adv-admin {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff6d6;
+  border: 2px solid #e0b43c;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Voix absente ou son coupé : aucune consigne n'est écrite, la lecture ne peut pas se jouer. */
+.adv-unavailable {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 84px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

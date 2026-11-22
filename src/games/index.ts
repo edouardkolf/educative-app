@@ -1,5 +1,6 @@
 // CONTRAT — registre des jeux hors parcours (docs/specs/HUB.md §4.2). Un jeu = une route du même nom =
 // une activité du temps de jeu. Aucun accès au DOM au chargement du module (testable sous Vitest, node).
+import { FLAVOR, type Flavor } from '../app/flavor';
 import type { GameRouteName, Route } from '../app/routes';
 import { getTrackOrDefault } from '../engine';
 import type { GameRecordBase, GameStoreName, Profile } from '../storage/types';
@@ -47,7 +48,8 @@ async function checkReadingAvailability(): Promise<Availability> {
   return { available: true };
 }
 
-export const GAMES: readonly GameDefinition[] = [
+/** Tous les jeux du code, quelle que soit la variante ; `GAMES` ne garde que ceux de l'app construite. */
+export const ALL_GAMES: readonly GameDefinition[] = [
   {
     id: 'dictation',
     route: { name: 'dictation' },
@@ -143,20 +145,47 @@ export const GAMES: readonly GameDefinition[] = [
   },
 ];
 
+/** Jeux embarqués par une variante (src/app/flavor.ts), dans l'ordre de la variante (sinon du registre). */
+export function gamesForFlavor(flavor: Flavor): readonly GameDefinition[] {
+  const ids = flavor.gameIds;
+  if (ids === null) return ALL_GAMES;
+  return ids.flatMap((id) => ALL_GAMES.filter((game) => game.id === id));
+}
+
+/** Jeux de l'app construite : Petits Malins les a tous ; Petits Lecteurs, la lecture et les mini-jeux de maternelle. */
+export const GAMES: readonly GameDefinition[] = gamesForFlavor(FLAVOR);
+
+/** Le jeu tient-il lieu d'aventure dans cette variante (tuile « carte » du hub, jamais une tuile de jeu libre) ? */
+export function isAdventureGame(id: string, flavor: Flavor = FLAVOR): boolean {
+  return flavor.adventureGame === id;
+}
+
 export function getGame(id: string): GameDefinition | undefined {
   return GAMES.find((game) => game.id === id);
 }
 
 /** Jeux visibles par défaut pour un parcours (un parcours inconnu est résolu comme sur la carte, F11). */
-export function defaultGameIds(trackId: string): GameId[] {
+export function defaultGameIds(trackId: string, flavor: Flavor = FLAVOR): GameId[] {
   const resolved = getTrackOrDefault(trackId)?.id ?? trackId;
-  return GAMES.filter((game) => game.defaultTracks.includes(resolved)).map((game) => game.id);
+  return gamesForFlavor(flavor)
+    .filter((game) => game.defaultTracks.includes(resolved))
+    .map((game) => game.id);
 }
 
-/** `profile.games` s'il existe (ids inconnus et doublons retirés), sinon le défaut du parcours ; ordre du registre. */
-export function visibleGameIds(profile: Pick<Profile, 'trackId' | 'games'>): GameId[] {
-  const wanted = new Set<string>(profile.games ?? defaultGameIds(profile.trackId));
-  return GAMES.filter((game) => wanted.has(game.id)).map((game) => game.id);
+/**
+ * `profile.games` s'il existe (ids inconnus et doublons retirés), sinon le défaut du parcours ; ordre du registre.
+ * Le jeu d'aventure de la variante (la lecture dans Petits Lecteurs) est toujours visible : c'est l'app elle-même.
+ */
+export function visibleGameIds(profile: Pick<Profile, 'trackId' | 'games'>, flavor: Flavor = FLAVOR): GameId[] {
+  const wanted = new Set<string>(profile.games ?? defaultGameIds(profile.trackId, flavor));
+  return gamesForFlavor(flavor)
+    .filter((game) => wanted.has(game.id) || isAdventureGame(game.id, flavor))
+    .map((game) => game.id);
+}
+
+/** Tuiles de jeu libre du hub : les jeux visibles, sans le jeu d'aventure (il a la tuile « carte »). */
+export function hubGameIds(profile: Pick<Profile, 'trackId' | 'games'>, flavor: Flavor = FLAVOR): GameId[] {
+  return visibleGameIds(profile, flavor).filter((id) => !isAdventureGame(id, flavor));
 }
 
 /**

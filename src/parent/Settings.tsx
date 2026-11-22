@@ -1,5 +1,7 @@
-// Onglet « Réglages » : son, changement du code parent, protection du stockage.
-import { useEffect, useState } from 'preact/hooks';
+// Onglet « Réglages » : son, changement du code parent, protection du stockage, et mode admin (caché : il
+// apparaît après 7 tapes sur le nom de l'app en bas de l'onglet, ou s'il est déjà actif).
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { FLAVOR } from '../app/flavor';
 import { getSettings, isPersisted, requestPersistence, updateSettings } from '../storage';
 import type { AppSettings } from '../storage';
 import { Icon } from '../ui/icons/Icon';
@@ -9,6 +11,9 @@ import { generateSalt, hashPin } from './pin';
 import { describeError } from './util';
 
 type PinStep = { kind: 'closed' } | { kind: 'enter' } | { kind: 'confirm'; pin: string } | { kind: 'done' };
+
+/** Tapes sur le nom de l'app pour faire apparaître le mode admin (comme les options développeur d'Android). */
+export const ADMIN_REVEAL_TAPS = 7;
 
 export function ParentSettings() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -20,6 +25,8 @@ export function ParentSettings() {
   const [digits, setDigits] = useState('');
   const [pinError, setPinError] = useState<string | null>(null);
   const [pinBusy, setPinBusy] = useState(false);
+  const [adminRevealed, setAdminRevealed] = useState(false);
+  const revealTapsRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +61,27 @@ export function ParentSettings() {
       setLoadError(describeError(err));
     }
   }
+
+  async function toggleAdmin() {
+    if (!settings) return;
+    // L'interrupteur reste affiché jusqu'à la sortie de l'onglet, même désactivé (il ne disparaît pas sous le doigt).
+    setAdminRevealed(true);
+    const next = !settings.adminUnlockAll;
+    setSettings({ ...settings, adminUnlockAll: next });
+    try {
+      const updated = await updateSettings({ adminUnlockAll: next });
+      setSettings(updated);
+    } catch (err) {
+      setLoadError(describeError(err));
+    }
+  }
+
+  function tapAppName() {
+    revealTapsRef.current += 1;
+    if (revealTapsRef.current >= ADMIN_REVEAL_TAPS) setAdminRevealed(true);
+  }
+
+  const showAdmin = adminRevealed || settings?.adminUnlockAll === true;
 
   async function handleProtect() {
     setProtecting(true);
@@ -126,7 +154,10 @@ export function ParentSettings() {
           </span>
           <div className="pa-section__grow">
             <h2 className="pa-section__title">Son</h2>
-            <p className="pa-muted">Voix, bruitages et musique du jeu. La dictée a besoin du son.</p>
+            <p className="pa-muted">
+              Voix, bruitages et musique du jeu. {FLAVOR.adventureGame === 'reading' ? 'La lecture' : 'La dictée'} a
+              besoin du son.
+            </p>
           </div>
           {settings && (
             <button
@@ -227,6 +258,39 @@ export function ParentSettings() {
           </button>
         )}
       </section>
+
+      {showAdmin && settings && (
+        <section className="pa-section" data-testid="admin-section">
+          <div className="pa-section__head">
+            <span className="pa-section__icon" aria-hidden="true">
+              <Icon name="key" size={30} />
+            </span>
+            <div className="pa-section__grow">
+              <h2 className="pa-section__title">Mode admin</h2>
+              <p className="pa-muted">
+                Tous les niveaux sont ouverts, pour tous les enfants de ce téléphone. Les séances jouées comptent comme
+                d'habitude : testez avec un profil dédié. Une clé s'affiche sur la carte tant qu'il est actif.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="pa-toggle"
+              aria-pressed={settings.adminUnlockAll === true}
+              aria-label="Mode admin"
+              data-testid="toggle-admin"
+              onClick={toggleAdmin}
+            >
+              <span className="pa-toggle__knob" aria-hidden="true" />
+              <span className="pa-toggle__text">{settings.adminUnlockAll ? 'Activé' : 'Désactivé'}</span>
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Pas un bouton : rien ne l'annonce au parent. 7 tapes font apparaître le mode admin. */}
+      <p className="pa-muted pa-app-name" data-testid="app-name" onClick={tapAppName}>
+        {FLAVOR.appName}
+      </p>
     </>
   );
 }

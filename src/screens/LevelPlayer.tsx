@@ -14,7 +14,7 @@ import {
 } from '../engine';
 import type { ChoiceId, Level, Round } from '../engine/types';
 import type { RoundRecord } from '../storage/types';
-import { abandonRun, completeRun, listOverrides, listRuns, recordRound, startRun } from '../storage';
+import { abandonRun, completeRun, getSettings, listOverrides, listRuns, recordRound, startRun } from '../storage';
 import { getMechanic } from '../mechanics';
 import { navigate } from '../app/routes';
 import { worldIdAt, worldIndexForLevel, type WorldId } from './map/layout';
@@ -94,11 +94,11 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
         if (!cancelled) setPhase('not-found');
         return;
       }
-      const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
+      const [runs, overrides, settings] = await Promise.all([listRuns(profile.id), listOverrides(profile.id), getSettings()]);
       if (cancelled) return;
       const index = track.levels.indexOf(levelId);
       setWorld(index >= 0 ? worldIdAt(worldIndexForLevel(index)) : null);
-      const state = computeLevelStates(track, runs, overrides).find((s) => s.levelId === levelId);
+      const state = computeLevelStates(track, runs, overrides, { unlockAll: settings.adminUnlockAll }).find((s) => s.levelId === levelId);
       if (!state || state.status === 'locked') {
         setPhase('not-found');
         return;
@@ -216,8 +216,8 @@ export function LevelPlayer({ levelId }: { levelId: string }) {
       const track = getTrackOrDefault(profile.trackId); // F11
       const candidate = track ? getNextLevelId(track, levelId) : undefined;
       if (track && candidate) {
-        const [runs, overrides] = await Promise.all([listRuns(profile.id), listOverrides(profile.id)]);
-        const states = computeLevelStates(track, runs, overrides);
+        const [runs, overrides, settings] = await Promise.all([listRuns(profile.id), listOverrides(profile.id), getSettings()]);
+        const states = computeLevelStates(track, runs, overrides, { unlockAll: settings.adminUnlockAll });
         const nextState = states.find((s) => s.levelId === candidate);
         if (nextState?.status === 'unlocked') next = candidate;
         // Niveau suivant déjà réussi (enfant qui rattrape un niveau inséré après coup, JEUX-LOGIQUE.md §7) :

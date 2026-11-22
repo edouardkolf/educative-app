@@ -15,7 +15,16 @@ export function hasCompleted(levelId: string, runs: Run[]): boolean {
   return runs.some((run) => run.levelId === levelId && run.status === 'completed');
 }
 
-export function computeLevelStates(track: Track, runs: Run[], overrides: LevelOverride[]): LevelState[] {
+/**
+ * `unlockAll` (mode admin, `AppSettings.adminUnlockAll`) : aucun niveau verrouillé, même par un réglage du parent ;
+ * le niveau « en cours » reste le premier non terminé.
+ */
+export function computeLevelStates(
+  track: Track,
+  runs: Run[],
+  overrides: LevelOverride[],
+  opts: { unlockAll?: boolean } = {},
+): LevelState[] {
   const minStars = track.minStarsToUnlockNext ?? 1;
   const overrideByLevel = new Map(overrides.map((o) => [o.levelId, o.state]));
   const starsByLevel = new Map(track.levels.map((levelId) => [levelId, bestStarsFor(levelId, runs)]));
@@ -40,6 +49,8 @@ export function computeLevelStates(track: Track, runs: Run[], overrides: LevelOv
       status = bestStars >= 1 ? 'completed' : 'unlocked';
       overridden = true;
     }
+
+    if (opts.unlockAll && status === 'locked') status = 'unlocked';
 
     return { levelId, status, bestStars, current: false, overridden };
   });

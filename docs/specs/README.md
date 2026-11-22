@@ -11,6 +11,7 @@ les trois specs le respectent, et en cas de désaccord entre deux specs, c'est l
 | Morpion et pendu (CE1) | [MORPION-PENDU.md](MORPION-PENDU.md) | lot du 29/10/2026 : deux jeux libres de plus, hub à 4 tuiles, stockage v3 |
 | Carte des mondes | [CARTE-MONDES.md](CARTE-MONDES.md) | lot du 10/11/2026 : refonte visuelle des quatre mondes, un module par monde, fin de chemin au château de nuages |
 | J'apprends à lire (MS) | [LECTURE.md](LECTURE.md) | lot du 10/11/2026 : programme de lecture en 5 étapes (huit jeux, voix du téléphone, maîtrise par item), accueil propre, store `readings`, stockage v5 et export v5, hub MS à 7 tuiles |
+| Petits Lecteurs (app de lecture) | [LECTURE-APP.md](LECTURE-APP.md) | lot du 22/11/2026 : deuxième app construite depuis le même code, maternelle seulement, aventure = parcours de lecture sur la carte des mondes, mini-jeux au hub, base `petits-lecteurs`, mode admin caché |
 
 ## 1. Pourquoi ce lot
 
