@@ -331,17 +331,23 @@ cinq étapes (§2), la composition des séances (§5.4) et le passage d'étape (
 reste calculée pour les statistiques parent et le choix des leurres.
 
 - **Un niveau = un seul jeu = une séance.** La démonstration d'un jeu a lieu au premier niveau de ce jeu.
-- **Séances courtes** : 5 questions aux étapes 1 et 2, 8 ensuite.
+- **Séances courtes** : 4 questions aux étapes 1 et 2 (5 jusqu'au 22/11/2026), 8 ensuite.
 - **Deux pistes qui alternent** (`src/games/reading/levels.ts`, `LEVELS`) : un niveau « oreille », un niveau
   « lettres », et ainsi de suite. Oreille : tambour ×2, commence pareil ×2, finit pareil ×2, puis les trois en
   boucle ; dès que L et R sont connues, un niveau d'oreille sur deux est une machine à syllabes. Lettres, dans
   l'ordre du §3.2 : pour chaque lettre un niveau « la lettre qui chante », puis un niveau « par quoi ça commence »
-  si elle a au moins 2 images. La première lettre (A) est le **niveau 2**. Fin du parcours : mot mystère et
-  jumelles en alternance avec les lettres rares. 104 niveaux.
+  si elle a au moins 2 images. La première lettre (A) est le **niveau 2**, et ce niveau présente **A et I
+  ensemble** (`ReadingLevel.intro`) : I n'a pas de niveau « son » à elle. Fin du parcours : mot mystère et
+  jumelles en alternance avec les lettres rares. 102 niveaux.
 - **Contenu d'un niveau « lettre »** : la lettre du niveau est présentée d'abord, puis ~60 % des questions portent
-  sur elle et le reste révise les lettres déjà vues (jamais une lettre à venir comme cible). Pour A, tout porte sur A.
-- **Déblocage** : un niveau est gagné quand une séance terminée a **4 bonnes réponses du premier coup sur 5**
-  (6 sur 8). Sinon on le rejoue : pas de fête, la voix dit « On réessaie ! ». Un niveau gagné le reste et se rejoue
+  sur elle et le reste révise les lettres déjà vues (jamais une lettre à venir comme cible). Premier niveau lettre
+  (retour d'usage du 22/11/2026 : toujours toucher A ennuyait) : A est présentée, puis I, puis une question sur
+  chacune dans le désordre.
+- **Mot d'exemple varié** : la félicitation de « la lettre qui chante » dit « a, comme … » avec le mot repère à la
+  présentation, puis un autre mot qui commence par ce son à chaque question (ananas, abeille…), tant qu'il en reste.
+- **Déblocage** : un niveau est gagné quand une séance terminée a **3 bonnes réponses du premier coup sur 4**
+  (6 sur 8 ; 4 sur 5 pour les séances de 5 questions enregistrées avant le 22/11/2026). Sinon on le rejoue : pas
+  de fête, la voix dit « On réessaie ! ». Un niveau gagné le reste et se rejoue
   librement (`review: true`).
 - **Enregistrement** : `ReadingRecord.levelId` (facultatif). Les séances sans niveau (avant le 12/11/2026) ne
   comptent pas pour le parcours. Le parcours n'est jamais stocké : `levelProgress(records, settings)`.
@@ -350,4 +356,4 @@ reste calculée pour les statistiques parent et le choix des leurres.
 - **Accueil** : le chemin des niveaux, qui défile verticalement (niveau 1 en bas), centré sur le niveau en cours.
   `data-testid="reading-level-<rang>"`, `data-state` done|current|locked, `data-level`, `data-game`. Couleur par
   piste : bleu = écoute, rose = lettres, vert = assembler, orange = lire. Un médaillon « lettre » montre la lettre.
-- **Parent** : « Niveau en cours : n sur 104 » (`reading-stats-level`).
+- **Parent** : « Niveau en cours : n sur 102 » (`reading-stats-level`).

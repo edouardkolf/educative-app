@@ -42,7 +42,7 @@ async function expectNoHorizontalScroll(page: import('@playwright/test').Page) {
 
 // ==================== 1. Niveaux 1 et 2 : tambour, puis la première lettre ====================
 
-test('niveau 1 (tambour seul, 5 questions) gagné → le niveau 2 s’ouvre sur la lettre A', async ({ page }) => {
+test('niveau 1 (tambour seul, 4 questions) gagné → le niveau 2 s’ouvre sur les lettres A et I', async ({ page }) => {
   test.slow();
   await installFakeVoice(page, 'fr');
   await onboardMs(page, 'Alice');
@@ -63,7 +63,7 @@ test('niveau 1 (tambour seul, 5 questions) gagné → le niveau 2 s’ouvre sur 
   await expect(page.getByTestId('reading-session')).toHaveCount(0);
 
   await startCurrentLevel(page);
-  await expect(page.getByTestId('reading-dots').locator('.rd-dot')).toHaveCount(5);
+  await expect(page.getByTestId('reading-dots').locator('.rd-dot')).toHaveCount(4);
   await expect(page.getByTestId('reading-replay')).toBeVisible();
 
   // Le bouton haut-parleur rejoue la consigne.
@@ -92,10 +92,10 @@ test('niveau 1 (tambour seul, 5 questions) gagné → le niveau 2 s’ouvre sur 
   });
   expect(checkedDrum).toBe(true);
   await expectNoHorizontalScroll(page);
-  // Un niveau = un seul jeu : une démonstration, puis 5 tambours.
+  // Un niveau = un seul jeu : une démonstration, puis 4 tambours.
   for (const q of played) expect(q.game).toBe('syllable-drum');
   expect(played.filter((q) => q.guided)).toHaveLength(1);
-  expect(played.filter((q) => !q.guided)).toHaveLength(5);
+  expect(played.filter((q) => !q.guided)).toHaveLength(4);
 
   // Niveau gagné : fête, et le niveau suivant s'ouvre.
   await expect(page.getByTestId('reading-end')).toHaveAttribute('data-passed', 'true');
@@ -108,20 +108,25 @@ test('niveau 1 (tambour seul, 5 questions) gagné → le niveau 2 s’ouvre sur 
   let [session] = await readReadings(page);
   expect(session?.status).toBe('completed');
   expect(session?.levelId).toBe('drum-1');
-  expect(session?.planned).toBe(5);
-  expect(session?.answers.filter((a) => !a.retry)).toHaveLength(5);
+  expect(session?.planned).toBe(4);
+  expect(session?.answers.filter((a) => !a.retry)).toHaveLength(4);
   expect(session?.answers.every((a) => a.correct)).toBe(true);
   expect(session?.answers.some((a) => a.replays > 0)).toBe(true);
   expect(session?.demos).toEqual(['syllable-drum']);
 
-  // Niveau 2 : la première lettre, à la deuxième séance.
+  // Niveau 2 : les deux premières lettres (A et I), à la deuxième séance.
   await startCurrentLevel(page);
-  await expect(page.getByTestId('reading-dots').locator('.rd-dot')).toHaveCount(5);
+  await expect(page.getByTestId('reading-dots').locator('.rd-dot')).toHaveCount(4);
   const letters = await playFullSession(page);
   for (const q of letters) {
     expect(q.game).toBe('letter-sound');
-    expect(q.answer).toBe('a');
+    expect(['a', 'i']).toContain(q.answer);
   }
+  // La démonstration présente A ; I est présentée juste après ; la réponse n'est plus toujours A.
+  expect(letters.filter((q) => q.guided).map((q) => q.answer)).toEqual(['a']);
+  const asked = letters.filter((q) => !q.guided).map((q) => q.answer);
+  expect(asked[0]).toBe('i');
+  expect([...asked].sort()).toEqual(['a', 'a', 'i', 'i']);
   await finishEnd(page);
   await expect(page.getByTestId('reading-level-2')).toHaveAttribute('data-state', 'done');
   await expect(currentLevel(page)).toHaveAttribute('data-level', 'drum-2');
@@ -139,7 +144,7 @@ test('niveau 1 (tambour seul, 5 questions) gagné → le niveau 2 s’ouvre sur 
 
 // ==================== 2. Niveau raté : on le rejoue ====================
 
-test('3 bonnes réponses sur 5 : pas de fête, le niveau reste à rejouer ; 4 sur 5 le gagne', async ({ page }) => {
+test('2 bonnes réponses sur 4 : pas de fête, le niveau reste à rejouer ; 3 sur 4 le gagne', async ({ page }) => {
   test.slow();
   await installFakeVoice(page, 'fr');
   await onboardMs(page, 'Alice');
@@ -207,7 +212,7 @@ test('erreur volontaire : le choix se grise, la lettre touchée chante, la quest
   // La question ratée est reposée : un tour de plus que prévu, marqué `retry`.
   expect(played.some((q) => q.retry)).toBe(true);
 
-  // Une seule erreur sur 5 : le niveau est gagné quand même.
+  // Une seule erreur sur 4 : le niveau est gagné quand même.
   await expect(page.getByTestId('reading-end')).toHaveAttribute('data-passed', 'true');
   await finishEnd(page);
   const [session] = await readReadings(page);
@@ -355,15 +360,15 @@ async function playCurrent(page: import('@playwright/test').Page, game: string, 
   return id;
 }
 
-test('étape de départ 3 : niveaux de 8 questions, « commence pareil » puis « par quoi ça commence »', async ({ page }) => {
+test('étape de départ 3 : niveaux de 8 questions, « finit pareil » puis « par quoi ça commence »', async ({ page }) => {
   test.setTimeout(240_000); // quatre séances de 8 questions
   await installFakeVoice(page, 'fr');
   await onboardMs(page, 'Alice', 3);
   await chooseProfile(page, 'Alice');
   await openReading(page);
-  expect(await playCurrent(page, 'syllable-drum', 8)).toBe('drum-4');
+  expect(await playCurrent(page, 'same-end', 8)).toBe('end-3');
   expect(await playCurrent(page, 'letter-sound', 8)).toBe('sound-l');
-  expect(await playCurrent(page, 'same-start', 8)).toBe('start-4');
+  expect(await playCurrent(page, 'syllable-drum', 8)).toBe('drum-4');
   expect(await playCurrent(page, 'first-sound', 8)).toBe('first-l');
   const records = await readReadings(page);
   expect(records.every((r) => r.stage === 3 && r.status === 'completed')).toBe(true);
@@ -375,7 +380,7 @@ test('étape de départ 4 : la machine à syllabes a son niveau à elle', async 
   await onboardMs(page, 'Alice', 4);
   await chooseProfile(page, 'Alice');
   await openReading(page);
-  expect(await playCurrent(page, 'syllable-drum', 8)).toBe('drum-8');
+  expect(await playCurrent(page, 'same-end', 8)).toBe('end-7');
   expect(await playCurrent(page, 'letter-sound', 8)).toBe('sound-p');
   expect(await playCurrent(page, 'syllable-machine', 8)).toBe('machine-11');
 });

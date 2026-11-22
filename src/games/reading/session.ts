@@ -129,6 +129,8 @@ interface Ctx {
   drumCounts: [number, number, number];
   blendStopAsked: number;
   blendStopShort: number;
+  /** Mots déjà dits dans « a, comme avion » : on varie l'exemple d'une question à l'autre. */
+  praiseWords?: Set<string>;
 }
 
 function pickUnused<T>(ctx: Ctx, items: readonly T[], key: (t: T) => string): T | undefined {
@@ -202,6 +204,7 @@ function makeLetterSound(ctx: Ctx, slot: Slot): ReadingQuestion | null {
   if (decoys.length === 0) return null;
   const kw = keywordPicture(id);
   const keyword = kw && kw.firstSound === id ? kw.word : null;
+  const example = slot.presentation ? keyword : praiseExample(ctx, id, keyword);
   const base = letterSoundPrompt(id);
   return {
     game: 'letter-sound',
@@ -212,9 +215,24 @@ function makeLetterSound(ctx: Ctx, slot: Slot): ReadingQuestion | null {
     answer: id,
     prompt: slot.presentation ? [...presentationSteps(id, keyword), ...base] : base,
     speakChoices: false,
-    praise: letterSoundPraise(id, keyword),
+    praise: letterSoundPraise(id, example),
     isNew: slot.presentation,
   };
+}
+
+/**
+ * Mot d'exemple de la félicitation (« a, comme ananas ») : le mot repère à la présentation, puis un autre mot qui
+ * commence par ce son, différent à chaque question tant qu'il en reste. Sans autre image : le mot repère.
+ */
+function praiseExample(ctx: Ctx, id: GraphemeId, keyword: string | null): string | null {
+  const words = picturesStartingWith(id).map((p) => p.word);
+  if (words.length === 0) return keyword;
+  const said = (ctx.praiseWords ??= new Set());
+  if (keyword) said.add(keyword);
+  const fresh = words.filter((w) => !said.has(w));
+  const pick = fresh.length > 0 ? ctx.rng.pick(fresh) : keyword ?? ctx.rng.pick(words);
+  said.add(pick);
+  return pick;
 }
 
 function makeFirstSound(ctx: Ctx, slot: Slot): ReadingQuestion | null {
@@ -808,23 +826,28 @@ function levelSlots(level: ReadingLevel, rng: Rng): Slot[] {
     return Array.from({ length: n }, () => plain(level.item));
   }
   const id = level.item.slice(2);
+  // Lettres présentées à ce niveau : une seule, sauf au premier niveau lettre (A et I).
+  const intro = level.game === 'letter-sound' && level.intro && level.intro.length > 0 ? level.intro : [id];
   // Lettres déjà vues qui peuvent être révisées par ce jeu, les plus récentes d'abord.
   const earlier = level.known
-    .filter((g) => g !== id && gamesForItem(`g:${g}`).includes(level.game))
+    .filter((g) => !intro.includes(g) && gamesForItem(`g:${g}`).includes(level.game))
     .reverse()
     .slice(0, 4);
   let main = earlier.length === 0 ? n : Math.ceil(n * LEVEL_MAIN_SHARE);
   if (level.game === 'first-sound') main = Math.min(main, picturesStartingWith(id).length);
   if (earlier.length === 0) main = n;
+  main = Math.max(main, Math.min(intro.length, n));
   const review: Slot[] = [];
   const order = rng.shuffle(earlier);
   for (let i = 0; review.length < n - main; i += 1) review.push(plain(`g:${order[i % order.length] as string}`));
-  const mains = Array.from({ length: main }, () => plain(level.item, true));
   if (level.game === 'letter-sound') {
-    // La lettre du niveau est présentée en premier (« a… comme avion »), puis le reste est mélangé.
-    const first = plain(level.item, true, true);
-    return [first, ...rng.shuffle([...mains.slice(1), ...review])];
+    // Chaque lettre du niveau est présentée d'abord (« a… comme avion »), puis le reste est mélangé ; avec deux
+    // lettres nouvelles, les questions suivantes se partagent entre elles.
+    const presentations = intro.map((g) => plain(`g:${g}`, true, true));
+    const mains = Array.from({ length: main - presentations.length }, (_, i) => plain(`g:${intro[i % intro.length] as string}`, true));
+    return [...presentations, ...rng.shuffle([...mains, ...review])];
   }
+  const mains = Array.from({ length: main }, () => plain(level.item, true));
   return rng.shuffle([...mains, ...review]);
 }
 

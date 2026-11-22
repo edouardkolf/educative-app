@@ -55,12 +55,15 @@ describe('parcours de niveaux : structure', () => {
       'drum-2',
       'first-a',
       'start-1',
-      'sound-i',
-      'start-2',
       'first-i',
-      'end-1',
+      'start-2',
       'sound-o',
+      'end-1',
+      'first-o',
     ]);
+    // Le premier niveau lettre présente A et I ensemble.
+    expect(getLevel('sound-a')?.intro).toEqual(['a', 'i']);
+    expect(getLevel('sound-a')?.known).toEqual(['a', 'i']);
     // Jusqu'à la dernière lettre du programme, un niveau sur deux est un niveau « lettres ».
     const lastLetter = LEVELS.findIndex((l) => l.id === 'sound-g');
     for (let i = 0; i <= lastLetter + 1; i += 1) {
@@ -79,9 +82,11 @@ describe('parcours de niveaux : structure', () => {
 
   it('chaque lettre du programme a son niveau « son », et « son dans un mot » quand elle a des images', () => {
     for (const g of GRAPHEMES.filter((x) => x.gated)) {
-      const sound = getLevel(`sound-${g.id}`);
+      // I est présentée avec A, au niveau « sound-a ».
+      const sound = getLevel(g.id === 'i' ? 'sound-a' : `sound-${g.id}`);
       expect(sound, g.id).toBeDefined();
       expect(sound?.known).toContain(g.id);
+      expect(sound?.intro).toContain(g.id);
       const first = getLevel(`first-${g.id}`);
       expect(Boolean(first), g.id).toBe(gamesForItem(`g:${g.id}`).includes('first-sound'));
       if (first) expect(first.index).toBeGreaterThan(sound!.index);
@@ -102,9 +107,10 @@ describe('parcours de niveaux : structure', () => {
     expect(LEVELS.some((l) => l.game === 'letter-twins')).toBe(true);
   });
 
-  it('séances courtes aux étapes 1 et 2 (5 questions), 8 ensuite', () => {
-    for (const l of LEVELS) expect(l.questions, l.id).toBe(l.stage <= 2 ? 5 : 8);
-    expect(passMark(5)).toBe(4);
+  it('séances courtes aux étapes 1 et 2 (4 questions), 8 ensuite', () => {
+    for (const l of LEVELS) expect(l.questions, l.id).toBe(l.stage <= 2 ? 4 : 8);
+    expect(passMark(4)).toBe(3);
+    expect(passMark(5)).toBe(4); // séances enregistrées avant le 22/11/2026
     expect(passMark(8)).toBe(6);
   });
 });
@@ -203,9 +209,24 @@ describe('planLevel : une séance = un niveau = un seul jeu', () => {
     for (const q of plan.questions) expect(['a', 'i', 'o']).toContain(q.target);
   });
 
-  it('première lettre : tout le niveau porte sur A', () => {
-    const plan = planLevel(getLevel('sound-a')!, blank, createRng(5));
-    expect(plan.questions.every((q) => q.target === 'a')).toBe(true);
+  it('première lettre : A puis I sont présentées, puis une question sur chacune, dans le désordre', () => {
+    for (let seed = 1; seed <= 20; seed += 1) {
+      const plan = planLevel(getLevel('sound-a')!, blank, createRng(seed));
+      const targets = plan.questions.map((q) => q.target);
+      expect(targets.slice(0, 2)).toEqual(['a', 'i']);
+      expect(plan.questions.slice(0, 2).every((q) => q.isNew)).toBe(true);
+      expect([...targets.slice(2)].sort()).toEqual(['a', 'i']);
+      for (const q of plan.questions) expect(q.choices.map((c) => c.id).sort()).toEqual(['a', 'i']);
+    }
+  });
+
+  it('« a, comme … » : le mot d’exemple change d’une question à l’autre', () => {
+    const plan = planLevel(getLevel('sound-o')!, blank, createRng(4));
+    const words = plan.questions
+      .filter((q) => q.target === 'o')
+      .map((q) => q.praise.filter((st) => 'text' in st).map((st) => (st as { text: string }).text).join(' '));
+    expect(words[0]).toContain('orange'); // présentation : le mot repère
+    expect(new Set(words).size).toBe(words.length);
   });
 
   it('niveau « son dans un mot » : images différentes, lettres déjà vues seulement', () => {

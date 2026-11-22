@@ -20,6 +20,11 @@ export interface ReadingLevel {
   item: ItemId;
   /** Lettres déjà présentées à ce niveau, celle du niveau comprise, dans l'ordre du programme. */
   known: readonly GraphemeId[];
+  /**
+   * Niveau « la lettre qui chante » : lettres présentées à ce niveau (souvent une seule). Le premier niveau lettre
+   * en présente deux (A et I), pour que la réponse ne soit pas toujours la même.
+   */
+  intro?: readonly GraphemeId[];
   /** Étape du programme (réglage parent « étape de départ », couleur du médaillon). */
   stage: ReadingStage;
   /** Questions de la séance. */
@@ -27,13 +32,19 @@ export interface ReadingLevel {
 }
 
 /** Séances courtes tant que l'enfant découvre (étapes 1 et 2), un peu plus longues ensuite. */
-export const SHORT_LEVEL_QUESTIONS = 5;
+export const SHORT_LEVEL_QUESTIONS = 4;
 export const LONG_LEVEL_QUESTIONS = 8;
 
-/** Bonnes réponses du premier coup exigées pour gagner un niveau de `planned` questions : 4 sur 5, 6 sur 8. */
+/** Lettres présentées ensemble au premier niveau lettre (A et I). */
+export const FIRST_LETTER_LEVEL_SIZE = 2;
+
+/**
+ * Bonnes réponses du premier coup exigées pour gagner un niveau de `planned` questions : 3 sur 4, 6 sur 8.
+ * (4 sur 5 pour les séances de 5 questions enregistrées avant le 22/11/2026.)
+ */
 export function passMark(planned: number): number {
   if (planned <= 1) return planned;
-  return planned <= SHORT_LEVEL_QUESTIONS ? planned - 1 : planned - 2;
+  return planned < LONG_LEVEL_QUESTIONS ? planned - 1 : planned - 2;
 }
 
 const EAR_OPENING: readonly ReadingGameId[] = [
@@ -70,7 +81,15 @@ function buildLevels(): ReadingLevel[] {
   let earCount = 0;
   let otherCount = 0;
 
-  const push = (slug: string, track: LevelTrack, game: ReadingGameId, item: ItemId, stage: ReadingStage, id?: string) => {
+  const push = (
+    slug: string,
+    track: LevelTrack,
+    game: ReadingGameId,
+    item: ItemId,
+    stage: ReadingStage,
+    id?: string,
+    intro?: readonly GraphemeId[],
+  ) => {
     const n = (counters.get(slug) ?? 0) + 1;
     counters.set(slug, n);
     out.push({
@@ -80,6 +99,7 @@ function buildLevels(): ReadingLevel[] {
       game,
       item,
       known: [...known],
+      ...(intro ? { intro: [...intro] } : {}),
       stage,
       questions: stage <= 2 ? SHORT_LEVEL_QUESTIONS : LONG_LEVEL_QUESTIONS,
     });
@@ -104,13 +124,22 @@ function buildLevels(): ReadingLevel[] {
   };
 
   // Lettres du programme (n° 1 à 23) : un niveau « son », puis un niveau « son dans un mot » s'il y a des images.
-  for (const g of GRAPHEMES.filter((x) => x.gated)) {
+  // Le premier niveau « son » présente deux lettres (A et I) : la seconde n'a pas de niveau « son » à elle.
+  const gated = GRAPHEMES.filter((x) => x.gated);
+  const opening = gated.slice(0, FIRST_LETTER_LEVEL_SIZE).map((g) => g.id);
+  for (const g of gated) {
     const item: ItemId = `g:${g.id}`;
     // Les niveaux d'écoute mêlés aux voyelles forment l'étape 1 ; ensuite ils suivent l'étape de la lettre.
     const otherStage: ReadingStage = g.stage <= 2 ? 1 : g.stage;
-    pushOther(otherStage);
-    known.push(g.id);
-    push('sound', 'letters', 'letter-sound', item, g.stage, `sound-${g.id}`);
+    if (g.id === opening[0]) {
+      pushOther(otherStage);
+      known.push(...opening);
+      push('sound', 'letters', 'letter-sound', item, g.stage, `sound-${g.id}`, opening);
+    } else if (!opening.includes(g.id)) {
+      pushOther(otherStage);
+      known.push(g.id);
+      push('sound', 'letters', 'letter-sound', item, g.stage, `sound-${g.id}`, [g.id]);
+    }
     if (gamesForItem(item).includes('first-sound')) {
       pushOther(otherStage);
       push('first', 'letters', 'first-sound', item, g.stage, `first-${g.id}`);
@@ -127,7 +156,7 @@ function buildLevels(): ReadingLevel[] {
   for (const id of TAIL_GRAPHEMES) {
     pushRead();
     known.push(id);
-    push('sound', 'letters', 'letter-sound', `g:${id}`, 5, `sound-${id}`);
+    push('sound', 'letters', 'letter-sound', `g:${id}`, 5, `sound-${id}`, [id]);
   }
   for (let i = 0; i < TAIL_EXTRA_PAIRS * 2; i += 1) pushRead();
   return out;
