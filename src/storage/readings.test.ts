@@ -161,6 +161,9 @@ describe('isReadingSettings', () => {
     expect(isReadingSettings({ startStage: 5 })).toBe(true);
     expect(isReadingSettings({ startStage: 0 })).toBe(false);
     expect(isReadingSettings({ startStage: 6 })).toBe(false);
+    expect(isReadingSettings({ allLevelsOpen: true })).toBe(true);
+    expect(isReadingSettings({ startStage: 2, allLevelsOpen: false })).toBe(true);
+    expect(isReadingSettings({ allLevelsOpen: 'oui' })).toBe(false);
     expect(isReadingSettings({ startStage: '2' })).toBe(false);
     expect(isReadingSettings(null)).toBe(false);
     expect(isReadingSettings([])).toBe(false);

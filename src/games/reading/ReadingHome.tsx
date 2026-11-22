@@ -8,14 +8,19 @@ import { playError } from '../../ui/sound';
 import { LevelIcon, TRACK_COLORS } from './LevelIcon';
 import { LEVELS, levelState, type LevelProgress, type LevelState, type ReadingLevel } from './levels';
 
+/** play : le niveau en cours ; review : un niveau gagné ; trial : un niveau fermé, ouvert par le réglage parent. */
+export type StartMode = 'play' | 'review' | 'trial';
+
 interface ReadingHomeProps {
   progress: LevelProgress;
   /** `checkVoice()` = ready. */
   voiceReady: boolean;
-  onStart: (level: ReadingLevel, review: boolean) => void;
+  /** Réglage parent « tous les niveaux ouverts » : un niveau fermé se lance à l'essai. */
+  allOpen?: boolean;
+  onStart: (level: ReadingLevel, mode: StartMode) => void;
 }
 
-export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps) {
+export function ReadingHome({ progress, voiceReady, allOpen = false, onStart }: ReadingHomeProps) {
   const [shaking, setShaking] = useState<string | null>(null);
   const pathRef = useRef<HTMLOListElement>(null);
   const focusId = (progress.current ?? LEVELS[LEVELS.length - 1])?.id;
@@ -35,15 +40,24 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
   function tap(level: ReadingLevel, state: LevelState) {
     if (!voiceReady) return;
     if (state === 'locked') {
+      if (allOpen) {
+        onStart(level, 'trial');
+        return;
+      }
       playError();
       setShaking(level.id);
       return;
     }
-    onStart(level, state === 'done');
+    onStart(level, state === 'done' ? 'review' : 'play');
   }
 
   return (
-    <div class="screen rd-home" data-testid="reading-home" data-voice={voiceReady ? 'ready' : 'off'}>
+    <div
+      class="screen rd-home"
+      data-testid="reading-home"
+      data-voice={voiceReady ? 'ready' : 'off'}
+      data-all-open={allOpen ? 'true' : undefined}
+    >
       <header class="rd-topbar rd-topbar--home">
         <IconButton size={56} onClick={() => returnTo('hub')} aria-label="Retour à l'accueil" data-testid="to-hub">
           <Icon name="home" size={36} />
@@ -70,7 +84,7 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
                 data-state={state}
                 data-focus={level.id === focusId ? 'true' : undefined}
                 disabled={!voiceReady}
-                aria-disabled={state === 'locked' ? 'true' : undefined}
+                aria-disabled={state === 'locked' && !allOpen ? 'true' : undefined}
                 aria-label={`Niveau ${level.index}`}
                 style={`--m-main:${colors.main};--m-soft:${colors.soft};--m-dark:${colors.dark}`}
                 onClick={() => tap(level, state)}
@@ -91,7 +105,10 @@ export function ReadingHome({ progress, voiceReady, onStart }: ReadingHomeProps)
                   </span>
                 )}
                 {state === 'locked' && (
-                  <span class="rd-medal__badge rd-medal__badge--lock" aria-hidden="true">
+                  <span
+                    class={`rd-medal__badge rd-medal__badge--lock${allOpen ? ' rd-medal__badge--open' : ''}`}
+                    aria-hidden="true"
+                  >
                     <Icon name="lock" size="68%" />
                   </span>
                 )}

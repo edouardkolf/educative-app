@@ -8,6 +8,8 @@ import type { ItemId, ItemProgress, ReadingGameId, ReadingProgress, ReadingStage
 export interface ReadingSettings {
   /** Étape de départ choisie par le parent : les étapes d'avant sont tenues pour acquises. Absent = 1. */
   startStage?: ReadingStage;
+  /** Séance parent : tous les niveaux se lancent, à l'essai (rien n'est enregistré). */
+  allLevelsOpen?: boolean;
 }
 
 /** Seuils (LECTURE.md §5), exportés pour les tests et les statistiques. */

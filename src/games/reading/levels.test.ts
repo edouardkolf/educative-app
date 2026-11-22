@@ -51,7 +51,7 @@ describe('parcours de niveaux : structure', () => {
   it('commence par le tambour, la première lettre arrive au niveau 2, et les pistes alternent', () => {
     expect(LEVELS.slice(0, 10).map((l) => l.id)).toEqual([
       'drum-1',
-      'sound-a',
+      'sound-a-i',
       'drum-2',
       'first-a',
       'start-1',
@@ -62,8 +62,13 @@ describe('parcours de niveaux : structure', () => {
       'first-o',
     ]);
     // Le premier niveau lettre présente A et I ensemble.
-    expect(getLevel('sound-a')?.intro).toEqual(['a', 'i']);
-    expect(getLevel('sound-a')?.known).toEqual(['a', 'i']);
+    expect(getLevel('sound-a-i')?.intro).toEqual(['a', 'i']);
+    expect(getLevel('sound-a-i')?.known).toEqual(['a', 'i']);
+    // L'ancien niveau « A seule » (avant le 22/11/2026) ne compte plus : elle refait le niveau 2 pour rencontrer I.
+    expect(getLevel('sound-a')).toBeUndefined();
+    const old = levelProgress([session('drum-1', 4, 4), session('sound-a', 5, 5), session('drum-2', 4, 4)]);
+    expect(old.current?.id).toBe('sound-a-i');
+    expect(old.passed.has('drum-2')).toBe(true);
     // Jusqu'à la dernière lettre du programme, un niveau sur deux est un niveau « lettres ».
     const lastLetter = LEVELS.findIndex((l) => l.id === 'sound-g');
     for (let i = 0; i <= lastLetter + 1; i += 1) {
@@ -82,8 +87,8 @@ describe('parcours de niveaux : structure', () => {
 
   it('chaque lettre du programme a son niveau « son », et « son dans un mot » quand elle a des images', () => {
     for (const g of GRAPHEMES.filter((x) => x.gated)) {
-      // I est présentée avec A, au niveau « sound-a ».
-      const sound = getLevel(g.id === 'i' ? 'sound-a' : `sound-${g.id}`);
+      // I est présentée avec A, au niveau « sound-a-i ».
+      const sound = getLevel(g.id === 'a' || g.id === 'i' ? 'sound-a-i' : `sound-${g.id}`);
       expect(sound, g.id).toBeDefined();
       expect(sound?.known).toContain(g.id);
       expect(sound?.intro).toContain(g.id);
@@ -130,7 +135,7 @@ describe('parcours de niveaux : déblocage', () => {
     expect(lost.attempts['drum-1']).toBe(1);
     const won = levelProgress([session('drum-1', 3), session('drum-1', 4)]);
     expect(won.passed.has('drum-1')).toBe(true);
-    expect(won.current?.id).toBe('sound-a');
+    expect(won.current?.id).toBe('sound-a-i');
     expect(levelState(won, level(1))).toBe('done');
     expect(levelState(won, level(3))).toBe('locked');
   });
@@ -159,7 +164,7 @@ describe('parcours de niveaux : déblocage', () => {
 
   it('étape de départ : les niveaux des étapes d’avant sont tenus pour gagnés', () => {
     const p2 = levelProgress([], { startStage: 2 });
-    expect(p2.current?.id).toBe('sound-a');
+    expect(p2.current?.id).toBe('sound-a-i');
     const p3 = levelProgress([], { startStage: 3 });
     expect(p3.current?.stage).toBe(3);
     expect(LEVELS.filter((l) => l.stage < 3).every((l) => p3.passed.has(l.id))).toBe(true);
@@ -211,7 +216,7 @@ describe('planLevel : une séance = un niveau = un seul jeu', () => {
 
   it('première lettre : A puis I sont présentées, puis une question sur chacune, dans le désordre', () => {
     for (let seed = 1; seed <= 20; seed += 1) {
-      const plan = planLevel(getLevel('sound-a')!, blank, createRng(seed));
+      const plan = planLevel(getLevel('sound-a-i')!, blank, createRng(seed));
       const targets = plan.questions.map((q) => q.target);
       expect(targets.slice(0, 2)).toEqual(['a', 'i']);
       expect(plan.questions.slice(0, 2).every((q) => q.isNew)).toBe(true);
@@ -250,6 +255,6 @@ describe('planLevel : une séance = un niveau = un seul jeu', () => {
   it('la démonstration n’est demandée que pour un jeu jamais montré', () => {
     const seen = computeProgress([session('drum-1', 5, 5, { demos: ['syllable-drum'] })]);
     expect(planLevel(getLevel('drum-2')!, seen, createRng(1)).demos).toEqual([]);
-    expect(planLevel(getLevel('sound-a')!, seen, createRng(1)).demos).toEqual(['letter-sound']);
+    expect(planLevel(getLevel('sound-a-i')!, seen, createRng(1)).demos).toEqual(['letter-sound']);
   });
 });

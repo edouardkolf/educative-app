@@ -12,7 +12,7 @@ import { computeProgress, type ReadingSettings } from './progress';
 import { isLevelPass, levelProgress, type LevelProgress, type ReadingLevel } from './levels';
 import { planLevel } from './session';
 import { ReadingEnd, type EndInfo } from './ReadingEnd';
-import { ReadingHome } from './ReadingHome';
+import { ReadingHome, type StartMode } from './ReadingHome';
 import { ReadingSession } from './ReadingSession';
 import type { ReadingAnswer, ReadingProgress, ReadingSessionPlan } from './types';
 import './reading.css';
@@ -21,6 +21,8 @@ interface ActiveSession {
   plan: ReadingSessionPlan;
   level: ReadingLevel;
   review: boolean;
+  /** Niveau fermé lancé grâce au réglage parent « tous les niveaux ouverts » : rien n'est enregistré. */
+  trial: boolean;
   /** Parcours avant la séance (pour savoir si le niveau vient d'être gagné). */
   before: LevelProgress;
 }
@@ -81,13 +83,13 @@ export function ReadingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.id]);
 
-  function start(level: ReadingLevel, review: boolean) {
+  function start(level: ReadingLevel, mode: StartMode) {
     if (!loaded) return;
     try {
       seedRef.current = (seedRef.current + 0x9e3779b9) >>> 0;
       const rng = createRng((Date.now() ^ seedRef.current) >>> 0);
       const plan = planLevel(level, loaded.progress, rng);
-      setSession({ plan, level, review, before: loaded.levels });
+      setSession({ plan, level, review: mode !== 'play', trial: mode === 'trial', before: loaded.levels });
       setPhase('session');
     } catch (err) {
       console.error('reading planLevel failed', err);
@@ -135,9 +137,22 @@ export function ReadingScreen() {
           </IconButton>
         </div>
       )}
-      {phase === 'home' && loaded && <ReadingHome progress={loaded.levels} voiceReady={voiceReady} onStart={start} />}
+      {phase === 'home' && loaded && (
+        <ReadingHome
+          progress={loaded.levels}
+          voiceReady={voiceReady}
+          allOpen={profile.gameSettings?.reading?.allLevelsOpen === true}
+          onStart={start}
+        />
+      )}
       {phase === 'session' && session && (
-        <ReadingSession plan={session.plan} review={session.review} profileId={profile.id} onFinish={onFinish} />
+        <ReadingSession
+          plan={session.plan}
+          review={session.review}
+          record={!session.trial}
+          profileId={profile.id}
+          onFinish={onFinish}
+        />
       )}
       {phase === 'end' && end && <ReadingEnd info={end} onContinue={backHome} />}
     </div>

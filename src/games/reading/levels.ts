@@ -10,7 +10,7 @@ import type { GraphemeId, ItemId, ReadingGameId, ReadingStage } from './types';
 export type LevelTrack = 'ear' | 'letters' | 'blend' | 'read';
 
 export interface ReadingLevel {
-  /** Identifiant stable, enregistré dans la séance (`ReadingRecord.levelId`) : 'drum-1', 'sound-a', 'first-a'… */
+  /** Identifiant stable, enregistré dans la séance (`ReadingRecord.levelId`) : 'drum-1', 'sound-a-i', 'first-a'… */
   id: string;
   /** Rang dans le parcours, à partir de 1. */
   index: number;
@@ -134,7 +134,9 @@ function buildLevels(): ReadingLevel[] {
     if (g.id === opening[0]) {
       pushOther(otherStage);
       known.push(...opening);
-      push('sound', 'letters', 'letter-sound', item, g.stage, `sound-${g.id}`, opening);
+      // Identifiant neuf (« sound-a-i ») : un ancien niveau « sound-a » gagné (A seule) ne compte pas, elle le
+      // refait une fois pour rencontrer I.
+      push('sound', 'letters', 'letter-sound', item, g.stage, `sound-${opening.join('-')}`, opening);
     } else if (!opening.includes(g.id)) {
       pushOther(otherStage);
       known.push(g.id);

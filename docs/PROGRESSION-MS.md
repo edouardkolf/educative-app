@@ -178,7 +178,7 @@ Détails : `docs/specs/COLORIAGE.md`. Contenu : `docs/CONTENU.md`.
 Une **piste à part**, sans étoile ni niveau sur la carte : une tuile du hub MS (juste après le coloriage) ouvre un
 programme de zéro lecture à l'entrée en CP. Depuis le 12/11/2026, c'est un **parcours de 102 niveaux** (LECTURE.md
 §16) : un niveau = un seul jeu = une séance de 4 questions (8 à partir des consonnes), gagné à 3 sur 4. Le chemin
-alterne un niveau d'écoute et un niveau de lettres ; la lettre A est le niveau 2. Les cinq étapes ci-dessous
+alterne un niveau d'écoute et un niveau de lettres ; la lettre A (avec I) est le niveau 2. Les cinq étapes ci-dessous
 restent le découpage pédagogique (ordre des lettres, réglage « étape de départ »).
 
 | Étape | Titre | Contenu |

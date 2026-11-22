@@ -12,12 +12,14 @@ import type { ReadingAnswer, ReadingSessionPlan } from './types';
 interface ReadingSessionProps {
   plan: ReadingSessionPlan;
   review: boolean;
+  /** Faux pour une séance à l'essai : rien n'est enregistré. */
+  record?: boolean;
   profileId: string;
   onFinish: (answers: readonly ReadingAnswer[]) => void;
 }
 
-export function ReadingSession({ plan, review, profileId, onFinish }: ReadingSessionProps) {
-  const flow = useQuestionFlow({ plan, review, profileId, onFinish });
+export function ReadingSession({ plan, review, record = true, profileId, onFinish }: ReadingSessionProps) {
+  const flow = useQuestionFlow({ plan, review, record, profileId, onFinish });
   const { question, viewProps, dots } = flow;
   const colors = STAGE_COLORS[plan.stage];
   const View = question ? READING_VIEWS[question.game] : null;

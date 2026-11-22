@@ -27,6 +27,8 @@ export interface ReadingRecord extends GameRecordBase {
 /** Réglage par enfant (fiche enfant) : `Profile.gameSettings.reading`. */
 export interface ReadingSettingsValue {
   startStage?: ReadingStage;
+  /** Séance parent : tous les niveaux se lancent ; ceux encore verrouillés sont joués à l'essai, sans rien enregistrer. */
+  allLevelsOpen?: boolean;
 }
 
 export type ReadingInit = Pick<ReadingRecord, 'stage' | 'planned' | 'newItemId' | 'demos' | 'answers' | 'review' | 'levelId'>;
@@ -111,9 +113,10 @@ function isReadingAnswer(value: unknown): value is ReadingAnswer {
   return isFiniteNumber(value.at);
 }
 
-/** Réglage parent « étape de départ » : absent ou entier de 1 à 5 (validé à l'import, comme le coloriage). */
+/** Réglages parent : étape de départ (absente ou entier de 1 à 5), niveaux ouverts (booléen facultatif). */
 export function isReadingSettings(value: unknown): value is ReadingSettingsValue {
   if (!isPlainObject(value)) return false;
+  if (value.allLevelsOpen !== undefined && typeof value.allLevelsOpen !== 'boolean') return false;
   return value.startStage === undefined || isReadingStage(value.startStage);
 }
 

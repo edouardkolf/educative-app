@@ -36,3 +36,5 @@
 .rp-bench__btn[aria-pressed='true'] { border-color: var(--pa-focus); background: color-mix(in srgb, var(--pa-focus) 16%, var(--pa-surface)); }
 .rp-bench__all { min-height: 44px; padding: 6px 14px; }
 .rp-select { width: 100%; min-height: 48px; font: inherit; font-size: 16px; }
+.rp-check { display: flex; align-items: center; gap: 10px; min-height: 48px; font-weight: 600; }
+.rp-check input { width: 22px; height: 22px; flex: none; }

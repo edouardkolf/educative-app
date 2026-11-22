@@ -75,6 +75,8 @@ const NEW_TURN: TurnState = {
 export interface UseQuestionFlowOptions {
   plan: ReadingSessionPlan;
   review: boolean;
+  /** Séance à l'essai (niveau fermé ouvert par le parent) : rien n'est enregistré. Défaut : true. */
+  record?: boolean;
   profileId: string;
   /** Appelé une fois, quand la séance est terminée et enregistrée. */
   onFinish: (answers: readonly ReadingAnswer[]) => void;
@@ -105,6 +107,7 @@ function safe<T>(fn: () => T, fallback: T): T {
 
 export function useQuestionFlow(opts: UseQuestionFlowOptions): QuestionFlow {
   const { plan, review, profileId } = opts;
+  const record = opts.record !== false;
   const onFinishRef = useRef(opts.onFinish);
   onFinishRef.current = opts.onFinish;
 
@@ -185,7 +188,7 @@ export function useQuestionFlow(opts: UseQuestionFlowOptions): QuestionFlow {
     const slot = recordRef.current;
     const activeMs = clock.elapsed();
     return enqueue(async () => {
-      if (slot.closed) return;
+      if (slot.closed || !record) return;
       slot.closed = true;
       if (slot.id) await abandonReading(slot.id, reason, activeMs);
     });
@@ -198,7 +201,7 @@ export function useQuestionFlow(opts: UseQuestionFlowOptions): QuestionFlow {
     const answers = [...state.answers];
     const demos = [...state.demosDone];
     enqueue(async () => {
-      if (slot.closed) return;
+      if (slot.closed || !record) return;
       if (!slot.id) {
         if (answers.length === 0) {
           if (kind === 'complete') slot.closed = true;

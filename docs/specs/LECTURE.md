@@ -337,7 +337,8 @@ reste calculée pour les statistiques parent et le choix des leurres.
   boucle ; dès que L et R sont connues, un niveau d'oreille sur deux est une machine à syllabes. Lettres, dans
   l'ordre du §3.2 : pour chaque lettre un niveau « la lettre qui chante », puis un niveau « par quoi ça commence »
   si elle a au moins 2 images. La première lettre (A) est le **niveau 2**, et ce niveau présente **A et I
-  ensemble** (`ReadingLevel.intro`) : I n'a pas de niveau « son » à elle. Fin du parcours : mot mystère et
+  ensemble** (`ReadingLevel.intro`, id `sound-a-i`) : I n'a pas de niveau « son » à elle. Un ancien `sound-a`
+  gagné ne compte plus : l'enfant refait le niveau 2 une fois. Fin du parcours : mot mystère et
   jumelles en alternance avec les lettres rares. 102 niveaux.
 - **Contenu d'un niveau « lettre »** : la lettre du niveau est présentée d'abord, puis ~60 % des questions portent
   sur elle et le reste révise les lettres déjà vues (jamais une lettre à venir comme cible). Premier niveau lettre
@@ -357,3 +358,7 @@ reste calculée pour les statistiques parent et le choix des leurres.
   `data-testid="reading-level-<rang>"`, `data-state` done|current|locked, `data-level`, `data-game`. Couleur par
   piste : bleu = écoute, rose = lettres, vert = assembler, orange = lire. Un médaillon « lettre » montre la lettre.
 - **Parent** : « Niveau en cours : n sur 102 » (`reading-stats-level`).
+- **Tous les niveaux ouverts** (réglage parent de la fiche enfant, `allLevelsOpen`, case `reading-all-levels`,
+  22/11/2026) : sur l'accueil, un niveau encore fermé se lance quand même, **à l'essai** : rien n'est enregistré
+  (ni séance, ni démonstration), le parcours et les statistiques de l'enfant ne bougent pas. Le cadenas s'estompe ;
+  `data-all-open="true"` sur `reading-home`. Les niveaux gagnés et le niveau en cours se jouent comme d'habitude.

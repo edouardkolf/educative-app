@@ -176,6 +176,11 @@
   opacity: 0.45;
 }
 
+/* Réglage parent « tous les niveaux ouverts » : le cadenas s'estompe, le niveau se lance à l'essai. */
+.rd-medal__badge--open {
+  opacity: 0.4;
+}
+
 .rd-medal:disabled {
   opacity: 0.55;
   animation: none;

@@ -55,7 +55,7 @@ test('niveau 1 (tambour seul, 4 questions) gagné → le niveau 2 s’ouvre sur 
   await expect(page.getByTestId('reading-level-1')).toHaveAttribute('data-game', 'syllable-drum');
   await expect(page.getByTestId('reading-level-1')).toBeInViewport();
   await expect(page.getByTestId('reading-level-2')).toHaveAttribute('data-state', 'locked');
-  await expect(page.getByTestId('reading-level-2')).toHaveAttribute('data-level', 'sound-a');
+  await expect(page.getByTestId('reading-level-2')).toHaveAttribute('data-level', 'sound-a-i');
 
   // Un niveau verrouillé ne lance rien.
   await page.getByTestId('reading-level-2').click({ force: true }); // aria-disabled : Playwright refuse le clic normal
@@ -102,7 +102,7 @@ test('niveau 1 (tambour seul, 4 questions) gagné → le niveau 2 s’ouvre sur 
   await expect(page.getByTestId('reading-end-next')).toBeVisible();
   await finishEnd(page);
   await expect(page.getByTestId('reading-level-1')).toHaveAttribute('data-state', 'done');
-  await expect(currentLevel(page)).toHaveAttribute('data-level', 'sound-a');
+  await expect(currentLevel(page)).toHaveAttribute('data-level', 'sound-a-i');
   await expect(page.getByTestId('reading-level-3')).toHaveAttribute('data-state', 'locked');
 
   let [session] = await readReadings(page);
@@ -130,7 +130,7 @@ test('niveau 1 (tambour seul, 4 questions) gagné → le niveau 2 s’ouvre sur 
   await finishEnd(page);
   await expect(page.getByTestId('reading-level-2')).toHaveAttribute('data-state', 'done');
   await expect(currentLevel(page)).toHaveAttribute('data-level', 'drum-2');
-  session = (await readReadings(page)).find((r) => r.levelId === 'sound-a');
+  session = (await readReadings(page)).find((r) => r.levelId === 'sound-a-i');
   expect(session?.status).toBe('completed');
   expect(session?.stage).toBe(2);
   expect(session?.newItemId).toBe('g:a');
@@ -185,7 +185,7 @@ test('erreur volontaire : le choix se grise, la lettre touchée chante, la quest
   await chooseProfile(page, 'Alice');
   await openReading(page);
   await expect(page.getByTestId('reading-level-1')).toHaveAttribute('data-state', 'done');
-  await expect(currentLevel(page)).toHaveAttribute('data-level', 'sound-a');
+  await expect(currentLevel(page)).toHaveAttribute('data-level', 'sound-a-i');
   await startCurrentLevel(page);
 
   let spokenBefore = 0;
@@ -285,7 +285,7 @@ test('étape de départ 2 (réglage parent) : le parcours reprend à la lettre A
   const records = await readReadings(page);
   expect(records).toHaveLength(1);
   expect(records[0]?.stage).toBe(2);
-  expect(records[0]?.levelId).toBe('sound-a');
+  expect(records[0]?.levelId).toBe('sound-a-i');
   expect(records[0]?.newItemId).toBe('g:a');
 
   // Espace parent : statistiques de lecture.
@@ -342,6 +342,43 @@ test('voix anglaise seulement : même écran d’indisponibilité', async ({ pag
   await openReading(page);
   await expect(page.getByTestId('reading-unavailable')).toBeVisible();
   await expect(page.getByTestId('reading-level-1')).toBeDisabled();
+});
+
+// ==================== 6 bis. Séance parent : tous les niveaux ouverts, à l'essai ====================
+
+test('réglage parent « tous les niveaux ouverts » : un niveau fermé se joue à l’essai, sans rien enregistrer', async ({ page }) => {
+  test.slow();
+  await installFakeVoice(page, 'fr');
+  await onboardMs(page, 'Alice');
+  await chooseProfile(page, 'Alice');
+
+  await page.getByTestId('hub-to-profiles').click();
+  await openParentDashboard(page);
+  await page.getByRole('button', { name: 'Modifier' }).click();
+  await expect(page.getByTestId('reading-all-levels')).not.toBeChecked();
+  await page.getByTestId('reading-all-levels').check();
+  await page.getByTestId('save-child').click();
+  await expect(page.getByRole('heading', { name: 'Espace parent' })).toBeVisible();
+  await page.getByTestId('back-to-game').click();
+
+  await chooseProfile(page, 'Alice');
+  await openReading(page);
+  await expect(page.getByTestId('reading-home')).toHaveAttribute('data-all-open', 'true');
+  const far = page.getByTestId('reading-level-8');
+  await expect(far).toHaveAttribute('data-state', 'locked');
+  await expect(far).not.toHaveAttribute('aria-disabled', 'true');
+  const game = (await far.getAttribute('data-game')) ?? '';
+
+  await far.click();
+  await expect(page.getByTestId('reading-session')).toBeVisible();
+  const played = await playFullSession(page);
+  for (const q of played) expect(q.game).toBe(game);
+  await finishEnd(page);
+
+  // Rien n'est enregistré : le parcours de l'enfant n'a pas bougé.
+  expect(await readReadings(page)).toHaveLength(0);
+  await expect(page.getByTestId('reading-level-1')).toHaveAttribute('data-state', 'current');
+  await expect(page.getByTestId('reading-level-8')).toHaveAttribute('data-state', 'locked');
 });
 
 // ==================== 7. Plus loin dans le parcours, par l'étape de départ ====================
